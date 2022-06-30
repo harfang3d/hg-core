@@ -8,6 +8,7 @@
 #include "foundation/vector2.h"
 #include "foundation/vector3.h"
 #include "foundation/vector4.h"
+#include "foundation/log.h"
 
 using namespace hg;
 
@@ -60,6 +61,13 @@ void test_vec4_mul() {
 }
 
 //
+void test_log() {
+	log("Calling Log()");
+	warn("Calling Warn()");
+	error("Calling Error()");
+}
+
+//
 TEST_LIST = {
 	{"Clock.Update", test_clock_update},
 
@@ -69,6 +77,8 @@ TEST_LIST = {
 	{"Vec3.Mul", test_vec3_mul},
 
 	{"Vec4.Mul", test_vec4_mul},
+
+//	{"Log", test_log},
 
 	{NULL, NULL},
 };

@@ -2,10 +2,12 @@
 
 #pragma once
 
+#include <string>
+
 namespace hg {
 
 /// Trigger a system assert error (may be swapped by a platform specialized version).
-extern void (*trigger_assert)(const char *source, int line, const char *function, const char *condition, const char *message);
+extern void (*trigger_assert)(const std::string &source, int line, const std::string &function, const std::string &condition, const std::string &message);
 
 } // namespace hg
 
