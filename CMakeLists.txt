@@ -40,6 +40,7 @@ foundation/os.h
 foundation/pack_float.h
 foundation/path_tools.h
 foundation/plane.h
+foundation/projection.h
 foundation/quaternion.h
 foundation/rand.h
 foundation/rw_interface.h
@@ -74,6 +75,7 @@ foundation/obb.cpp
 foundation/os.cpp
 foundation/path_tools.cpp
 foundation/plane.cpp
+foundation/projection.cpp
 foundation/quaternion.cpp
 foundation/rand.cpp
 foundation/rw_interface.cpp
@@ -102,6 +104,7 @@ set(ENGINE_HDRS
 engine/assets.h
 engine/assets_rw_interface.h
 engine/file_format.h
+engine/fps_controller.h
 engine/geometry.h
 engine/model_builder.h
 engine/picture.h
@@ -112,6 +115,7 @@ engine/resource_cache.h
 set(ENGINE_SRCS
 #engine/assets.cpp
 #engine/assets_rw_interface.cpp
+engine/fps_controller.cpp
 #engine/geometry.cpp
 #engine/model_builder.cpp
 engine/picture.cpp
