@@ -5,65 +5,56 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <type_traits>
 
 #include "foundation/time.h"
 
 namespace hg {
 
 /// Convert an angle in degrees to the engine unit system.
-template <typename T> constexpr T Deg(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Deg(T v) {
 	return v / T(180) * T(3.1415926535);
 }
 /// Convert an angle in radians to the engine unit system.
-template <typename T> constexpr T Rad(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Rad(T v) {
 	return v;
 }
 
 /// Convert an angle in degrees to radians.
-template <typename T> constexpr T DegreeToRadian(T v) { return v * (3.1415926535f / 180.f); }
+template <typename T> T DegreeToRadian(T v) { return v * (3.1415926535f / 180.f); }
 /// Convert an angle in radians to degrees.
-template <typename T> constexpr T RadianToDegree(T v) { return v * (180.f / 3.1415926535f); }
+template <typename T> T RadianToDegree(T v) { return v * (180.f / 3.1415926535f); }
 
-template <typename T> constexpr T Sec(T v) { return v; }
+template <typename T> T Sec(T v) { return v; }
 
-template <typename T> constexpr T Csec(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Csec(T v) {
 	return v * T(0.01);
 }
-template <typename T> constexpr T Ms(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Ms(T v) {
 	return v * T(0.001);
 }
 
-template <typename T> constexpr T Ton(T v) { return v * T(1000); }
-template <typename T> constexpr T Kg(T v) { return v; }
+template <typename T> T Ton(T v) { return v * T(1000); }
+template <typename T> T Kg(T v) { return v; }
 
-template <typename T> constexpr T G(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T G(T v) {
 	return v * T(0.001);
 }
 
-template <typename T> constexpr T Km(T v) { return v * T(1000); }
-template <typename T> constexpr T Mtr(T v) { return v; }
+template <typename T> T Km(T v) { return v * T(1000); }
+template <typename T> T Mtr(T v) { return v; }
 
-template <typename T> constexpr T Cm(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Cm(T v) {
 	return v * T(0.01);
 }
-template <typename T> constexpr T Mm(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Mm(T v) {
 	return v * T(0.001);
 }
-template <typename T> constexpr T Inch(T v) {
-	static_assert(std::is_floating_point<T>::value, "Expected floating point type");
+template <typename T> T Inch(T v) {
 	return v * T(0.0254);
 }
 
-inline constexpr size_t KB(const size_t size) { return size * 1024; }
-inline constexpr size_t MB(const size_t size) { return size * 1024 * 1024; }
+inline size_t KB(const size_t size) { return size * 1024; }
+inline size_t MB(const size_t size) { return size * 1024 * 1024; }
 
 template <typename T> std::string FormatMemorySize(T v_) {
 	std::ostringstream str;
@@ -114,7 +105,7 @@ template <typename T> std::string FormatCount(T v_) {
 template <typename T> std::string FormatDistance(T v_) {
 	std::ostringstream str;
 
-	auto v = float(v_);
+	float v = float(v_);
 
 	if (v < 0) {
 		str << "-";

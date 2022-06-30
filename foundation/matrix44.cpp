@@ -35,7 +35,7 @@ Mat44 operator*(const Mat44 &a, const Mat44 &b) {
 }
 
 Mat44 operator*(const Mat44 &a, const Mat4 &b) {
-	return {a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0], a.m[1][0] * b.m[0][0] + a.m[1][1] * b.m[1][0] + a.m[1][2] * b.m[2][0],
+	return Mat44(a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0], a.m[1][0] * b.m[0][0] + a.m[1][1] * b.m[1][0] + a.m[1][2] * b.m[2][0],
 		a.m[2][0] * b.m[0][0] + a.m[2][1] * b.m[1][0] + a.m[2][2] * b.m[2][0], a.m[3][0] * b.m[0][0] + a.m[3][1] * b.m[1][0] + a.m[3][2] * b.m[2][0],
 
 		a.m[0][0] * b.m[0][1] + a.m[0][1] * b.m[1][1] + a.m[0][2] * b.m[2][1], a.m[1][0] * b.m[0][1] + a.m[1][1] * b.m[1][1] + a.m[1][2] * b.m[2][1],
@@ -47,11 +47,11 @@ Mat44 operator*(const Mat44 &a, const Mat4 &b) {
 		a.m[0][0] * b.m[0][3] + a.m[0][1] * b.m[1][3] + a.m[0][2] * b.m[2][3] + a.m[0][3],
 		a.m[1][0] * b.m[0][3] + a.m[1][1] * b.m[1][3] + a.m[1][2] * b.m[2][3] + a.m[1][3],
 		a.m[2][0] * b.m[0][3] + a.m[2][1] * b.m[1][3] + a.m[2][2] * b.m[2][3] + a.m[2][3],
-		a.m[3][0] * b.m[0][3] + a.m[3][1] * b.m[1][3] + a.m[3][2] * b.m[2][3] + a.m[3][3]};
+		a.m[3][0] * b.m[0][3] + a.m[3][1] * b.m[1][3] + a.m[3][2] * b.m[2][3] + a.m[3][3]);
 }
 
 Mat44 operator*(const Mat4 &a, const Mat44 &b) {
-	return {a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0] + a.m[0][3] * b.m[3][0],
+	return Mat44(a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0] + a.m[0][3] * b.m[3][0],
 		a.m[1][0] * b.m[0][0] + a.m[1][1] * b.m[1][0] + a.m[1][2] * b.m[2][0] + a.m[1][3] * b.m[3][0],
 		a.m[2][0] * b.m[0][0] + a.m[2][1] * b.m[1][0] + a.m[2][2] * b.m[2][0] + a.m[2][3] * b.m[3][0], b.m[3][0],
 
@@ -65,17 +65,17 @@ Mat44 operator*(const Mat4 &a, const Mat44 &b) {
 
 		a.m[0][0] * b.m[0][3] + a.m[0][1] * b.m[1][3] + a.m[0][2] * b.m[2][3] + a.m[0][3] * b.m[3][3],
 		a.m[1][0] * b.m[0][3] + a.m[1][1] * b.m[1][3] + a.m[1][2] * b.m[2][3] + a.m[1][3] * b.m[3][3],
-		a.m[2][0] * b.m[0][3] + a.m[2][1] * b.m[1][3] + a.m[2][2] * b.m[2][3] + a.m[2][3] * b.m[3][3], b.m[3][3]};
+		a.m[2][0] * b.m[0][3] + a.m[2][1] * b.m[1][3] + a.m[2][2] * b.m[2][3] + a.m[2][3] * b.m[3][3], b.m[3][3]);
 }
 
 Vec3 operator*(const Mat44 &m, const Vec3 &v) {
-	return {v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + m.m[1][3],
-		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + m.m[2][3]};
+	return Vec3(v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + m.m[1][3],
+		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + m.m[2][3]);
 }
 
 Vec4 operator*(const Mat44 &m, const Vec4 &v) {
-	return {v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
-		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3], v.x * m.m[3][0] + v.y * m.m[3][1] + v.z * m.m[3][2] + v.w * m.m[3][3]};
+	return Vec4(v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
+		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3], v.x * m.m[3][0] + v.y * m.m[3][1] + v.z * m.m[3][2] + v.w * m.m[3][3]);
 }
 
 void TransformVec3(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec3 *__restrict in, unsigned int count) {
@@ -99,8 +99,8 @@ void TransformVec4(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec4 *
 }
 
 Mat44 Transpose(const Mat44 &m) {
-	return {m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3], m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3], m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3], m.m[3][0],
-		m.m[3][1], m.m[3][2], m.m[3][3]};
+	return Mat44(m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3], m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3], m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3], m.m[3][0],
+		m.m[3][1], m.m[3][2], m.m[3][3]);
 }
 
 Mat44 Inverse(const Mat44 &m, bool &result) {
@@ -160,13 +160,13 @@ Mat44 Inverse(const Mat44 &m, bool &result) {
 
 Mat44 Inverse(const Mat44 &m) {
 	bool result;
-	auto out = Inverse(m, result);
+	Mat44 out = Inverse(m, result);
 	__ASSERT__(result);
 	return out;
 }
 
-Vec4 GetRow(const Mat44 &m, unsigned int n) { return {m.m[n][0], m.m[n][1], m.m[n][2], m.m[n][3]}; }
-Vec4 GetColumn(const Mat44 &m, unsigned int n) { return {m.m[0][n], m.m[1][n], m.m[2][n], m.m[3][n]}; }
+Vec4 GetRow(const Mat44 &m, unsigned int n) { return Vec4(m.m[n][0], m.m[n][1], m.m[n][2], m.m[n][3]); }
+Vec4 GetColumn(const Mat44 &m, unsigned int n) { return Vec4(m.m[0][n], m.m[1][n], m.m[2][n], m.m[3][n]); }
 
 void SetRow(Mat44 &m, unsigned int n, const Vec4 &v) {
 	m.m[n][0] = v.x;
@@ -183,6 +183,25 @@ void SetColumn(Mat44 &m, unsigned int n, const Vec4 &v) {
 }
 
 //
+Mat44::Mat44() {
+	m[0][0] = 1.f;
+	m[1][0] = 0.f;
+	m[2][0] = 0.f;
+	m[3][0] = 0.f;
+	m[0][1] = 0.f;
+	m[1][1] = 1.f;
+	m[2][1] = 0.f;
+	m[3][1] = 0.f;
+	m[0][2] = 0.f;
+	m[1][2] = 0.f;
+	m[2][2] = 1.f;
+	m[3][2] = 0.f;
+	m[0][3] = 0.f;
+	m[1][3] = 0.f;
+	m[2][3] = 0.f;
+	m[3][3] = 1.f;
+}
+
 Mat44::Mat44(float m00, float m10, float m20, float m30, float m01, float m11, float m21, float m31, float m02, float m12, float m22, float m32, float m03,
 	float m13, float m23, float m33) {
 	m[0][0] = m00;

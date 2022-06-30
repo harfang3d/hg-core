@@ -96,7 +96,7 @@ Quaternion QuaternionFromMatrix3(const Mat3 &m) {
 		*quat[j] = (m.m[j][i] + m.m[i][j]) * root;
 		*quat[k] = (m.m[k][i] + m.m[i][k]) * root;
 	}
-	return {_x, _y, _z, _w};
+	return Quaternion(_x, _y, _z, _w);
 }
 
 //

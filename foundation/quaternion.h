@@ -13,8 +13,8 @@ struct Mat3;
 struct Quaternion {
 	static const Quaternion Identity;
 
-	Quaternion() = default;
-	Quaternion(const Quaternion &q) = default;
+	Quaternion() : x(0), y(0), z(0), w(1) {}
+	Quaternion(const Quaternion &q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
 	Quaternion(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
 
 	float x, y, z, w;
@@ -83,18 +83,20 @@ inline bool operator!=(const Quaternion &a, const Quaternion &b) { return a.x !=
 
 inline float Dot(const Quaternion &a, const Quaternion &b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 
-inline Quaternion operator+(const Quaternion &a, const Quaternion &b) { return {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
-inline Quaternion operator+(const Quaternion &q, float v) { return {q.x + v, q.y + v, q.z + v, q.w + v}; }
-inline Quaternion operator-(const Quaternion &a, const Quaternion &b) { return {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
-inline Quaternion operator-(const Quaternion &q, float v) { return {q.x - v, q.y - v, q.z - v, q.w - v}; }
+inline Quaternion operator+(const Quaternion &a, const Quaternion &b) { return Quaternion(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
+inline Quaternion operator+(const Quaternion &q, float v) { return Quaternion(q.x + v, q.y + v, q.z + v, q.w + v); }
+inline Quaternion operator-(const Quaternion &a, const Quaternion &b) { return Quaternion(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
+inline Quaternion operator-(const Quaternion &q, float v) { return Quaternion(q.x - v, q.y - v, q.z - v, q.w - v); }
 
 inline Quaternion operator*(const Quaternion &a, const Quaternion &b) {
-	return {a.w * b.x + b.w * a.x + a.y * b.z - a.z * b.y, a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z, a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x,
-		a.w * b.w - (a.x * b.x + a.y * b.y + a.z * b.z)};
+	return Quaternion(a.w * b.x + b.w * a.x + a.y * b.z - a.z * b.y,
+		a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z,
+		a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x,
+		a.w * b.w - (a.x * b.x + a.y * b.y + a.z * b.z));
 }
 
-inline Quaternion operator*(const Quaternion &q, float v) { return {q.x * v, q.y * v, q.z * v, q.w * v}; }
-inline Quaternion operator/(const Quaternion &q, float v) { return {q.x / v, q.y / v, q.z / v, q.w / v}; }
+inline Quaternion operator*(const Quaternion &q, float v) { return Quaternion(q.x * v, q.y * v, q.z * v, q.w * v); }
+inline Quaternion operator/(const Quaternion &q, float v) { return Quaternion(q.x / v, q.y / v, q.z / v, q.w / v); }
 
 /// Normalize quaternion.
 Quaternion Normalize(const Quaternion &q);

@@ -7,17 +7,27 @@
 
 namespace hg {
 
-const Color Color::Zero{0, 0, 0, 0}, Color::One{1, 1, 1, 1}, Color::White{1, 1, 1}, Color::Grey{0.5f, 0.5f, 0.5f}, Color::Black{0, 0, 0}, Color::Red{1, 0, 0},
-	Color::Green{0, 1, 0}, Color::Blue{0, 0, 1}, Color::Yellow{1, 1, 0}, Color::Orange{1, 0.3f, 0}, Color::Purple{1, 0, 1}, Color::Transparent{0, 0, 0, 0};
+const Color Color::Zero(0, 0, 0, 0);
+const Color Color::One(1, 1, 1, 1);
+const Color Color::White(1, 1, 1);
+const Color Color::Grey(0.5f, 0.5f, 0.5f);
+const Color Color::Black(0, 0, 0);
+const Color Color::Red(1, 0, 0);
+const Color Color::Green(0, 1, 0);
+const Color Color::Blue(0, 0, 1);
+const Color Color::Yellow(1, 1, 0);
+const Color Color::Orange(1, 0.3f, 0);
+const Color Color::Purple(1, 0, 1);
+const Color Color::Transparent(0, 0, 0, 0);
 
-Color operator+(const Color &a, const Color &b) { return {a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a}; }
-Color operator+(const Color &a, const float v) { return {a.r + v, a.g + v, a.b + v, a.a + v}; }
-Color operator-(const Color &a, const Color &b) { return {a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a}; }
-Color operator-(const Color &a, const float v) { return {a.r - v, a.g - v, a.b - v, a.a - v}; }
-Color operator*(const Color &a, const Color &b) { return {a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a}; }
-Color operator*(const Color &a, const float v) { return {a.r * v, a.g * v, a.b * v, a.a * v}; }
-Color operator/(const Color &a, const Color &b) { return {a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a}; }
-Color operator/(const Color &a, const float v) { return {a.r / v, a.g / v, a.b / v, a.a / v}; }
+Color operator+(const Color &a, const Color &b) { return Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a); }
+Color operator+(const Color &a, const float v) { return Color(a.r + v, a.g + v, a.b + v, a.a + v); }
+Color operator-(const Color &a, const Color &b) { return Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a); }
+Color operator-(const Color &a, const float v) { return Color(a.r - v, a.g - v, a.b - v, a.a - v); }
+Color operator*(const Color &a, const Color &b) { return Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a); }
+Color operator*(const Color &a, const float v) { return Color(a.r * v, a.g * v, a.b * v, a.a * v); }
+Color operator/(const Color &a, const Color &b) { return Color(a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a); }
+Color operator/(const Color &a, const float v) { return Color(a.r / v, a.g / v, a.b / v, a.a / v); }
 
 float ColorToGrayscale(const Color &c) { return 0.3f * c.r + 0.59f * c.g + 0.11f * c.b; }
 
@@ -78,27 +88,27 @@ bool AlmostEqual(const Color &a, const Color &b, float epsilon) {
 }
 
 /// Scale the chroma component of a color, return the result as a new color.
-Color ChromaScale(const Color &c, float k) { return {c.r * k, c.g * k, c.b * k, c.a}; }
+Color ChromaScale(const Color &c, float k) { return Color(c.r * k, c.g * k, c.b * k, c.a); }
 /// Scale the alpha component of a color, return the result as a new color.
-Color AlphaScale(const Color &c, float k) { return {c.r, c.g, c.b, c.a * k}; }
+Color AlphaScale(const Color &c, float k) { return Color(c.r, c.g, c.b, c.a * k); }
 
 //
-Color Clamp(const Color &c, float min, float max) { return {Clamp(c.r, min, max), Clamp(c.g, min, max), Clamp(c.b, min, max), Clamp(c.a, min, max)}; }
+Color Clamp(const Color &c, float min, float max) { return Color(Clamp(c.r, min, max), Clamp(c.g, min, max), Clamp(c.b, min, max), Clamp(c.a, min, max)); }
 Color Clamp(const Color &c, const Color &min, const Color &max) {
-	return {Clamp(c.r, min.r, max.r), Clamp(c.g, min.g, max.g), Clamp(c.b, min.b, max.b), Clamp(c.a, min.a, max.a)};
+	return Color(Clamp(c.r, min.r, max.r), Clamp(c.g, min.g, max.g), Clamp(c.b, min.b, max.b), Clamp(c.a, min.a, max.a));
 }
 
 //
 Color ClampLen(const Color &c, float min, float max) {
-	const auto l2 = float(c.r * c.r + c.g * c.g + c.b * c.b);
+	const float l2 = float(c.r * c.r + c.g * c.g + c.b * c.b);
 	if ((l2 >= (min * min) && l2 <= (max * max)) || l2 < 0.000001f)
 		return c;
-	const auto l = Sqrt(l2);
+	const float l = Sqrt(l2);
 	return c * Clamp(l, min, max) / l;
 }
 
-Color ColorFromVector3(const Vec3 &v) { return {v.x, v.y, v.z, 1}; }
-Color ColorFromVector4(const Vec4 &v) { return {v.x, v.y, v.z, v.w}; }
+Color ColorFromVector3(const Vec3 &v) { return Color(v.x, v.y, v.z, 1); }
+Color ColorFromVector4(const Vec4 &v) { return Color(v.x, v.y, v.z, v.w); }
 
 //
 Color ToHLS(const Color &c) {
@@ -132,7 +142,7 @@ Color ToHLS(const Color &c) {
 			h += 360.f;
 	}
 
-	return {h, l, s, c.a};
+	return Color(h, l, s, c.a);
 }
 
 static float QqhToRgb(float q1, float q2, float hue) {
@@ -167,42 +177,42 @@ Color FromHLS(const Color &c) {
 		b = QqhToRgb(p1, p2, c.r - 120.f);
 	}
 
-	return {r, g, b, c.a};
+	return Color(r, g, b, c.a);
 }
 
 //
 Color SetHue(const Color &c, float h) {
-	auto hls = ToHLS(c);
+	Color hls = ToHLS(c);
 	hls.r = h;
 	return FromHLS(hls);
 }
 
 Color SetSaturation(const Color &c, float s) {
-	auto hls = ToHLS(c);
+	Color hls = ToHLS(c);
 	hls.b = s;
 	return FromHLS(hls);
 }
 
 Color SetLuminance(const Color &c, float l) {
-	auto hls = ToHLS(c);
+	Color hls = ToHLS(c);
 	hls.g = l;
 	return FromHLS(hls);
 }
 
 Color ScaleHue(const Color &c, float k) {
-	auto hls = ToHLS(c);
+	Color hls = ToHLS(c);
 	hls.r *= k;
 	return FromHLS(hls);
 }
 
 Color ScaleSaturation(const Color &c, float k) {
-	auto hls = ToHLS(c);
+	Color hls = ToHLS(c);
 	hls.b *= k;
 	return FromHLS(hls);
 }
 
 Color ScaleLuminance(const Color &c, float k) {
-	auto hls = ToHLS(c);
+	Color hls = ToHLS(c);
 	hls.g *= k;
 	return FromHLS(hls);
 }

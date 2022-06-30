@@ -19,7 +19,7 @@ struct Mat3 {
 	static const Mat3 Zero;
 	static const Mat3 Identity;
 
-	Mat3() = default;
+	Mat3();
 	Mat3(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22);
 	explicit Mat3(const Mat4 &m);
 	explicit Mat3(const float *v);

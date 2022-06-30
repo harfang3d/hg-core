@@ -29,7 +29,7 @@ bool operator!=(const Mat4 &a, const Mat4 &b) {
 }
 
 Mat4 operator*(const Mat4 &a, const Mat4 &b) {
-	return {a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0], a.m[1][0] * b.m[0][0] + a.m[1][1] * b.m[1][0] + a.m[1][2] * b.m[2][0],
+	return Mat4(a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0], a.m[1][0] * b.m[0][0] + a.m[1][1] * b.m[1][0] + a.m[1][2] * b.m[2][0],
 		a.m[2][0] * b.m[0][0] + a.m[2][1] * b.m[1][0] + a.m[2][2] * b.m[2][0],
 
 		a.m[0][0] * b.m[0][1] + a.m[0][1] * b.m[1][1] + a.m[0][2] * b.m[2][1], a.m[1][0] * b.m[0][1] + a.m[1][1] * b.m[1][1] + a.m[1][2] * b.m[2][1],
@@ -40,49 +40,49 @@ Mat4 operator*(const Mat4 &a, const Mat4 &b) {
 
 		a.m[0][0] * b.m[0][3] + a.m[0][1] * b.m[1][3] + a.m[0][2] * b.m[2][3] + a.m[0][3],
 		a.m[1][0] * b.m[0][3] + a.m[1][1] * b.m[1][3] + a.m[1][2] * b.m[2][3] + a.m[1][3],
-		a.m[2][0] * b.m[0][3] + a.m[2][1] * b.m[1][3] + a.m[2][2] * b.m[2][3] + a.m[2][3]};
+		a.m[2][0] * b.m[0][3] + a.m[2][1] * b.m[1][3] + a.m[2][2] * b.m[2][3] + a.m[2][3]);
 }
 
 Mat4 operator*(const Mat4 &m, float v) {
 	Mat4 o;
-	for (auto j = 0; j < 3; ++j)
-		for (auto i = 0; i < 4; ++i)
+	for (size_t j = 0; j < 3; ++j)
+		for (size_t i = 0; i < 4; ++i)
 			o.m[j][i] = m.m[j][i] * v;
 	return o;
 }
 
 Mat4 operator/(const Mat4 &m, float v) {
 	Mat4 o;
-	for (auto j = 0; j < 3; ++j)
-		for (auto i = 0; i < 4; ++i)
+	for (size_t j = 0; j < 3; ++j)
+		for (size_t i = 0; i < 4; ++i)
 			o.m[j][i] = m.m[j][i] / v;
 	return o;
 }
 
 Mat4 operator+(const Mat4 &a, const Mat4 &b) {
 	Mat4 o;
-	for (auto j = 0; j < 3; ++j)
-		for (auto i = 0; i < 4; ++i)
+	for (size_t j = 0; j < 3; ++j)
+		for (size_t i = 0; i < 4; ++i)
 			o.m[j][i] = a.m[j][i] + b.m[j][i];
 	return o;
 }
 
 Mat4 operator-(const Mat4 &a, const Mat4 &b) {
 	Mat4 o;
-	for (auto j = 0; j < 3; ++j)
-		for (auto i = 0; i < 4; ++i)
+	for (size_t j = 0; j < 3; ++j)
+		for (size_t i = 0; i < 4; ++i)
 			o.m[j][i] = a.m[j][i] - b.m[j][i];
 	return o;
 }
 
 Vec3 operator*(const Mat4 &m, const Vec3 &v) {
-	return {v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + m.m[1][3],
-		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + m.m[2][3]};
+	return Vec3(v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + m.m[1][3],
+		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + m.m[2][3]);
 }
 
 Vec4 operator*(const Mat4 &m, const Vec4 &v) {
-	return {v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
-		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3], v.w};
+	return Vec4(v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3], v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
+		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3], v.w);
 }
 
 //
@@ -115,8 +115,8 @@ void RotateVec3(const Mat4 &__restrict m, Vec3 *__restrict out, const Vec3 *__re
 }
 
 //
-Vec4 GetRow(const Mat4 &m, unsigned int n) { return {m.m[n][0], m.m[n][1], m.m[n][2], m.m[n][3]}; }
-Vec3 GetColumn(const Mat4 &m, unsigned int n) { return {m.m[0][n], m.m[1][n], m.m[2][n]}; }
+Vec4 GetRow(const Mat4 &m, unsigned int n) { return Vec4(m.m[n][0], m.m[n][1], m.m[n][2], m.m[n][3]); }
+Vec3 GetColumn(const Mat4 &m, unsigned int n) { return Vec3(m.m[0][n], m.m[1][n], m.m[2][n]); }
 
 void SetRow(Mat4 &m, unsigned int n, const Vec4 &v) {
 	m.m[n][0] = v.x;
@@ -140,18 +140,18 @@ Vec3 GetTranslation(const Mat4 &m) { return GetT(m); }
 
 Vec3 GetR(const Mat4 &m, RotationOrder order) {
 	Vec3 rotation;
-	Decompose(m, nullptr, &rotation, nullptr, order);
+	Decompose(m, NULL, &rotation, NULL, order);
 	return rotation;
 }
 
 Vec3 GetRotation(const Mat4 &m, RotationOrder order) { return GetR(m, order); }
 
-Vec3 GetS(const Mat4 &m) { return {Len(GetX(m)), Len(GetY(m)), Len(GetZ(m))}; }
+Vec3 GetS(const Mat4 &m) { return Vec3(Len(GetX(m)), Len(GetY(m)), Len(GetZ(m))); }
 Vec3 GetScale(const Mat4 &m) { return GetS(m); }
 
 Mat3 GetRMatrix(const Mat4 &m) {
 	Mat3 rotation;
-	Decompose(m, nullptr, &rotation, nullptr);
+	Decompose(m, NULL, &rotation, NULL);
 	return rotation;
 }
 
@@ -175,8 +175,8 @@ void SetScale(Mat4 &m, const Vec3 &v) { SetS(m, v); }
 //
 Mat4 TransformationMat4(const Vec3 &p, const Mat3 &r) { return TransformationMat4(p, r, Vec3::One); }
 Mat4 TransformationMat4(const Vec3 &p, const Mat3 &r, const Vec3 &s) {
-	return {r.m[0][0] * s.x, r.m[1][0] * s.x, r.m[2][0] * s.x, r.m[0][1] * s.y, r.m[1][1] * s.y, r.m[2][1] * s.y, r.m[0][2] * s.z, r.m[1][2] * s.z,
-		r.m[2][2] * s.z, p.x, p.y, p.z};
+	return Mat4(r.m[0][0] * s.x, r.m[1][0] * s.x, r.m[2][0] * s.x, r.m[0][1] * s.y, r.m[1][1] * s.y, r.m[2][1] * s.y, r.m[0][2] * s.z, r.m[1][2] * s.z,
+		r.m[2][2] * s.z, p.x, p.y, p.z);
 }
 
 Mat4 TransformationMat4(const Vec3 &p, const Vec3 &e) { return TransformationMat4(p, e, Vec3::One); }
@@ -186,8 +186,8 @@ Mat4 TransformationMat4(const Vec3 &p, const Vec3 &e, const Vec3 &s) { return Tr
 Mat4 LerpAsOrthonormalBase(const Mat4 &a, const Mat4 &b, float k, bool fast) {
 	if (fast) {
 		Mat4 o;
-		for (auto c = 0; c < 3; ++c)
-			for (auto r = 0; r < 4; ++r)
+		for (size_t c = 0; c < 3; ++c)
+			for (size_t r = 0; r < 4; ++r)
 				o.m[c][r] = (b.m[c][r] - a.m[c][r]) * k + a.m[c][r];
 		return o;
 	}
@@ -225,7 +225,7 @@ void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation, Vec3 *scale) {
 	Vec3 scl(Len(vx), Len(vy), Len(vz));
 
 	// handle negative scale (permute X to preserve left-handedness)
-	auto left = Cross(vy, vz);
+	Vec3 left = Cross(vy, vz);
 	if (Dot(left, vx) < 0.f)
 		scl.x = -scl.x;
 
@@ -237,17 +237,17 @@ void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation, Vec3 *scale) {
 		if (scl.x)
 			SetX(*rotation, vx/scl.x);
 		else
-			SetX(*rotation, {1.f, 0.f, 0.f});
+			SetX(*rotation, Vec3(1.f, 0.f, 0.f));
 
 		if (scl.y)
 			SetY(*rotation, vy/scl.y);
 		else
-			SetY(*rotation, {0.f, 1.f, 0.f});
+			SetY(*rotation, Vec3(0.f, 1.f, 0.f));
 
 		if (scl.z)
 			SetZ(*rotation, vz/scl.z);
 		else
-			SetZ(*rotation, {0.f, 0.f, 1.f});
+			SetZ(*rotation, Vec3(0.f, 0.f, 1.f));
 	}
 }
 
@@ -277,7 +277,7 @@ bool Inverse(const Mat4 &m, Mat4 &I) {
 
 	det = 1.f / det;
 
-	for (auto i = 0; i < 12; i++)
+	for (size_t i = 0; i < 12; i++)
 		reinterpret_cast<float *>(I.m)[i] = inv[i] * det;
 
 	return true;
@@ -297,20 +297,21 @@ Mat4 InverseFast(const Mat4 &m) {
 
 //
 Mat4 Orthonormalize(const Mat4 &m) {
-	const auto T = GetT(m);
+	const Vec3& T = GetT(m);
 	return TransformationMat4(T, Orthonormalize(Mat3(m)));
 }
 
 Mat4 Normalize(const Mat4 &m) {
-	const auto T = GetT(m);
+	const Vec3& T = GetT(m);
 	return TransformationMat4(T, Normalize(Mat3(m)));
 }
 
 //
-Mat4 TranslationMat4(const Vec3 &t) { return {1, 0, 0, 0, 1, 0, 0, 0, 1, t.x, t.y, t.z}; }
+Mat4 TranslationMat4(const Vec3 &t) { return Mat4(1, 0, 0, 0, 1, 0, 0, 0, 1, t.x, t.y, t.z); }
 Mat4 RotationMat4(const Vec3 &e, RotationOrder r) { return Mat4(RotationMat3(e, r)); }
-Mat4 ScaleMat4(const Vec3 &s) { return {s.x, 0, 0, 0, s.y, 0, 0, 0, s.z, 0, 0, 0}; }
-Mat4 ScaleMat4(float s) { return {s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0}; }
+Mat4 ScaleMat4(const Vec3 &s) { return Mat4(s.x, 0, 0, 0, s.y, 0, 0, 0, s.z, 0, 0, 0); }
+Mat4 ScaleMat4(float s) { return Mat4(s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0);
+}
 
 //
 Mat4 Mat4LookAt(const Vec3 &p, const Vec3 &at, const Vec3 &s) { return TransformationMat4(p, Mat3LookAt(at - p), s); }
@@ -351,6 +352,21 @@ void Set(Mat4 &m, float m00, float m10, float m20, float m01, float m11, float m
 }
 
 //
+Mat4::Mat4() {
+	m[0][0] = 1;
+	m[1][0] = 0;
+	m[2][0] = 0;
+	m[0][1] = 0;
+	m[1][1] = 1;
+	m[2][1] = 0;
+	m[0][2] = 0;
+	m[1][2] = 0;
+	m[2][2] = 1;
+	m[0][3] = 0;
+	m[1][3] = 0;
+	m[2][3] = 0;
+}
+
 Mat4::Mat4(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22, float m03, float m13, float m23) {
 	Set(*this, m00, m10, m20, m01, m11, m21, m02, m12, m22, m03, m13, m23);
 }
@@ -372,7 +388,7 @@ Mat4::Mat4(const Mat3 &o) {
 
 Mat4::Mat4(const float *v) { Set(*this, v); }
 
-Mat4 Mat4FromFloat16Transposed(const float m[16]) { return {m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10], m[12], m[13], m[14]}; }
+Mat4 Mat4FromFloat16Transposed(const float m[16]) { return Mat4(m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10], m[12], m[13], m[14]); }
 
 void Mat4ToFloat16Transposed(const Mat4 &m, float t[16]) {
 	t[0] = m.m[0][0];

@@ -16,7 +16,7 @@ struct Mat4 {
 	static const Mat4 Zero;
 	static const Mat4 Identity;
 
-	Mat4() = default;
+	Mat4();
 	explicit Mat4(const float *v);
 	explicit Mat4(const Mat3 &m);
 	Mat4(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22, float m03, float m13, float m23);
@@ -48,7 +48,7 @@ Mat4 Orthonormalize(const Mat4 &m);
 Mat4 Normalize(const Mat4 &m);
 
 /// Decompose a transformation matrix into a position vector, a scale vector and a 3x3 rotation matrix.
-void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation = nullptr, Vec3 *scale = nullptr);
+void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation = NULL, Vec3 *scale = NULL);
 /// Decompose a transformation matrix into a position vector, a scale vector and a rotation vector.
 void Decompose(const Mat4 &m, Vec3 *position, Vec3 *rotation, Vec3 *scale, RotationOrder order = RO_Default);
 
@@ -127,6 +127,6 @@ Mat4 TransformationMat4(const Vec3 &p, const Mat3 &r, const Vec3 &s);
 Mat4 Mat4FromFloat16Transposed(const float m[16]);
 void Mat4ToFloat16Transposed(const Mat4 &m, float t[16]);
 
-Mat4 ComputeBillboardMat4(const Vec3 &pos, const Mat3 &camera, const Vec3 &scale = {1, 1, 1});
+Mat4 ComputeBillboardMat4(const Vec3 &pos, const Mat3 &camera, const Vec3 &scale = Vec3::One);
 
 } // namespace hg

@@ -14,7 +14,7 @@ template <class T> struct tVec2 {
 	static tVec2 Zero;
 	static tVec2 One;
 
-	tVec2<T>() = default;
+	tVec2<T>();
 	tVec2<T>(T x_, T y_) : x(x_), y(y_) {}
 	explicit tVec2<T>(const Vec3 &v);
 	explicit tVec2<T>(const Vec4 &v);
@@ -73,31 +73,31 @@ template <class T> struct tVec2 {
 	T x, y;
 };
 
-using Vec2 = tVec2<float>;
-using iVec2 = tVec2<int>;
+typedef tVec2<float> Vec2;
+typedef tVec2<int> iVec2;
 
-template <typename T> tVec2<T> tVec2<T>::Zero{0, 0};
-template <typename T> tVec2<T> tVec2<T>::One{1, 1};
+template <typename T> tVec2<T> tVec2<T>::Zero = tVec2<T>(0, 0);
+template <typename T> tVec2<T> tVec2<T>::One = tVec2<T>(1, 1);
 
 template <typename T> bool operator==(const tVec2<T> &a, const tVec2<T> &b) { return a.x == b.x && a.y == b.y; }
 template <typename T> bool operator!=(const tVec2<T> &a, const tVec2<T> &b) { return a.x != b.x || a.y != b.y; }
 
 template <typename T> bool AlmostEqual(const tVec2<T> &a, const tVec2<T> &b, float e) { return Abs(a.x - b.x) <= e && Abs(a.y - b.y) <= e; }
 
-template <typename T> tVec2<T> operator+(const tVec2<T> &a, const tVec2<T> &b) { return {a.x + b.x, a.y + b.y}; }
-template <typename T> tVec2<T> operator+(const tVec2<T> &v, const T k) { return {v.x + k, v.y + k}; }
-template <typename T> tVec2<T> operator-(const tVec2<T> &a, const tVec2<T> &b) { return {a.x - b.x, a.y - b.y}; }
-template <typename T> tVec2<T> operator-(const tVec2<T> &v, const T k) { return {v.x - k, v.y - k}; }
-template <typename T> tVec2<T> operator*(const tVec2<T> &a, const tVec2<T> &b) { return {a.x * b.x, a.y * b.y}; }
-template <typename T> tVec2<T> operator*(const tVec2<T> &v, const T k) { return {v.x * k, v.y * k}; }
+template <typename T> tVec2<T> operator+(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x + b.x, a.y + b.y);}
+template <typename T> tVec2<T> operator+(const tVec2<T> &v, const T k) { return tVec2<T>(v.x + k, v.y + k); }
+template <typename T> tVec2<T> operator-(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x - b.x, a.y - b.y); }
+template <typename T> tVec2<T> operator-(const tVec2<T> &v, const T k) { return tVec2<T>(v.x - k, v.y - k); }
+template <typename T> tVec2<T> operator*(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x * b.x, a.y * b.y); }
+template <typename T> tVec2<T> operator*(const tVec2<T> &v, const T k) { return tVec2<T>(v.x * k, v.y * k); }
 template <typename T> tVec2<T> operator*(const T k, const tVec2<T> &v) { return v * k; }
-template <typename T> tVec2<T> operator/(const tVec2<T> &a, const tVec2<T> &b) { return {a.x / b.x, a.y / b.y}; }
-template <typename T> tVec2<T> operator/(const tVec2<T> &v, const T k) { return {v.x / k, v.y / k}; }
+template <typename T> tVec2<T> operator/(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x / b.x, a.y / b.y); }
+template <typename T> tVec2<T> operator/(const tVec2<T> &v, const T k) { return tVec2<T>(v.x / k, v.y / k); }
 
 template <typename T> tVec2<T> operator*(const tVec2<T> &v, const Mat3 &m);
 
-template <typename T> tVec2<T> Min(const tVec2<T> &v, const tVec2<T> &m) { return {v.x < m.x ? v.x : m.x, v.y < m.y ? v.y : m.y}; }
-template <typename T> tVec2<T> Max(const tVec2<T> &v, const tVec2<T> &m) { return {v.x > m.x ? v.x : m.x, v.y > m.y ? v.y : m.y}; }
+template <typename T> tVec2<T> Min(const tVec2<T> &v, const tVec2<T> &m) { return tVec2<T>(v.x < m.x ? v.x : m.x, v.y < m.y ? v.y : m.y); }
+template <typename T> tVec2<T> Max(const tVec2<T> &v, const tVec2<T> &m) { return tVec2<T>(v.x > m.x ? v.x : m.x, v.y > m.y ? v.y : m.y); }
 
 /// Squared vector length.
 template <typename T> T Len2(const tVec2<T> &v) { return v.x * v.x + v.y * v.y; }
@@ -109,12 +109,12 @@ template <typename T> T Dot(const tVec2<T> &a, const tVec2<T> &b) { return a.x *
 
 /// Normalize vector.
 template <typename T> tVec2<T> Normalize(const tVec2<T> &v) {
-	const auto l = Len(v);
+	const float l = Len(v);
 	return l > 0.f ? v / l : v;
 }
 
 /// Reversed vector.
-template <typename T> tVec2<T> Reverse(const tVec2<T> &v) { return {-v.x, -v.y}; }
+template <typename T> tVec2<T> Reverse(const tVec2<T> &v) { return tVec2<T>(-v.x, -v.y); }
 
 /// Vector squared distance.
 template <typename T> T Dist2(const tVec2<T> &a, const tVec2<T> &b) { return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y); }

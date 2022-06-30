@@ -4,13 +4,16 @@
 
 namespace hg {
 
-static time_ns last{0}, dt{1}, clock{0};
+static time_ns last = 0;
+static time_ns dt = 1;
+static time_ns clock = 0;
+
 static int clock_scale = 1024;
 
 void reset_clock() { last = time_now(); }
 
 time_ns tick_clock() {
-	const auto now = time_now();
+	const hg::time_ns now = time_now();
 	dt = last ? ((now - last) * clock_scale) >> 10 : 1;
 	last = now;
 	clock += dt;

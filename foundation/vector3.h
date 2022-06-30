@@ -18,7 +18,7 @@ struct Vec3 {
 	static const Vec3 Left, Right, Up, Down, Front, Back;
 	static const Vec3 Min, Max;
 
-	Vec3() = default;
+	Vec3();
 	Vec3(float x, float y, float z);
 
 	explicit Vec3(const tVec2<int> &v);
@@ -85,15 +85,15 @@ struct Vec3 {
 inline bool operator==(const Vec3 &a, const Vec3 &b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
 inline bool operator!=(const Vec3 &a, const Vec3 &b) { return a.x != b.x || a.y != b.y || a.z != b.z; }
 
-inline Vec3 operator+(const Vec3 &a, const Vec3 &b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }
-inline Vec3 operator+(const Vec3 &a, const float v) { return {a.x + v, a.y + v, a.z + v}; }
-inline Vec3 operator-(const Vec3 &a, const Vec3 &b) { return {a.x - b.x, a.y - b.y, a.z - b.z}; }
-inline Vec3 operator-(const Vec3 &a, const float v) { return {a.x - v, a.y - v, a.z - v}; }
-inline Vec3 operator*(const Vec3 &a, const Vec3 &b) { return {a.x * b.x, a.y * b.y, a.z * b.z}; }
-inline Vec3 operator*(const Vec3 &a, const float v) { return {a.x * v, a.y * v, a.z * v}; }
+inline Vec3 operator+(const Vec3 &a, const Vec3 &b) { return Vec3(a.x + b.x, a.y + b.y, a.z + b.z);}
+inline Vec3 operator+(const Vec3 &a, const float v) { return Vec3(a.x + v, a.y + v, a.z + v); }
+inline Vec3 operator-(const Vec3 &a, const Vec3 &b) { return Vec3(a.x - b.x, a.y - b.y, a.z - b.z); }
+inline Vec3 operator-(const Vec3 &a, const float v) { return Vec3(a.x - v, a.y - v, a.z - v); }
+inline Vec3 operator*(const Vec3 &a, const Vec3 &b) { return Vec3(a.x * b.x, a.y * b.y, a.z * b.z); }
+inline Vec3 operator*(const Vec3 &a, const float v) { return Vec3(a.x * v, a.y * v, a.z * v); }
 inline Vec3 operator*(const float v, const Vec3 &a) { return a * v; }
-inline Vec3 operator/(const Vec3 &a, const Vec3 &b) { return {a.x / b.x, a.y / b.y, a.z / b.z}; }
-inline Vec3 operator/(const Vec3 &a, const float v) { return {a.x / v, a.y / v, a.z / v}; }
+inline Vec3 operator/(const Vec3 &a, const Vec3 &b) { return Vec3(a.x / b.x, a.y / b.y, a.z / b.z); }
+inline Vec3 operator/(const Vec3 &a, const float v) { return Vec3(a.x / v, a.y / v, a.z / v); }
 
 /// Return a random vector.
 Vec3 RandomVec3(float min = -1.f, float max = 1.f);
@@ -129,12 +129,12 @@ Vec3 Max(const Vec3 &a, const Vec3 &b);
 /// Returns the dot product of two vectors.
 inline float Dot(const Vec3 &a, const Vec3 &b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 /// Returns the cross product of two vectors.
-inline Vec3 Cross(const Vec3 &a, const Vec3 &b) { return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}; }
+inline Vec3 Cross(const Vec3 &a, const Vec3 &b) { return Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);}
 
 /// Returns the provided vector pointing in the opposite direction.
-inline Vec3 Reverse(const Vec3 &v) { return {-v.x, -v.y, -v.z}; }
+inline Vec3 Reverse(const Vec3 &v) { return Vec3(-v.x, -v.y, -v.z); }
 /// Returns the inverse of a vector.
-inline Vec3 Inverse(const Vec3 &v) { return {1.f / v.x, 1.f / v.y, 1.f / v.z}; }
+inline Vec3 Inverse(const Vec3 &v) { return Vec3(1.f / v.x, 1.f / v.y, 1.f / v.z); }
 
 /// Normalize a vector.
 Vec3 Normalize(const Vec3 &v);
@@ -179,6 +179,6 @@ Vec3 Deg3(float x, float y, float z);
 Vec3 Rad3(float x, float y, float z);
 
 /// Return a vector from integer value in the [0;255] range.
-inline Vec3 Vec3I(int x, int y, int z) { return {float(x) / 255.f, float(y) / 255.f, float(z) / 255.f}; }
+inline Vec3 Vec3I(int x, int y, int z) { return Vec3(float(x) / 255.f, float(y) / 255.f, float(z) / 255.f); }
 
 } // namespace hg
