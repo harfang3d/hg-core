@@ -26,29 +26,6 @@ jobs:
         run: cmake --build . --config Release
         working-directory: build/cmake
 
-  static_analysis:
-     runs-on: ubuntu-latest
-     permissions:
-       security-events: write
-       actions: read
-       contents: read
-#     needs: build_linux
-     steps:
-       - uses: actions/checkout@v3
-       - uses: actions/setup-python@v4
-         with:
-            python-version: '3.9'
-            
-       - name: prepare
-         run: pip install flawfinder
-       - name: analyse
-         run: python -m flawfinder --minlevel=0 --sarif -- foundation > results.sarif     
-       - name: upload results
-         uses: github/codeql-action/upload-sarif@v2
-         with:
-           sarif_file: results.sarif
-           category: flawfinder
-
   build_windows:
     runs-on: windows-latest
 
