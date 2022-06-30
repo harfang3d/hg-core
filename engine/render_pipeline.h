@@ -2,7 +2,6 @@
 
 #pragma once
 
-//#include "engine/meta.h"
 #include "engine/picture.h"
 #include "engine/resource_cache.h"
 
@@ -17,9 +16,6 @@
 #include "foundation/rw_interface.h"
 #include "foundation/time.h"
 #include "foundation/vector2.h"
-
-//#include <bgfx/bgfx.h>
-//#include <bimg/bimg.h>
 
 #include <deque>
 #include <functional>
@@ -37,6 +33,7 @@ class Data;
 
 static constexpr int max_skinned_model_matrix_count = 32; // make sure this stays in sync with bgfx_shader.sh
 
+/*
 using bgfxMatrix3 = std::array<float, 9>;
 using bgfxMatrix4 = std::array<float, 16>;
 
@@ -50,6 +47,7 @@ bgfxMatrix4 to_bgfx(const Mat44 &m);
 			bgfx::destroy(V);                                                                                                                                  \
 		V = BGFX_INVALID_HANDLE;                                                                                                                               \
 	}
+*/
 
 //
 struct ViewState {

@@ -5,8 +5,11 @@ string(STRIP ${HG_VERSION} HG_VERSION)
 
 #
 project(harfang_core VERSION ${HG_VERSION} LANGUAGES CXX C HOMEPAGE_URL "https://harfang3d.com")
+set(CMAKE_CXX_STANDARD 98)
 
-set(CMAKE_CXX_STANDARD 98) # very conservative target
+if(WIN32)
+	add_compile_definitions(GLFW_WIN32=1)
+endif()
 
 # fmt::format
 add_subdirectory(extern/fmt)
@@ -86,6 +89,14 @@ add_library(foundation STATIC ${FOUNDATION_SRCS} ${FOUNDATION_HDRS})
 target_include_directories(foundation PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/utf8-cpp)
 target_link_libraries(foundation PUBLIC fmt)
 
+# GLFW
+set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
+set(GLFW_INSTALL OFF CACHE INTERNAL "" FORCE)
+
+add_subdirectory(extern/glfw-3.3.7)
+
 # engine
 set(ENGINE_HDRS
 engine/assets.h
@@ -95,6 +106,7 @@ engine/geometry.h
 engine/model_builder.h
 engine/picture.h
 engine/render_pipeline.h
+engine/resource_cache.h
 )
 
 set(ENGINE_SRCS
@@ -107,10 +119,14 @@ engine/picture.cpp
 )
 
 add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
-target_link_libraries(engine PUBLIC foundation fmt)
-target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/stb)
+target_link_libraries(engine PUBLIC foundation fmt glfw)
+target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb)
 
 # unit tests
 add_executable(test_foundation tests/test_foundation.cpp)
 target_link_libraries(test_foundation PUBLIC foundation)
 target_include_directories(test_foundation PUBLIC extern/acutest)
+
+add_executable(test_render_pipeline tests/test_render_pipeline.cpp)
+target_link_libraries(test_render_pipeline PUBLIC engine)
+target_include_directories(test_render_pipeline PUBLIC extern/acutest)
