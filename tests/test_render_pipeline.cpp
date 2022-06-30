@@ -9,9 +9,9 @@
 #include <GLFW/glfw3.h>
 
 #include "foundation/matrix44.h"
+#include "foundation/projection.h"
 #include "foundation/time.h"
 #include "foundation/vector3.h"
-#include "foundation/projection.h"
 
 #include "engine/fps_controller.h"
 
@@ -82,6 +82,65 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 }
 
 //
+struct VertexLayout {
+	VertexLayout() : attrib_count(0) {}
+
+	struct Attrib {
+		Attrib() : format(SG_VERTEXFORMAT_INVALID), offset(0) {}
+
+		sg_vertex_format format;
+		size_t offset;
+	};
+
+	void AddAttrib(size_t idx, sg_vertex_format format, size_t offset = 0);
+
+	void FillLayoutDesc(sg_layout_desc &desc) const;
+
+private:
+	Attrib attrib[SG_MAX_VERTEX_ATTRIBUTES];
+	size_t attrib_count;
+};
+
+void VertexLayout::AddAttrib(size_t idx, sg_vertex_format format, size_t offset) {
+	attrib[idx].format = format;
+	attrib[idx].offset = offset;
+}
+
+void VertexLayout::FillLayoutDesc(sg_layout_desc &layout) const {
+	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+		layout.attrs[i].buffer_index = 0;
+		layout.attrs[i].format = attrib[i].format;
+		layout.attrs[i].offset = attrib[i].offset;
+	}
+}
+
+//
+sg_pipeline MakePipeline(const VertexLayout &vtx_layout, sg_shader shader) {
+	sg_pipeline_desc pipeline_desc;
+
+	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
+	pipeline_desc.shader = shader;
+	vtx_layout.FillLayoutDesc(pipeline_desc.layout);
+
+	return sg_make_pipeline(&pipeline_desc);
+}
+
+//
+sg_buffer MakeVertexBuffer(const void *data, size_t size) {
+	sg_buffer_desc buffer_desc;
+
+	memset(&buffer_desc, 0, sizeof(sg_buffer_desc));
+	buffer_desc.data.ptr = data;
+	buffer_desc.data.size = size;
+
+	return sg_make_buffer(&buffer_desc);
+}
+
+//
+
+
+
+//
 void test_init() {
 	GLFWwindow *win = RenderInit(640, 480, "Sokol Triangle GLFW");
 
@@ -89,11 +148,7 @@ void test_init() {
 
 	// a vertex buffer (position/color)
 	const float vertices[] = {0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f};
-
-	sg_buffer_desc buffer_desc;
-	memset(&buffer_desc, 0, sizeof(sg_buffer_desc));
-	buffer_desc.data = SG_RANGE(vertices);
-	sg_buffer vbuf = sg_make_buffer(&buffer_desc);
+	sg_buffer vbuf = MakeVertexBuffer(vertices, sizeof(vertices));
 
 	// a shader
 	sg_shader_desc shader_desc;
@@ -128,14 +183,11 @@ void test_init() {
 	sg_shader shd = sg_make_shader(&shader_desc);
 
 	// a pipeline state object (default render states are fine for triangle)
-	sg_pipeline_desc pipeline_desc;
+	VertexLayout vtx_layout;
+	vtx_layout.AddAttrib(0, SG_VERTEXFORMAT_FLOAT3);
+	vtx_layout.AddAttrib(1, SG_VERTEXFORMAT_FLOAT4);
 
-	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
-	pipeline_desc.shader = shd;
-	pipeline_desc.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;
-	pipeline_desc.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT4;
-
-	sg_pipeline pip = sg_make_pipeline(&pipeline_desc);
+	sg_pipeline pip = MakePipeline(vtx_layout, shd);
 
 	// resource bindings
 	sg_bindings bind;
@@ -172,19 +224,21 @@ void test_init() {
 		//
 		int cur_width, cur_height;
 		glfwGetFramebufferSize(win, &cur_width, &cur_height);
-		sg_begin_default_pass(&pass_action, cur_width, cur_height);
-		sg_apply_pipeline(pip);
-		sg_apply_bindings(&bind);
 
+		sg_begin_default_pass(&pass_action, cur_width, cur_height);
+
+		sg_apply_pipeline(pip);
+		sg_apply_bindings(bind);
 		{
 			sg_range range;
 			range.ptr = &vs_params;
 			range.size = sizeof(vs_params);
 			sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, range);
 		}
-
 		sg_draw(0, 3, 1);
+
 		sg_end_pass();
+
 		sg_commit();
 		glfwSwapBuffers(win);
 		glfwPollEvents();
