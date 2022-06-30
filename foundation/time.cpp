@@ -3,6 +3,7 @@
 #include "foundation/time.h"
 
 #include <limits>
+#include <climits>
 
 #if _WIN32
 #include <windows.h>
@@ -12,7 +13,7 @@
 
 namespace hg {
 
-time_ns time_undefined = std::numeric_limits<time_ns>::min();
+time_ns time_undefined = LONG_MIN;
 
 #if _WIN32
 time_ns time_now() { 
