@@ -1,0 +1,44 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: prepare
+        run: |
+          mkdir -p build/cmake
+      - name: configure
+        run: cmake ../.. -DCMAKE_BUILD_TYPE=Release
+        working-directory: build/cmake
+      - name: build
+        run: cmake --build . --config Release
+        working-directory: build/cmake
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: prepare
+        run: |
+          mkdir build\cmake
+      - name: configure
+        run: cmake ..\.. -DCMAKE_BUILD_TYPE=Release
+        working-directory: build/cmake
+      - name: build
+        run: cmake --build . --config Release
+        working-directory: build/cmake
