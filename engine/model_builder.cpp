@@ -1,11 +1,11 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
 #include "engine/model_builder.h"
+
 #include "foundation/log.h"
 
-#include "meshoptimizer.h"
-
 #include <fmt/format.h>
+#include <meshoptimizer.h>
 
 namespace hg {
 
@@ -196,16 +196,15 @@ Model ModelBuilder::MakeModel(const VertexLayout &layout, ModelOptimisationLevel
 			const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
 			Model &model = *reinterpret_cast<Model *>(userdata);
 
-			// FIXME
-			/*
-			// TODO [EJ] this is always 32 bit and very wasteful
-			const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))),
-	BGFX_BUFFER_INDEX32); const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
+			DisplayList list;
+			// list.index_buffer;
+			list.vertex_buffer = MakeVertexBuffer(vtx_data.data(), vtx_data.size());
+			// const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))), BGFX_BUFFER_INDEX32);
+			// const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
 
 			model.bounds.push_back(minmax);
-			model.lists.push_back({idx_hnd, vtx_hnd, bones_table});
+			model.lists.push_back(list);
 			model.mats.push_back(mat);
-			*/
 		},
 		&model, optimisation_level, verbose);
 

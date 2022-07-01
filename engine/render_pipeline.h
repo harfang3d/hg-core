@@ -218,12 +218,21 @@ private:
 	size_t stride;
 };
 
-struct List {};
-
-struct Model {
-	std::vector<List> lists; // display lists
-	std::vector<Mat4> bind_pose; // per-bone
+struct DisplayList {
+	sg_buffer index_buffer;
+	sg_buffer vertex_buffer;
+	std::vector<uint16_t> bones_table;
 };
+
+struct Model { // 96B (+heap)
+	std::vector<MinMax> bounds; // minmax/list
+	std::vector<DisplayList> lists;
+	std::vector<uint16_t> mats; // material/list
+	std::vector<Mat4> bind_pose; // bind pose matrices
+};
+
+//
+sg_buffer MakeVertexBuffer(const void *data, size_t size);
 
 #if 0
 

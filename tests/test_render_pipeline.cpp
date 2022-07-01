@@ -99,17 +99,6 @@ sg_pipeline MakePipeline(const VertexLayout &vtx_layout, sg_shader shader) {
 }
 
 //
-sg_buffer MakeVertexBuffer(const void *data, size_t size) {
-	sg_buffer_desc buffer_desc;
-
-	memset(&buffer_desc, 0, sizeof(sg_buffer_desc));
-	buffer_desc.data.ptr = data;
-	buffer_desc.data.size = size;
-
-	return sg_make_buffer(&buffer_desc);
-}
-
-//
 void test_init() {
 	GLFWwindow *win = RenderInit(640, 480, "Sokol Triangle GLFW");
 

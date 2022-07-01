@@ -151,6 +151,18 @@ void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const float *in,
 
 void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
 
+//
+sg_buffer MakeVertexBuffer(const void *data, size_t size) {
+	sg_buffer_desc buffer_desc;
+
+	memset(&buffer_desc, 0, sizeof(sg_buffer_desc));
+	buffer_desc.data.ptr = data;
+	buffer_desc.data.size = size;
+
+	return sg_make_buffer(&buffer_desc);
+}
+
+
 #if 0
 
 //
