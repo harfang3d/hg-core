@@ -33,18 +33,18 @@ std::vector<DirEntry> ListDir(const std::string &path, int mask) {
 #if _WIN32
 	WIN32_FIND_DATAW data;
 
-	auto wfind_path = utf8_to_wchar(PathJoin({path, "*.*"}));
-	auto hFind = FindFirstFileW(wfind_path.c_str(), &data);
+	std::wstring wfind_path = utf8_to_wchar(PathJoin({path, "*.*"}));
+	HANDLE hFind = FindFirstFileW(wfind_path.c_str(), &data);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return entries;
 
 	do {
-		auto name = wchar_to_utf8(data.cFileName);
+		std::string name = wchar_to_utf8(data.cFileName);
 		if (name == "." || name == "..")
 			continue;
 
-		const auto type = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DE_Dir : DE_File;
-		const auto last_modified = time_to_ns(((uint64_t(data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime) * 100);
+		const DirEntryType type = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DE_Dir : DE_File;
+		const int64_t last_modified = time_to_ns(((uint64_t(data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime) * 100);
 
 		LARGE_INTEGER size;
 		size.HighPart = data.nFileSizeHigh;
@@ -56,17 +56,17 @@ std::vector<DirEntry> ListDir(const std::string &path, int mask) {
 
 	FindClose(hFind);
 #else /* POSIX */
-	auto dir = opendir(path);
+	DIR* dir = opendir(path.c_str());
 	if (!dir)
 		return entries;
 
-	while (auto ent = readdir(dir)) {
+	while (struct dirent* ent = readdir(dir)) {
 		if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 			continue;
 
 		DirEntry entry;
 
-		int type{};
+		int type = 0;
 
 		if (ent->d_type == DT_DIR)
 			type = DE_Dir;
@@ -76,8 +76,10 @@ std::vector<DirEntry> ListDir(const std::string &path, int mask) {
 			type = DE_Link;
 
 		// TODO: stat() missing infos
-		if (mask & type)
-			entries.push_back({type, ent->d_name});
+		if (mask & type) {
+			DirEntry e = {type, ent->d_name, 0, 0};
+			entries.push_back(e);
+		}
 	}
 
 	closedir(dir);
@@ -89,34 +91,48 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask) {
 	std::vector<DirEntry> entries = ListDir(path, mask);
 #if _WIN32
 	WIN32_FIND_DATAW data;
-	auto wfind_path = utf8_to_wchar(PathJoin({path, "*"}));
-	auto hFind = FindFirstFileW(wfind_path.c_str(), &data);
+	std::wstring wfind_path = utf8_to_wchar(PathJoin({path, "*"}));
+	HANDLE hFind = FindFirstFileW(wfind_path.c_str(), &data);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return entries;
 	do {
-		auto name = wchar_to_utf8(data.cFileName);
+		std::string name = wchar_to_utf8(data.cFileName);
 		if (name == "." || name == "..")
 			continue;
 		if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			const auto sub_entries = ListDirRecursive(PathJoin({path, name}).c_str(), mask);
-			for (const auto &i : sub_entries)
-				entries.push_back({i.type, PathJoin({name, i.name})});
+			const std::vector<DirEntry> sub_entries = ListDirRecursive(PathJoin({path, name}).c_str(), mask);
+			std::vector<std::string> tmp(2);
+			for (std::vector<DirEntry>::const_iterator i = sub_entries.begin(); i != sub_entries.end(); ++i) {
+				tmp[0] = name;
+				tmp[1] = i->name;
+				DirEntry e = {i->type, PathJoin(tmp), 0, 0};
+				
+				entries.push_back(e);
+			}
 		}
 	} while (FindNextFileW(hFind, &data));
 
 	FindClose(hFind);
 #else /* POSIX */
-	auto dir = opendir(path);
+	DIR *dir = opendir(path.c_str());
 	if (!dir)
 		return entries;
 
-	while (auto ent = readdir(dir)) {
+	std::vector<std::string> tmp(2);
+	while (struct dirent *ent = readdir(dir)) {
 		if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 			continue;
 		if (ent->d_type == DT_DIR) {
-			const auto sub_entries = ListDirRecursive(PathJoin({path, ent->d_name}).c_str(), mask);
-			for (const auto &i : sub_entries)
-				entries.push_back({i.type, PathJoin({ent->d_name, i.name})});
+			tmp[0] = path;
+			tmp[1] = ent->d_name;
+			const std::vector<DirEntry> sub_entries = ListDirRecursive(PathJoin(tmp).c_str(), mask);
+			for (std::vector<DirEntry>::const_iterator i = sub_entries.begin(); i != sub_entries.end(); ++i) {
+				tmp[0] = ent->d_name;
+				tmp[1] = i->name;
+				DirEntry e = {i->type, PathJoin(tmp), 0, 0};
+
+				entries.push_back(e);
+			}
 		}
 	}
 
@@ -127,16 +143,19 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask) {
 
 //
 size_t GetDirSize(const std::string &path) {
-	const auto entries = hg::ListDirRecursive(path);
+	const std::vector<DirEntry> entries = hg::ListDirRecursive(path);
 
 	size_t size = 0;
-	for (const auto &e : entries)
-		if (e.type == hg::DE_File) {
-			const auto fpath = hg::PathJoin({path, e.name});
-			const auto finfo = hg::GetFileInfo(fpath.c_str());
+	std::vector<std::string> tmp(2);
+	tmp[0] = path;
+	for (std::vector<DirEntry>::const_iterator e = entries.begin(); e != entries.end(); ++e) {
+		if (e->type == hg::DE_File) {
+			tmp[1] = e->name;
+			const std::string fpath = hg::PathJoin(tmp);
+			const FileInfo finfo = hg::GetFileInfo(fpath.c_str());
 			size += finfo.size;
 		}
-
+	}
 	return size;
 }
 
@@ -148,7 +167,7 @@ bool MkDir(const std::string &path, int permissions, bool verbose) {
 		warn(fmt::format("MkDir({}) failed with error: {}", path, OSGetLastError()));
 	return res;
 #else
-	return mkdir(path, permissions) == 0;
+	return mkdir(path.c_str(), permissions) == 0;
 #endif
 }
 
@@ -164,13 +183,13 @@ bool RmDir(const std::string &path, bool verbose) {
 }
 
 bool MkTree(const std::string &path, int permissions, bool verbose) {
-	const auto dirs = split(CleanPath(path), "/");
+	const std::vector<std::string> dirs = split(CleanPath(path), "/");
 
 	std::string p;
-	for (auto &dir : dirs) {
-		p += dir + "/";
+	for (std::vector<std::string>::const_iterator dir = dirs.begin(); dir != dirs.end(); ++dir) {
+		p += *dir + "/";
 
-		if (ends_with(dir.c_str(), ":"))
+		if (ends_with(dir->c_str(), ":"))
 			continue; // skip c:
 
 		if (Exists(p.c_str()))
@@ -224,7 +243,7 @@ bool IsDir(const std::string &path) {
 		return false;
 #else
 	struct stat info;
-	if (stat(path, &info) != 0)
+	if (stat(path.c_str(), &info) != 0)
 		return false;
 #endif
 
@@ -237,12 +256,16 @@ bool CopyDir(const std::string &src, const std::string &dst) {
 	if (!IsDir(src))
 		return false;
 
-	const auto entries = ListDir(src);
-	for (auto &e : entries) {
-		if (e.type & DE_File) {
-			const auto file_src = PathJoin({src, e.name});
-			const auto file_dst = PathJoin({dst, e.name});
-			if (!CopyFile(file_src.c_str(), file_dst.c_str()))
+	std::vector<std::string> tmp(2);
+	const std::vector<DirEntry> entries = ListDir(src);
+	for (std::vector<DirEntry>::const_iterator e = entries.begin(); e != entries.end(); ++e) {
+		if (e->type & DE_File) {
+			tmp[1] = e->name;
+			tmp[0] = src;
+			const std::string file_src = PathJoin(tmp);
+			tmp[0] = dst;
+			const std::string file_dst = PathJoin(tmp);
+			if (!CopyFile(file_src, file_dst))
 				return false;
 		}
 	}
@@ -253,19 +276,26 @@ bool CopyDirRecursive(const std::string &src, const std::string &dst) {
 	if (!IsDir(src) || !IsDir(dst))
 		return false;
 
-	const auto entries = ListDir(src);
-	for (auto &e : entries) {
-		if (e.type & DE_Dir) {
-			const auto src_path = PathJoin({src, e.name});
-			const auto dst_path = PathJoin({dst, e.name});
+	std::vector<std::string> tmp(2);
+	const std::vector<DirEntry> entries = ListDir(src);
+	for (std::vector<DirEntry>::const_iterator e = entries.begin(); e != entries.end(); ++e) {
+		if (e->type & DE_Dir) {
+			tmp[1] = e->name;
+			tmp[0] = src;
+			const std::string src_path = PathJoin(tmp);
+			tmp[0] = dst;
+			const std::string dst_path = PathJoin(tmp);
 			if (!MkDir(dst_path.c_str()))
 				return false;
 			if (!CopyDirRecursive(src_path.c_str(), dst_path.c_str()))
 				return false;
-		} else if (e.type & DE_File) {
-			const auto file_src = PathJoin({src, e.name});
-			const auto file_dst = PathJoin({dst, e.name});
-			if (!CopyFile(file_src.c_str(), file_dst.c_str()))
+		} else if (e->type & DE_File) {
+			tmp[1] = e->name;
+			tmp[0] = src;
+			const std::string file_src = PathJoin(tmp);
+			tmp[0] = dst;
+			const std::string file_dst = PathJoin(tmp);
+			if (!CopyFile(file_src, file_dst))
 				return false;
 		}
 	}
@@ -278,7 +308,7 @@ bool Exists(const std::string &path) {
 	return _wstat(utf8_to_wchar(path).data(), &info) == 0;
 #else
 	struct stat info;
-	return stat(path, &info) == 0;
+	return stat(path.c_str(), &info) == 0;
 #endif
 }
 
