@@ -136,7 +136,7 @@ void Rewind(File file) {
 
 //
 FileInfo GetFileInfo(const std::string &path) {
-#if WIN32
+#if _WIN32
 	struct _stat info;
 	const auto wpath = utf8_to_wchar(path);
 	if (_wstat(wpath.c_str(), &info) != 0)
@@ -151,7 +151,7 @@ FileInfo GetFileInfo(const std::string &path) {
 
 //
 bool IsFile(const std::string &path) {
-#if WIN32
+#if _WIN32
 	struct _stat info;
 	const auto wpath = utf8_to_wchar(path);
 	if (_wstat(wpath.c_str(), &info) != 0)

@@ -218,7 +218,7 @@ bool RmTree(const std::string &path, bool verbose) {
 }
 
 bool IsDir(const std::string &path) {
-#if WIN32
+#if _WIN32
 	struct _stat info;
 	if (_wstat(utf8_to_wchar(path).c_str(), &info) != 0)
 		return false;
