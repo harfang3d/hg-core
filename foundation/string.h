@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "foundation/cext.h"
+
 #include <cstddef>
 #include <string>
 #include <vector>

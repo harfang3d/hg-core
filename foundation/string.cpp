@@ -12,7 +12,7 @@
 namespace hg {
 
 std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count) {
-	auto l = str.length();
+	size_t l = str.length();
 
 	if (from < 0)
 		from += l; // start from right of std::string
@@ -35,7 +35,7 @@ std::string left(const std::string &str, size_t count) { return slice(str, 0, co
 std::string right(const std::string &str, size_t count) { return slice(str, -(ptrdiff_t)count, 0); }
 
 size_t replace_all(std::string &value, const std::string &what, const std::string &by) {
-	auto what_len = what.length(), by_len = by.length();
+	size_t what_len = what.length(), by_len = by.length();
 
 	int count = 0;
 	for (std::string::size_type i = 0; (i = value.find(what, i)) != std::string::npos;) {
@@ -53,23 +53,31 @@ std::vector<std::string> split(const std::string &value, const std::string &sepa
 	std::vector<std::string> elements; // keep here to help NVRO
 	elements.reserve(8);
 
-	auto value_length = value.length();
-	auto separator_length = separator.length();
-	auto trim_length = trim.length();
+	size_t value_length = value.length();
+	size_t separator_length = separator.length();
+	size_t trim_length = trim.length();
 
 	for (std::string::size_type s = 0, i = 0; i != std::string::npos;) {
 		i = value.find(separator, i);
 
 		if (i == std::string::npos) {
-			auto v = value.substr(s);
+			std::string v = value.substr(s);
 			if (!v.empty())
+#if __cplusplus >= 201103L
 				elements.push_back(std::move(v));
+#else
+				elements.push_back(v);
+#endif
 			break;
 		} else {
 			std::string element(value.substr(s, i - s));
 			if (trim_length)
 				replace_all(element, trim, "");
+#if __cplusplus >= 201103L
 			elements.push_back(std::move(element));
+#else
+			elements.push_back(element);
+#endif
 		}
 
 		i += separator_length;
@@ -82,29 +90,29 @@ std::vector<std::string> split(const std::string &value, const std::string &sepa
 }
 
 std::string trim(const std::string &str, const std::string &pattern) {
-	const auto str_begin = str.find_first_not_of(pattern);
+	const size_t str_begin = str.find_first_not_of(pattern);
 	if (str_begin == std::string::npos)
 		return ""; // no content
 
-	const auto str_end = str.find_last_not_of(pattern);
-	const auto str_range = str_end - str_begin + 1;
+	const size_t str_end = str.find_last_not_of(pattern);
+	const size_t str_range = str_end - str_begin + 1;
 
 	return str.substr(str_begin, str_range);
 }
 
 std::string reduce(const std::string &str, const std::string &fill, const std::string &pattern) {
 	// trim first
-	auto result = trim(str, pattern);
+	std::string result = trim(str, pattern);
 
 	// replace sub ranges
-	auto begin_space = result.find_first_of(pattern);
+	size_t begin_space = result.find_first_of(pattern);
 	while (begin_space != std::string::npos) {
-		const auto endSpace = result.find_first_not_of(pattern, begin_space);
-		const auto range = endSpace - begin_space;
+		const size_t endSpace = result.find_first_not_of(pattern, begin_space);
+		const size_t range = endSpace - begin_space;
 
 		result.replace(begin_space, range, fill);
 
-		const auto newStart = begin_space + fill.length();
+		const size_t newStart = begin_space + fill.length();
 		begin_space = result.find_first_of(pattern, newStart);
 	}
 
@@ -113,7 +121,7 @@ std::string reduce(const std::string &str, const std::string &fill, const std::s
 
 //
 std::string lstrip(const std::string &str, const std::string &pattern) {
-	const auto str_begin = str.find_first_not_of(pattern);
+	const size_t str_begin = str.find_first_not_of(pattern);
 
 	if (str_begin == std::string::npos)
 		return str;
@@ -122,7 +130,7 @@ std::string lstrip(const std::string &str, const std::string &pattern) {
 }
 
 std::string rstrip(const std::string &str, const std::string &pattern) {
-	const auto str_end = str.find_last_not_of(pattern);
+	const size_t str_end = str.find_last_not_of(pattern);
 
 	if (str_end == std::string::npos)
 		return str;
@@ -142,7 +150,7 @@ std::string lstrip_space(const std::string &str) {
 }
 
 std::string rstrip_space(const std::string &str) {
-	auto i = str.size();
+	size_t i = str.size();
 	for (; i > 0; --i)
 		if (!std::isspace(str[i - 1]))
 			break;
@@ -170,13 +178,13 @@ std::u32string utf8_to_utf32(const std::string &str) {
 
 std::string wchar_to_utf8(const std::wstring &str) {
 	std::string out;
-	utf8::utf16to8(std::begin(str), std::end(str), std::back_inserter(out));
+	utf8::utf16to8(str.begin(), str.end(), std::back_inserter(out));
 	return out;
 }
 
 std::wstring utf8_to_wchar(const std::string &str) {
 	std::wstring out;
-	utf8::utf8to16(std::begin(str), std::end(str), std::back_inserter(out));
+	utf8::utf8to16(str.begin(), str.end(), std::back_inserter(out));
 	return out;
 }
 
@@ -189,11 +197,13 @@ std::wstring ansi_to_wchar(const std::string &str) {
 	size_t len = std::mbsrtowcs(nullptr, &src, 0, &state);
 
 	if (static_cast<size_t>(-1) != len) {
-		std::unique_ptr<wchar_t[]> buff(new wchar_t[len + 1]);
-		len = std::mbsrtowcs(buff.get(), &src, len, &state);
+		wchar_t *buff = new wchar_t[len + 1];
+		len = std::mbsrtowcs(buff, &src, len, &state);
 
 		if (static_cast<size_t>(-1) != len)
-			ret.assign(buff.get(), len);
+			ret.assign(buff, len);
+
+		delete [] buff;
 	}
 	return ret;
 }
@@ -201,9 +211,9 @@ std::wstring ansi_to_wchar(const std::string &str) {
 std::string ansi_to_utf8(const std::string &string) { return wchar_to_utf8(ansi_to_wchar(string)); }
 
 //
+static inline char _tolower_impl(char c) { return c >= 65 && c <= 90 ? c + (97 - 65) : c; }
 void tolower_inplace(std::string &str, size_t start, size_t end) {
-	transform(std::begin(str) + start, end ? std::begin(str) + end : std::end(str), std::begin(str) + start,
-		[](char c) -> char { return c >= 65 && c <= 90 ? c + (97 - 65) : c; });
+	transform(str.begin() + start, end ? str.begin() + end : str.end(), str.begin() + start, _tolower_impl);
 }
 
 std::string tolower(std::string str, size_t start, size_t end) {
@@ -211,9 +221,9 @@ std::string tolower(std::string str, size_t start, size_t end) {
 	return str;
 }
 
+static inline char _toupper_impl(char c) { return c >= 97 && c <= 122 ? c - (97 - 65) : c; }
 void toupper_inplace(std::string &str, size_t start, size_t end) {
-	transform(std::begin(str) + start, end ? std::begin(str) + end : std::end(str), std::begin(str) + start,
-		[](char c) -> char { return c >= 97 && c <= 122 ? c - (97 - 65) : c; });
+	transform(str.begin() + start, end ? str.begin() + end : str.end(), str.begin() + start, _toupper_impl);
 }
 
 std::string toupper(std::string str, size_t start, size_t end) {
@@ -238,7 +248,8 @@ std::string word_wrap(const std::string &str, int width, int lead, char lead_cha
 	const std::string lead_str(lead, lead_char);
 
 	int n = width;
-	for (auto &c : str) {
+	for (size_t i = 0; i < str.length(); i++) {
+		const char c = str[i];
 		if (c == '\n') {
 			o += c;
 			o += lead_str;
@@ -263,9 +274,9 @@ std::string word_wrap(const std::string &str, int width, int lead, char lead_cha
 
 std::string name_to_path(std::string name) {
 	name = tolower(name);
-	static const std::vector<std::string> blacklist = {" ", "\\", "/", "!", "@"};
-	for (const auto &s : blacklist)
-		replace_all(name, s, "-");
+	static const std::string blacklist[5] = {" ", "\\", "/", "!", "@"};
+	for (size_t i=0; i<5; i++)
+		replace_all(name, blacklist[i], "-");
 	return name;
 }
 

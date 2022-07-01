@@ -10,8 +10,8 @@
 namespace hg {
 
 static inline Plane NormalizePlane(const Plane &p) {
-	const auto l = sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
-	return {p.x / l, p.y / l, p.z / l, p.w / l};
+	const float l = sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
+	return p / l;
 }
 
 Frustum MakeFrustum(const Mat44 &projection) {
@@ -30,7 +30,7 @@ Frustum MakeFrustum(const Mat44 &projection) {
 Frustum MakeFrustum(const Mat44 &projection, const Mat4 &m) { return TransformFrustum(MakeFrustum(projection), m); }
 
 Frustum TransformFrustum(const Frustum &frustum, const Mat4 &m) {
-	const auto iMt = Transpose(Mat44(InverseFast(m)));
+	const Mat44 iMt = Transpose(Mat44(InverseFast(m)));
 
 	Frustum out;
 	for (size_t i = 0; i < FP_Count; i++) {
@@ -72,12 +72,12 @@ Visibility TestVisibility(const Frustum &planes, const MinMax &minmax) {
 	const Vec3 center_x2 = minmax.mn + minmax.mx;
 	const Vec3 extend_x2 = minmax.mx - minmax.mn;
 
-	auto vis = V_Inside;
+	Visibility vis = V_Inside;
 	for (uint32_t n = 0; n < FP_Count; ++n) {
 		// complete demonstration at: https://fgiesen.wordpress.com/2010/10/17/view-frustum-culling/
 		const Plane &plane = planes[n];
 
-		const float d = Dot({plane.x, plane.y, plane.z}, center_x2);
+		const float d = Dot(Vec3(plane.x, plane.y, plane.z), center_x2);
 		const float r = Dot(Abs(Vec3(plane.x, plane.y, plane.z)), extend_x2); // "where there's one, there's many" would take care of that Abs()
 
 		const float plane_d_x2 = -plane.w * 2.f;

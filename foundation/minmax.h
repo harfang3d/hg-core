@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "foundation/cext.h"
 #include "foundation/axis.h"
 #include "foundation/vector3.h"
 

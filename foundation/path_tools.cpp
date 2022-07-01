@@ -10,12 +10,12 @@
 #include <unistd.h>
 #endif
 
+#include "foundation/cext.h"
 #include "foundation/assert.h"
 #include "foundation/path_tools.h"
 #include "foundation/string.h"
 
-#include <array>
-#include <cstring>
+#include <string.h>
 #include <fmt/format.h>
 
 namespace hg {
@@ -84,17 +84,18 @@ std::string PathJoin(const std::vector<std::string> &elements) {
 		}
 	}
 #endif
-	for (auto &element : elements)
-		if (!element.empty())
-			stripped_elements.push_back(rstrip(lstrip(element, "/"), "/"));
+	for (std::vector<std::string>::const_iterator element = elements.begin(); element != elements.end(); ++element ) {
+		if (!element->empty())
+			stripped_elements.push_back(rstrip(lstrip(*element, "/"), "/"));
+	}
 	return CleanPath(join(stripped_elements.begin(), stripped_elements.end(), "/"));
 }
 
 //
 std::string CutFilePath(const std::string &path) {
 	if (path.empty())
-		return {};
-	for (auto n = path.length() - 1; n > 0; --n)
+		return std::string();
+	for (size_t n = path.length() - 1; n > 0; --n)
 		if (path[n] == '\\' || path[n] == '/')
 			return slice(path, n + 1);
 	return path;
@@ -102,8 +103,8 @@ std::string CutFilePath(const std::string &path) {
 
 std::string CutFileExtension(const std::string &path) {
 	if (path.empty())
-		return {};
-	for (auto n = path.length() - 1; n > 0; --n) {
+		return std::string();
+	for (size_t n = path.length() - 1; n > 0; --n) {
 		if (path[n] == '.')
 			return slice(path, 0, n);
 		if (path[n] == '\\' || path[n] == '/' || path[n] == ':')
@@ -114,8 +115,8 @@ std::string CutFileExtension(const std::string &path) {
 
 std::string CutFileName(const std::string &path) {
 	if (path.empty())
-		return {};
-	for (auto n = path.length() - 1; n > 0; --n)
+		return std::string();
+	for (size_t n = path.length() - 1; n > 0; --n)
 		if (path[n] == '\\' || path[n] == '/' || path[n] == ':')
 			return slice(path, 0, n + 1);
 	return path;
@@ -124,11 +125,11 @@ std::string CutFileName(const std::string &path) {
 //
 std::string GetFileExtension(const std::string &path) {
 	if (path.empty())
-		return {};
-	for (auto n = path.length() - 1; n > 0; --n)
+		return std::string();
+	for (size_t n = path.length() - 1; n > 0; --n)
 		if (path[n] == '.')
 			return slice(path, n + 1);
-	return {};
+	return std::string();
 }
 
 bool HasFileExtension(const std::string &path) { return !GetFileExtension(path).empty(); }
@@ -138,7 +139,7 @@ std::string SwapFileExtension(const std::string &path, const std::string &ext) {
 
 //
 std::string FactorizePath(const std::string &path) {
-	auto dirs = split(path, "/");
+	std::vector<std::string> dirs = split(path, "/");
 	if (dirs.size() < 2) {
 		return dirs.empty() ? path : dirs[0];
 	}
@@ -148,7 +149,7 @@ std::string FactorizePath(const std::string &path) {
 	while (dirs.size() > 1 && !factorized) {
 		factorized = true;
 
-		auto i = dirs.begin();
+		std::vector<std::string>::iterator i = dirs.begin();
 		for (; i != dirs.end() - 1; ++i)
 			if (*i != ".." && *(i + 1) == "..") {
 				factorized = false;

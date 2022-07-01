@@ -11,7 +11,7 @@ struct MinMax;
 
 /// Oriented bounding box
 struct OBB {
-	OBB() = default;
+	OBB(){};
 	OBB(const Vec3 &pos_, const Vec3 &scl_) : pos(pos_), scl(scl_), rot(Mat3::Identity) {}
 	OBB(const Vec3 &pos_, const Vec3 &scl_, const Mat3 &rot_) : pos(pos_), scl(scl_), rot(rot_) {}
 

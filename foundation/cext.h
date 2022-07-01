@@ -174,8 +174,9 @@ template <typename C, typename V> int index_of(const C &c, const V &v, int if_mi
 } // namespace hg
 
 #if __cplusplus < 201103L
-namespace std {
 typedef uint32_t char32_t;
+
+namespace std {
 typedef basic_string<char32_t, char_traits<char32_t>, allocator<char32_t> > u32string;
 }
 #endif
