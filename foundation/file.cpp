@@ -28,8 +28,8 @@ static generational_vector_list<FILE *> files;
 static FILE *_Open(const std::string &path, const std::string &mode, bool silent = false) {
 	FILE *file = nullptr;
 #if _WIN32
-	auto wpath = utf8_to_wchar(path);
-	auto wmode = utf8_to_wchar(mode);
+	std::wstring wpath = utf8_to_wchar(path);
+	std::wstring wmode = utf8_to_wchar(mode);
 
 	const auto err = _wfopen_s(&file, wpath.data(), wmode.data());
 
@@ -39,55 +39,21 @@ static FILE *_Open(const std::string &path, const std::string &mode, bool silent
 		warn(fmt::format("Failed to open file '{}' mode '{}', error code {} ({})", path, mode, err, errmsg));
 	}
 #else
-	file = fopen(path, mode);
+	file = fopen(path.c_str(), mode.c_str());
 #endif
 	return file;
 }
 
-File Open(const std::string &path, bool silent) {
-	auto *f = _Open(path, "rb", silent);
-
-	if (f)
-		return {files.add_ref(f)};
-
-	return {invalid_gen_ref};
+static inline File from_posix_FILE(FILE* f) {
+	File out = {f ? files.add_ref(f) : invalid_gen_ref};
+	return out;
 }
 
-File OpenText(const std::string &path, bool silent) {
-	auto *f = _Open(path, "r", silent);
-
-	if (f)
-		return {files.add_ref(f)};
-
-	return {invalid_gen_ref};
-}
-
-File OpenWrite(const std::string &path) {
-	auto *f = _Open(path, "wb");
-
-	if (f)
-		return {files.add_ref(f)};
-
-	return {invalid_gen_ref};
-}
-
-File OpenWriteText(const std::string &path) {
-	auto *f = _Open(path, "w");
-
-	if (f)
-		return {files.add_ref(f)};
-
-	return {invalid_gen_ref};
-}
-
-File OpenAppendText(const std::string &path) {
-	auto *f = _Open(path, "a");
-
-	if (f)
-		return {files.add_ref(f)};
-
-	return {invalid_gen_ref};
-}
+File Open(const std::string &path, bool silent) { return from_posix_FILE(_Open(path, "rb", silent)); }
+File OpenText(const std::string &path, bool silent) { return from_posix_FILE(_Open(path, "r", silent)); }
+File OpenWrite(const std::string &path) { return from_posix_FILE(_Open(path, "wb")); }
+File OpenWriteText(const std::string &path) { return from_posix_FILE(_Open(path, "w")); }
+File OpenAppendText(const std::string &path) { return from_posix_FILE(_Open(path, "a")); }
 
 bool Close(File file) {
 	if (!files.is_valid(file.ref))
@@ -104,10 +70,10 @@ bool IsEOF(File file) { return files.is_valid(file.ref) ? feof(files[file.ref.id
 size_t GetSize(File file) {
 	if (!files.is_valid(file.ref))
 		return 0;
-	const auto s = files[file.ref.idx];
-	const auto t = ftell(s);
+	FILE* s = files[file.ref.idx];
+	long t = ftell(s);
 	fseek(s, 0, SEEK_END);
-	const auto size = ftell(s);
+	long size = ftell(s);
 	fseek(s, t, SEEK_SET);
 	return size;
 }
@@ -136,29 +102,32 @@ void Rewind(File file) {
 
 //
 FileInfo GetFileInfo(const std::string &path) {
+	static const FileInfo not_found = {false, 0, 0, 0};
 #if _WIN32
 	struct _stat info;
-	const auto wpath = utf8_to_wchar(path);
-	if (_wstat(wpath.c_str(), &info) != 0)
-		return {false, 0, 0, 0};
+	const std::wstring wpath = utf8_to_wchar(path);
+	if (_wstat(wpath.c_str(), &info) != 0) {
+		return not_found;
+	}
 #else
 	struct stat info;
-	if (stat(path, &info) != 0)
-		return {false, 0, 0, 0};
+	if (stat(path.c_str(), &info) != 0)
+		return not_found;
 #endif
-	return {info.st_mode & S_IFREG ? true : false, size_t(info.st_size), time_ns(info.st_ctime), time_ns(info.st_mtime)};
+	FileInfo out = {info.st_mode & S_IFREG ? true : false, size_t(info.st_size), time_ns(info.st_ctime), time_ns(info.st_mtime)};
+	return out;
 }
 
 //
 bool IsFile(const std::string &path) {
 #if _WIN32
 	struct _stat info;
-	const auto wpath = utf8_to_wchar(path);
+	const std::wstring wpath = utf8_to_wchar(path);
 	if (_wstat(wpath.c_str(), &info) != 0)
 		return false;
 #else
 	struct stat info;
-	if (stat(path, &info) != 0)
+	if (stat(path.c_str(), &info) != 0)
 		return false;
 #endif
 
@@ -169,18 +138,18 @@ bool IsFile(const std::string &path) {
 
 bool Unlink(const std::string &path) {
 #if _WIN32
-	const auto wpath = utf8_to_wchar(path);
+	const std::wstring wpath = utf8_to_wchar(path);
 	return DeleteFileW(wpath.c_str()) == TRUE;
 #else
-	return unlink(path) == 0;
+	return unlink(path.c_str()) == 0;
 #endif
 }
 
 //
 bool CopyFile(const std::string &src, const std::string &dst) {
 #if _WIN32
-	const auto wsrc = utf8_to_wchar(src);
-	const auto wdst = utf8_to_wchar(dst);
+	const std::wstring wsrc = utf8_to_wchar(src);
+	const std::wstring wdst = utf8_to_wchar(dst);
 	return ::CopyFileW(wsrc.c_str(), wdst.c_str(), FALSE) ? true : false;
 #else
 	ScopedFile in(Open(src));
@@ -192,7 +161,7 @@ bool CopyFile(const std::string &src, const std::string &dst) {
 	std::vector<char> data(65536); // 64KB copy
 
 	while (!IsEOF(in)) {
-		const auto size = Read(in, data.data(), data.size());
+		const size_t size = Read(in, data.data(), data.size());
 		if (size == 0)
 			break;
 		if (Write(out, data.data(), size) != size)
@@ -219,7 +188,7 @@ Data FileToData(const std::string &path, bool silent) {
 //
 std::string FileToString(const std::string &path, bool silent) {
 	ScopedFile in(Open(path, silent));
-	const auto size = GetSize(in);
+	const size_t size = GetSize(in);
 
 	std::string str(size, 0);
 	Read(in, &str[0], size);
@@ -234,15 +203,15 @@ bool StringToFile(const std::string &path, const std::string &str) {
 
 //
 std::string ReadString(File file) {
-	const auto len = Read<uint32_t>(file);
+	const size_t len = Read<uint32_t>(file);
 	std::string s(len, 0);
 	Read(file, &s[0], len);
 	return s;
 }
 
 bool WriteString(File file, const std::string &v) {
-	const auto len = v.length();
-	return Write(file, numeric_cast<uint32_t>(len)) && Write(file, v.data(), len) == len;
+	const size_t len = v.length();
+	return Write(file, uint32_t(len)) && Write(file, v.data(), len) == len;
 }
 
 bool WriteStringAsText(File file, const std::string &v) { return Write(file, v.data(), v.length()) == v.length(); }
