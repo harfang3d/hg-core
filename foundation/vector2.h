@@ -14,7 +14,7 @@ template <class T> struct tVec2 {
 	static tVec2 Zero;
 	static tVec2 One;
 
-	tVec2<T>();
+	tVec2<T>() {}
 	tVec2<T>(T x_, T y_) : x(x_), y(y_) {}
 	explicit tVec2<T>(const Vec3 &v);
 	explicit tVec2<T>(const Vec4 &v);

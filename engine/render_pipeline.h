@@ -161,26 +161,67 @@ std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromFile(const st
 std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromAssets(const std::string &name, bool &success, bool silent = false);
 
 //
+enum VertexAttributeSemantic { VAS_Position, VAS_Normal, VAS_Tangent, VAS_Bitangent, VAS_Color, VAS_BoneIndices, VAS_BoneWeights, VAS_UV0, VAS_UV1, VAS_Count };
+
+/*
+	layout.AddAttrib(0, SG_VERTEXFORMAT_FLOAT3); // 0: position as float3
+
+	if (!geo.normal.empty())
+		layout.AddAttrib(1, SG_VERTEXFORMAT_UBYTE4N); // 1: normal as UByte4N
+
+	if (!geo.tangent.empty()) {
+		layout.AddAttrib(2, SG_VERTEXFORMAT_UBYTE4N); // 2: tangent as UByte4N
+		layout.AddAttrib(3, SG_VERTEXFORMAT_UBYTE4N); // 3: bitangent as UByte4N
+	}
+
+	if (!geo.color.empty())
+		layout.AddAttrib(4, SG_VERTEXFORMAT_UBYTE4N); // 4: color as UByte4N
+
+	if (!geo.skin.empty()) {
+		layout.AddAttrib(5, SG_VERTEXFORMAT_UBYTE4N); // 5: bone indices as UByte4N
+		layout.AddAttrib(6, SG_VERTEXFORMAT_UBYTE4N); // 6: bone weights as UByte4N
+	}
+
+	for (auto i = 0; i < geo.uv.size(); ++i)
+		if (!geo.uv[i].empty())
+			layout.AddAttrib(7 + i, SG_VERTEXFORMAT_FLOAT2);
+*/
+
 struct VertexLayout {
-	VertexLayout() : attrib_count(0) {}
+	VertexLayout() : attrib_count(0), stride(0) {}
 
 	struct Attrib {
-		Attrib() : format(SG_VERTEXFORMAT_INVALID), offset(0) {}
+		Attrib() : format(SG_VERTEXFORMAT_INVALID), semantic(VAS_Count), offset(0) {}
 
 		sg_vertex_format format;
+		VertexAttributeSemantic semantic;
+
 		size_t offset;
 	};
 
-	void AddAttrib(size_t idx, sg_vertex_format format, size_t offset = 0);
+	void AddAttrib(VertexAttributeSemantic semantic, sg_vertex_format format);
+	void End();
 
 	void FillLayoutDesc(sg_layout_desc &desc) const;
+	size_t GetStride() const { return stride; }
+
+	bool Has(VertexAttributeSemantic semantic) const { return semantic_to_attrib[semantic] != -1; }
+
+	void PackVertex(VertexAttributeSemantic semantic, const float *in, size_t in_count, int8_t *out) const;
+	void PackVertex(VertexAttributeSemantic semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
 
 private:
 	Attrib attrib[SG_MAX_VERTEX_ATTRIBUTES];
 	size_t attrib_count;
+
+	int8_t semantic_to_attrib[VAS_Count];
+	size_t stride;
 };
 
+struct List {};
+
 struct Model {
+	std::vector<List> lists; // display lists
 	std::vector<Mat4> bind_pose; // per-bone
 };
 

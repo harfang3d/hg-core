@@ -1,8 +1,7 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
-#include "foundation/math.h"
-
 #include "foundation/vector2.h"
+#include "foundation/math.h"
 #include "foundation/matrix3.h"
 #include "foundation/vector3.h"
 #include "foundation/vector4.h"

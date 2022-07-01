@@ -104,10 +104,14 @@ add_subdirectory(extern/glfw-3.3.7)
 add_library(simpleson STATIC extern/simpleson/json.cpp extern/simpleson/json.h)
 target_include_directories(foundation PUBLIC extern/simpleson)
 
+# meshoptimizer
+add_subdirectory(engine/extern/meshoptimizer)
+
 # engine
 set(ENGINE_HDRS
 engine/assets.h
 engine/assets_rw_interface.h
+engine/create_model.h
 engine/file_format.h
 engine/fps_controller.h
 engine/geometry.h
@@ -122,9 +126,10 @@ engine/extern/mikktspace/mikktspace.h
 set(ENGINE_SRCS
 #engine/assets.cpp
 #engine/assets_rw_interface.cpp
+engine/create_model.cpp
 engine/fps_controller.cpp
 engine/geometry.cpp
-#engine/model_builder.cpp
+engine/model_builder.cpp
 engine/picture.cpp
 engine/render_pipeline.cpp
 engine/vertex.cpp
@@ -132,7 +137,7 @@ engine/extern/mikktspace/mikktspace.c
 )
 
 add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
-target_link_libraries(engine PUBLIC foundation fmt glfw simpleson)
+target_link_libraries(engine PUBLIC foundation fmt glfw simpleson meshoptimizer)
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb engine/extern/mikktspace)
 
 # unit tests

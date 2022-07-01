@@ -512,27 +512,27 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 static VertexLayout GetGeometryVertexDeclaration(const Geometry &geo) {
 	VertexLayout layout;
 
-	layout.AddAttrib(0, SG_VERTEXFORMAT_FLOAT3); // 0: position as float3
+	layout.AddAttrib(VAS_Position, SG_VERTEXFORMAT_FLOAT3);
 
 	if (!geo.normal.empty())
-		layout.AddAttrib(1, SG_VERTEXFORMAT_UBYTE4N); // 1: normal as UByte4N
+		layout.AddAttrib(VAS_Normal, SG_VERTEXFORMAT_UBYTE4N);
 
 	if (!geo.tangent.empty()) {
-		layout.AddAttrib(2, SG_VERTEXFORMAT_UBYTE4N); // 2: tangent as UByte4N
-		layout.AddAttrib(3, SG_VERTEXFORMAT_UBYTE4N); // 3: bitangent as UByte4N
+		layout.AddAttrib(VAS_Tangent, SG_VERTEXFORMAT_UBYTE4N);
+		layout.AddAttrib(VAS_Bitangent, SG_VERTEXFORMAT_UBYTE4N);
 	}
 
 	if (!geo.color.empty())
-		layout.AddAttrib(4, SG_VERTEXFORMAT_UBYTE4N); // 4: color as UByte4N
+		layout.AddAttrib(VAS_Color, SG_VERTEXFORMAT_UBYTE4N);
 
 	if (!geo.skin.empty()) {
-		layout.AddAttrib(5, SG_VERTEXFORMAT_UBYTE4N); // 5: bone indices as UByte4N
-		layout.AddAttrib(6, SG_VERTEXFORMAT_UBYTE4N); // 6: bone weights as UByte4N
+		layout.AddAttrib(VAS_BoneIndices, SG_VERTEXFORMAT_UBYTE4N);
+		layout.AddAttrib(VAS_BoneWeights, SG_VERTEXFORMAT_UBYTE4N);
 	}
 
-	for (auto i = 0; i < geo.uv.size(); ++i)
+	for (auto i = 0; i < geo.uv.size() && i < 2; ++i)
 		if (!geo.uv[i].empty())
-			layout.AddAttrib(7 + i, SG_VERTEXFORMAT_FLOAT2);
+			layout.AddAttrib(VertexAttributeSemantic(VAS_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
 
 	return layout;
 }
@@ -666,7 +666,7 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, Model
 	ModelBuilder builder;
 	GeometryToModelBuilder(geo, builder);
 
-	auto on_end_list = [](const VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<uint8_t> &vtx,
+	auto on_end_list = [](const VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<int8_t> &vtx,
 						   const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
 		const auto &file = *reinterpret_cast<File *>(userdata);
 

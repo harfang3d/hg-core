@@ -10,6 +10,7 @@
 
 #include "engine/fps_controller.h"
 #include "engine/render_pipeline.h"
+#include "engine/create_model.h"
 #include "engine/geometry.h"
 
 #define SOKOL_GFX_IMPL
@@ -109,8 +110,6 @@ sg_buffer MakeVertexBuffer(const void *data, size_t size) {
 }
 
 //
-
-//
 void test_init() {
 	GLFWwindow *win = RenderInit(640, 480, "Sokol Triangle GLFW");
 
@@ -123,16 +122,16 @@ void test_init() {
 	// a shader
 	sg_shader_desc shader_desc;
 
-	typedef struct {
+	struct shader_vs_params {
 		Mat44 mvp;
-	} shader_vs_params;
+	};
 
 	memset(&shader_desc, 0, sizeof(sg_shader_desc));
 
 	shader_desc.vs.source = "#version 330\n"
 							"uniform mat4 mvp;\n"
-							"layout(location=0) in vec4 position;\n"
-							"layout(location=1) in vec4 color0;\n"
+							"layout(location = 0) in vec4 position;\n"
+							"layout(location = 1) in vec4 color0;\n"
 							"out vec4 color;\n"
 							"void main() {\n"
 							"	gl_Position = mvp * position;\n"
@@ -153,11 +152,14 @@ void test_init() {
 	sg_shader shd = sg_make_shader(&shader_desc);
 
 	// a pipeline state object (default render states are fine for triangle)
-	VertexLayout vtx_layout;
-	vtx_layout.AddAttrib(0, SG_VERTEXFORMAT_FLOAT3);
-	vtx_layout.AddAttrib(1, SG_VERTEXFORMAT_FLOAT4);
+	VertexLayout layout;
+	layout.AddAttrib(VAS_Position, SG_VERTEXFORMAT_FLOAT3);
+	layout.AddAttrib(VAS_Color, SG_VERTEXFORMAT_FLOAT4);
+	layout.End();
 
-	sg_pipeline pip = MakePipeline(vtx_layout, shd);
+	sg_pipeline pip = MakePipeline(layout, shd);
+
+	Model cube_model = CreateCubeModel(layout, 1.f, 1.f, 1.f);
 
 	// resource bindings
 	sg_bindings bind;

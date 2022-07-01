@@ -1,13 +1,11 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
 #include "engine/model_builder.h"
-#include "foundation/format.h"
 #include "foundation/log.h"
-#include "foundation/profiler.h"
 
 #include "meshoptimizer.h"
 
-#include <bgfx/bgfx.h>
+#include <fmt/format.h>
 
 namespace hg {
 
@@ -111,11 +109,8 @@ void ModelBuilder::AddBoneIdx(uint16_t idx) {
 }
 
 //
-void ModelBuilder::Make(
-	const bgfx::VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level, bool verbose) const {
-	ProfilerPerfSection section("ModelBuilder::Make");
-
-	const auto stride = decl.getStride();
+void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level, bool verbose) const {
+	const auto stride = decl.GetStride();
 
 	Model model;
 	model.lists.reserve(lists.size());
@@ -127,51 +122,31 @@ void ModelBuilder::Make(
 
 		MinMax minmax = {Vec3::Max, Vec3::Min};
 
-		std::vector<uint8_t> vtx_data(list.vtx.size() * stride);
-		auto p_vtx = vtx_data.data();
+		std::vector<int8_t> vtx_data(list.vtx.size() * stride);
+		int8_t *p_vtx = vtx_data.data();
 
 		for (const auto &vtx : list.vtx) {
-			const float v[4] = {vtx.pos.x, vtx.pos.y, vtx.pos.z};
-			bgfx::vertexPack(v, false, bgfx::Attrib::Position, decl, p_vtx, 0);
+			decl.PackVertex(VAS_Position, &vtx.pos.x, 3, p_vtx);
 
-			if (decl.has(bgfx::Attrib::Normal)) {
-				const float v[4] = {vtx.normal.x, vtx.normal.y, vtx.normal.z};
-				bgfx::vertexPack(v, true, bgfx::Attrib::Normal, decl, p_vtx, 0);
-			}
+			if (decl.Has(VAS_Normal))
+				decl.PackVertex(VAS_Normal, &vtx.normal.x, 3, p_vtx);
+			if (decl.Has(VAS_Tangent))
+				decl.PackVertex(VAS_Tangent, &vtx.tangent.x, 3, p_vtx);
+			if (decl.Has(VAS_Bitangent))
+				decl.PackVertex(VAS_Bitangent, &vtx.binormal.x, 3, p_vtx);
 
-			if (decl.has(bgfx::Attrib::Tangent)) {
-				const float v[4] = {vtx.tangent.x, vtx.tangent.y, vtx.tangent.z};
-				bgfx::vertexPack(v, true, bgfx::Attrib::Tangent, decl, p_vtx, 0);
-			}
+			if (decl.Has(VAS_Color))
+				decl.PackVertex(VAS_Color, &vtx.color0.r, 4, p_vtx);
 
-			if (decl.has(bgfx::Attrib::Bitangent)) {
-				const float v[4] = {vtx.binormal.x, vtx.binormal.y, vtx.binormal.z};
-				bgfx::vertexPack(v, true, bgfx::Attrib::Bitangent, decl, p_vtx, 0);
-			}
+			if (decl.Has(VAS_UV0))
+				decl.PackVertex(VAS_UV0, &vtx.uv0.x, 2, p_vtx);
+			if (decl.Has(VAS_UV1))
+				decl.PackVertex(VAS_UV1, &vtx.uv1.x, 2, p_vtx);
 
-			for (auto i = 0; i < 4; ++i) {
-				const auto attr = bgfx::Attrib::Enum(bgfx::Attrib::Color0 + i);
-				if (decl.has(attr)) {
-					const float v[4] = {(&vtx.color0)[i].r, (&vtx.color0)[i].g, (&vtx.color0)[i].b};
-					bgfx::vertexPack(v, true, attr, decl, p_vtx, 0);
-				}
-			}
-
-			for (auto i = 0; i < 8; ++i) {
-				const auto attr = bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + i);
-				if (decl.has(attr)) {
-					const float v[4] = {(&vtx.uv0)[i].x, (&vtx.uv0)[i].y};
-					bgfx::vertexPack(v, true, attr, decl, p_vtx, 0);
-				}
-			}
-
-			if (decl.has(bgfx::Attrib::Indices)) {
-				const float v[4] = {float(vtx.index[0]), float(vtx.index[1]), float(vtx.index[2]), float(vtx.index[3])};
-				bgfx::vertexPack(v, false, bgfx::Attrib::Indices, decl, p_vtx, 0);
-			}
-
-			if (decl.has(bgfx::Attrib::Weight))
-				bgfx::vertexPack(vtx.weight, true, bgfx::Attrib::Weight, decl, p_vtx, 0);
+			if (decl.Has(VAS_BoneIndices))
+				decl.PackVertex(VAS_BoneIndices, vtx.index, 4, p_vtx);
+			if (decl.Has(VAS_BoneWeights))
+				decl.PackVertex(VAS_BoneWeights, vtx.weight, 4, p_vtx);
 
 			minmax.mn = Min(minmax.mn, vtx.pos); // update list minmax
 			minmax.mx = Max(minmax.mx, vtx.pos);
@@ -181,7 +156,7 @@ void ModelBuilder::Make(
 		}
 
 		if (verbose)
-			debug(format("End list %1 indexes, %2 vertices, material index %3").arg(list.idx.size()).arg(list.vtx.size()).arg(list.mat).c_str());
+			debug(fmt::format("End list {} indexes, {} vertices, material index {}", list.idx.size(), list.vtx.size(), list.mat));
 
 		//
 		if (optimisation_level == MOL_None) {
@@ -196,7 +171,7 @@ void ModelBuilder::Make(
 			meshopt_optimizeVertexCache(idx_a.data(), list.idx.data(), list.idx.size(), list.vtx.size());
 			meshopt_optimizeOverdraw(idx_b.data(), idx_a.data(), list.idx.size(), reinterpret_cast<float *>(vtx_data.data()), list.vtx.size(), stride, 1.05f);
 
-			std::vector<uint8_t> vtx(list.vtx.size() * stride);
+			std::vector<int8_t> vtx(list.vtx.size() * stride);
 			meshopt_optimizeVertexFetch(vtx.data(), idx_b.data(), idx_b.size(), vtx_data.data(), list.vtx.size(), stride);
 
 			on_end_list(decl, minmax, idx_b, vtx, list.bones_table, list.mat, userdata);
@@ -207,29 +182,30 @@ void ModelBuilder::Make(
 		if (vtx_count == 0)
 			debug("No vertex in geometry!");
 		else
-			debug(format("Vertex hash collision: %1 (%2%)").arg(hash_collision).arg(hash_collision * 100 / vtx_count).c_str());
+			debug(fmt::format("Vertex hash collision: {} ({}%)", hash_collision, hash_collision * 100 / vtx_count));
 	}
 }
 
-Model ModelBuilder::MakeModel(const bgfx::VertexLayout &decl, ModelOptimisationLevel optimisation_level, bool verbose) const {
-	ProfilerPerfSection section("ModelBuilder::MakeModel");
-
+Model ModelBuilder::MakeModel(const VertexLayout &layout, ModelOptimisationLevel optimisation_level, bool verbose) const {
 	Model model;
 	model.lists.reserve(16);
 
 	Make(
-		decl,
-		[](const bgfx::VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<uint8_t> &vtx_data,
+		layout,
+		[](const VertexLayout &layout, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
 			const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
 			Model &model = *reinterpret_cast<Model *>(userdata);
 
+			// FIXME
+			/*
 			// TODO [EJ] this is always 32 bit and very wasteful
-			const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))), BGFX_BUFFER_INDEX32);
-			const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
+			const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))),
+	BGFX_BUFFER_INDEX32); const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
 
 			model.bounds.push_back(minmax);
 			model.lists.push_back({idx_hnd, vtx_hnd, bones_table});
 			model.mats.push_back(mat);
+			*/
 		},
 		&model, optimisation_level, verbose);
 

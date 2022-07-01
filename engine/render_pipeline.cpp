@@ -55,12 +55,13 @@ ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear,
 	return {frustum, proj, view};
 }
 
-//l
+// l
 Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Vec3 &scale) {
 	return ComputeBillboardMat4(pos, Transpose(GetRotationMatrix(view_state.view)), scale);
 }
 
 //
+/*
 uint32_t ComputeSortKey(float view_depth) {
 	view_depth += 100.f; // sort up to 100 meters behind view origin
 	if (view_depth < 0.f)
@@ -70,21 +71,85 @@ uint32_t ComputeSortKey(float view_depth) {
 
 uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view) { return ComputeSortKey((view * T).z); }
 uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &model) { return ComputeSortKey(((view * model) * T).z); }
+*/
 
 //
-void VertexLayout::AddAttrib(size_t idx, sg_vertex_format format, size_t offset) {
-	attrib[idx].format = format;
-	attrib[idx].offset = offset;
+void VertexLayout::AddAttrib(VertexAttributeSemantic semantic, sg_vertex_format format) {
+	assert(attrib_count < SG_MAX_VERTEX_ATTRIBUTES);
+	Attrib &attr = attrib[attrib_count];
+	attr.semantic = semantic;
+	attr.format = format;
+	++attrib_count;
 }
 
-void VertexLayout::FillLayoutDesc(sg_layout_desc &layout) const {
+static size_t vertex_format_size[_SG_VERTEXFORMAT_NUM] = {0, 4, 8, 12, 16, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 4};
+
+void VertexLayout::End() {
+	for (size_t i = 0; i < VAS_Count; ++i)
+		semantic_to_attrib[i] = -1;
+
+	stride = 0;
+
 	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		layout.attrs[i].buffer_index = 0;
-		layout.attrs[i].format = attrib[i].format;
-		layout.attrs[i].offset = attrib[i].offset;
+		Attrib &attr = attrib[i];
+
+		if (attr.format == SG_VERTEXFORMAT_INVALID)
+			continue;
+
+		semantic_to_attrib[attr.semantic] = i;
+
+		attr.offset = stride;
+		stride += vertex_format_size[attr.format];
 	}
 }
 
+void VertexLayout::FillLayoutDesc(sg_layout_desc &layout) const {
+	assert(stride != 0);
+
+	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+		const Attrib &attr = attrib[i];
+		sg_vertex_attr_desc &layout_attr = layout.attrs[i];
+
+		layout_attr.buffer_index = 0;
+		layout_attr.format = attr.format;
+		layout_attr.offset = attr.offset;
+	}
+}
+
+void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const float *in, size_t in_count, int8_t *out) const {
+	assert(semantic_to_attrib[semantic] != -1);
+
+	const Attrib &attr = attrib[semantic_to_attrib[semantic]];
+
+	if (attr.format == SG_VERTEXFORMAT_FLOAT ||
+		attr.format == SG_VERTEXFORMAT_FLOAT2 ||
+		attr.format == SG_VERTEXFORMAT_FLOAT3 ||
+		attr.format == SG_VERTEXFORMAT_FLOAT4) {
+
+		size_t out_count;
+		if (attr.format == SG_VERTEXFORMAT_FLOAT)
+			out_count = 1;
+		else if (attr.format == SG_VERTEXFORMAT_FLOAT2)
+			out_count = 2;
+		else if (attr.format == SG_VERTEXFORMAT_FLOAT3)
+			out_count = 3;
+		else if (attr.format == SG_VERTEXFORMAT_FLOAT4)
+			out_count = 4;
+
+		if (in_count > out_count)
+			in_count = out_count;
+
+		float *f_out = reinterpret_cast<float *>(out + attr.offset);
+
+		size_t i = 0;
+		for ( ; i < in_count; ++i)
+			f_out[i] = in[i];
+		for ( ; i < out_count; ++i) // zero pad missing input
+			f_out[i] = 0.f;
+	}
+}
+
+void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
 
 #if 0
 

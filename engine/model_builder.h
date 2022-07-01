@@ -38,7 +38,7 @@ struct ModelBuilder {
 
 	void Clear();
 
-	using end_list_cb = void (*)(const VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<uint8_t> &vtx_data,
+	using end_list_cb = void (*)(const VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
 		const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata);
 
 	void Make(
