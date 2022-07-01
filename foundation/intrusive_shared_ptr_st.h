@@ -8,20 +8,12 @@ template <typename T> struct intrusive_shared_ptr_st {
 	inline intrusive_shared_ptr_st() = default;
 	inline intrusive_shared_ptr_st(T *t) : t_(t) { acquire(); }
 	inline intrusive_shared_ptr_st(const intrusive_shared_ptr_st<T> &o) : t_(o.t_) { acquire(); }
-	inline intrusive_shared_ptr_st(intrusive_shared_ptr_st<T> &&o) : t_(o.t_) { o.t_ = nullptr; }
 	inline ~intrusive_shared_ptr_st() { release(); }
 
 	inline intrusive_shared_ptr_st<T> &operator=(const intrusive_shared_ptr_st<T> &o) {
 		release();
 		t_ = o.t_;
 		acquire();
-		return *this;
-	}
-
-	inline intrusive_shared_ptr_st<T> &operator=(intrusive_shared_ptr_st<T> &&o) {
-		release();
-		t_ = o.t_;
-		o.t_ = nullptr;
 		return *this;
 	}
 
@@ -39,6 +31,17 @@ template <typename T> struct intrusive_shared_ptr_st {
 		release();
 		t_ = nullptr;
 	}
+
+#if __cplusplus >= 201103L
+	inline intrusive_shared_ptr_st(intrusive_shared_ptr_st<T> &&o) : t_(o.t_) { o.t_ = nullptr; }
+
+	inline intrusive_shared_ptr_st<T> &operator=(intrusive_shared_ptr_st<T> &&o) {
+		release();
+		t_ = o.t_;
+		o.t_ = nullptr;
+		return *this;
+	}
+#endif
 
 private:
 	T *t_{nullptr};

@@ -5,9 +5,9 @@
 #include "engine/render_pipeline.h"
 #include "engine/vertex.h"
 
+#include "foundation/cext.h"
 #include "foundation/vector2.h"
 
-#include <array>
 #include <map>
 #include <vector>
 

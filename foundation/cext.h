@@ -250,3 +250,64 @@ template <typename T, size_t N> bool operator>=(const array<T, N> &lhs, const ar
 
 }
 #endif
+
+#if __cplusplus >= 201103L
+#include <type_traits>
+#else 
+namespace std {
+
+template <typename T> struct remove_const { typedef T type; };
+template <typename T> struct remove_const<const T> { typedef T type; };
+
+template <typename T> struct remove_volatile { typedef T type; };
+template <typename T> struct remove_volatile<volatile T> { typedef T type; };
+
+template <typename T> struct remove_cv { typedef T type; };
+template <typename T> struct remove_cv<const T> { typedef T type; };
+template <typename T> struct remove_cv<volatile T> { typedef T type; };
+template <typename T> struct remove_cv<const volatile T> { typedef T type; };
+
+template <class T, T v> struct integral_constant {
+	typedef T value_type;
+	typedef integral_constant<T, v> type;
+	operator value_type() const { return value; }
+	static const T value = v;
+};
+typedef integral_constant<bool, true> true_type;
+typedef integral_constant<bool, false> false_type;
+
+namespace detail {
+template <typename T> class is_integral : std::false_type {};
+template <> struct is_integral<bool> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<char> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<signed char> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<unsigned char> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<short> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<unsigned short> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<int> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<unsigned int> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<long> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<unsigned long> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<long long> : public std::integral_constant<bool, true> {};
+template <> struct is_integral<unsigned long long> : public std::integral_constant<bool, true> {};
+
+template <typename> struct is_floating_point : public std::false_type {};
+template <> struct is_floating_point<float> : public std::integral_constant<bool, true> {};
+template <> struct is_floating_point<double> : public std::integral_constant<bool, true> {};
+template <> struct is_floating_point<long double> : public std::integral_constant<bool, true> {};
+} // namespace detail
+
+template <typename T> struct is_integral : public integral_constant<bool, detail::is_integral<typename remove_cv<T>::type>::value> {};
+template <typename T> struct is_floating_point : public integral_constant<bool, detail::is_floating_point<typename remove_cv<T>::type>::value> {};
+
+template <typename T> struct is_arithmetic : public integral_constant<bool, is_integral<T>::value || is_floating_point<T>::value> {};
+
+namespace detail {
+template <typename T, bool = std::is_arithmetic<T>::value> struct is_signed : public std::integral_constant<bool, (T(-1) < T(0))> {};
+template <typename T> struct is_signed<T, false> : public std::false_type {};
+} // namespace detail
+
+template <typename T> struct is_signed : public detail::is_signed<T>::type {};
+
+}
+#endif

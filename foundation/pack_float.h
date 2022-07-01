@@ -3,8 +3,8 @@
 #pragma once
 
 #include <limits>
-#include <type_traits>
 
+#include "foundation/cext.h"
 #include "foundation/math.h"
 
 namespace hg {
