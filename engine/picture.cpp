@@ -28,6 +28,8 @@ size_t GetChannelCount(PictureFormat format) {
 }
 
 //
+Picture::Picture() : w(0), h(0), f(PF_RGBA32), has_ownership(0), d(nullptr) {}
+
 Picture::Picture(uint16_t width, uint16_t height, PictureFormat format)
 	: w(width), h(height), f(format), has_ownership(1), d(new uint8_t[w * h * size_of(f)]) {}
 
@@ -37,14 +39,6 @@ Picture::Picture(const Picture &pic)
 	: w(pic.w), h(pic.h), f(pic.f), has_ownership(pic.has_ownership), d(pic.has_ownership ? new uint8_t[w * h * size_of(f)] : pic.d) {
 	if (pic.has_ownership)
 		std::copy(pic.d, pic.d + w * h * size_of(f), d);
-}
-
-Picture::Picture(Picture &&pic) noexcept : w(pic.w), h(pic.h), f(pic.f), has_ownership(pic.has_ownership), d(pic.d) {
-	pic.w = 0;
-	pic.h = 0;
-	pic.f = PF_RGBA32;
-	pic.has_ownership = 0;
-	pic.d = nullptr;
 }
 
 Picture::~Picture() { Clear(); }
@@ -77,7 +71,7 @@ void Picture::TakeDataOwnership() {
 	if (has_ownership || d == nullptr)
 		return;
 
-	auto *d_ = new uint8_t[w * h * size_of(f)];
+	uint8_t *d_ = new uint8_t[w * h * size_of(f)];
 	std::copy(d, d + w * h * size_of(f), d_);
 
 	has_ownership = 1;
@@ -90,26 +84,6 @@ Picture &Picture::operator=(const Picture &pic) {
 		CopyData(pic.d, pic.w, pic.h, pic.f);
 	else
 		SetData(pic.d, pic.w, pic.h, pic.f);
-	return *this;
-}
-
-Picture &Picture::operator=(Picture &&pic) noexcept {
-	Clear();
-
-	w = pic.w;
-	h = pic.h;
-	f = pic.f;
-
-	d = pic.d;
-	has_ownership = pic.has_ownership;
-
-	pic.w = 0;
-	pic.h = 0;
-	pic.f = PF_RGBA32;
-
-	pic.has_ownership = 0;
-	pic.d = nullptr;
-
 	return *this;
 }
 
@@ -153,7 +127,7 @@ Color GetPixelRGBA(const Picture &pic, uint16_t x, uint16_t y) {
 		return Color::Zero;
 
 	const int size = size_of(pic.GetFormat());
-	int offset = numeric_cast<int>((x + (size_t)pic.GetWidth() * y) * size);
+	int offset = int((x + (size_t)pic.GetWidth() * y) * size);
 	Color out(Color::Zero);
 	const uint8_t *data = pic.GetData();
 
@@ -168,7 +142,7 @@ void SetPixelRGBA(Picture &pic, uint16_t x, uint16_t y, const Color &col) {
 		return;
 
 	const int size = size_of(pic.GetFormat());
-	int offset = numeric_cast<int>((x + (size_t)pic.GetWidth() * y) * size);
+	int offset = int((x + (size_t)pic.GetWidth() * y) * size);
 	uint8_t *data = pic.GetData();
 
 	for (int i = 0; i < size;)
@@ -181,21 +155,25 @@ struct STB_callbacks {
 	stbi_io_callbacks clbk;
 };
 
+
+
+static int stb_read_impl(void *user, char *data, int size) { return int(Read(*reinterpret_cast<ScopedFile *>(user), data, size)); }
+static void stb_skip_impl(void *user, int n) { Seek(*reinterpret_cast<ScopedFile *>(user), n, SM_Current); }
+static int stb_eof_impl(void *user) { return IsEOF(*reinterpret_cast<ScopedFile *>(user)) ? 0 : 1; }
+
+
 STB_callbacks open_STB_file(const std::string &path) {
-	return {Open(path), {
-							[](void *user, char *data, int size) -> int { return int(Read(*reinterpret_cast<ScopedFile *>(user), data, size)); },
-							[](void *user, int n) -> void { Seek(*reinterpret_cast<ScopedFile *>(user), n, SM_Current); },
-							[](void *user) -> int { return IsEOF(*reinterpret_cast<ScopedFile *>(user)) ? 0 : 1; },
-						}};
+	STB_callbacks out = {Open(path), {stb_read_impl, stb_skip_impl, stb_eof_impl}};
+	return out;
 }
 
 static bool load_STB_picture(Picture &pic, const std::string &path) {
-	auto cb = open_STB_file(path);
+	hg::STB_callbacks cb = open_STB_file(path);
 	if (!cb.file)
 		return false;
 
 	int x, y, n;
-	const auto data = stbi_load_from_callbacks(&cb.clbk, &cb.file, &x, &y, &n, 4);
+	stbi_uc* data = stbi_load_from_callbacks(&cb.clbk, &cb.file, &x, &y, &n, 4);
 	if (!data)
 		return false;
 
@@ -271,5 +249,36 @@ bool SaveHDR(const Picture &pic, const std::string &path) {
 
 	return stbi_write_hdr_to_func(STB_write, &file, pic.GetWidth(), pic.GetHeight(), comp, (const float *)pic.GetData()) != 0;
 }
+
+//
+#if __cplusplus >= 201103L
+Picture::Picture(Picture &&pic) noexcept : w(pic.w), h(pic.h), f(pic.f), has_ownership(pic.has_ownership), d(pic.d) {
+	pic.w = 0;
+	pic.h = 0;
+	pic.f = PF_RGBA32;
+	pic.has_ownership = 0;
+	pic.d = nullptr;
+}
+
+Picture &Picture::operator=(Picture &&pic) noexcept {
+	Clear();
+
+	w = pic.w;
+	h = pic.h;
+	f = pic.f;
+
+	d = pic.d;
+	has_ownership = pic.has_ownership;
+
+	pic.w = 0;
+	pic.h = 0;
+	pic.f = PF_RGBA32;
+
+	pic.has_ownership = 0;
+	pic.d = nullptr;
+
+	return *this;
+}
+#endif
 
 } // namespace hg

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 
 #include <foundation/color.h>
@@ -16,15 +16,13 @@ size_t GetChannelCount(PictureFormat format);
 
 class Picture { // 16 bytes
 public:
-	Picture() = default;
+	Picture();
 	Picture(const Picture &pic);
-	Picture(Picture &&pic) noexcept;
 	Picture(uint16_t width, uint16_t height, PictureFormat format);
 	Picture(void *data, uint16_t width, uint16_t height, PictureFormat format);
 	~Picture();
 
 	Picture &operator=(const Picture &pic);
-	Picture &operator=(Picture &&pic) noexcept;
 
 	uint16_t GetWidth() const { return w; }
 	uint16_t GetHeight() const { return h; }
@@ -43,12 +41,17 @@ public:
 
 	void Clear();
 
-private:
-	uint16_t w{}, h{};
-	PictureFormat f{PF_RGBA32};
-	uint8_t has_ownership{0};
+#if __cplusplus >= 201103L
+	Picture(Picture &&pic) noexcept;
+	Picture &operator=(Picture &&pic) noexcept;
+#endif
 
-	uint8_t *d{};
+private:
+	uint16_t w, h;
+	PictureFormat f;
+	uint8_t has_ownership;
+
+	uint8_t *d;
 };
 
 Picture MakePictureView(void *data, uint16_t width, uint16_t height, PictureFormat format);
