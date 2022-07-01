@@ -100,6 +100,10 @@ set(GLFW_INSTALL OFF CACHE INTERNAL "" FORCE)
 
 add_subdirectory(extern/glfw-3.3.7)
 
+# simpleson
+add_library(simpleson STATIC extern/simpleson/json.cpp extern/simpleson/json.h)
+target_include_directories(foundation PUBLIC extern/simpleson)
+
 # engine
 set(ENGINE_HDRS
 engine/assets.h
@@ -111,21 +115,25 @@ engine/model_builder.h
 engine/picture.h
 engine/render_pipeline.h
 engine/resource_cache.h
+engine/vertex.h
+engine/extern/mikktspace/mikktspace.h
 )
 
 set(ENGINE_SRCS
 #engine/assets.cpp
 #engine/assets_rw_interface.cpp
 engine/fps_controller.cpp
-#engine/geometry.cpp
+engine/geometry.cpp
 #engine/model_builder.cpp
 engine/picture.cpp
-#engine/render_pipeline.cpp
+engine/render_pipeline.cpp
+engine/vertex.cpp
+engine/extern/mikktspace/mikktspace.c
 )
 
 add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
-target_link_libraries(engine PUBLIC foundation fmt glfw)
-target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb)
+target_link_libraries(engine PUBLIC foundation fmt glfw simpleson)
+target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb engine/extern/mikktspace)
 
 # unit tests
 add_executable(test_foundation tests/test_foundation.cpp)

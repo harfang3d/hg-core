@@ -5,7 +5,6 @@
 
 #include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
-#include "foundation/format.h"
 #include "foundation/log.h"
 #include "foundation/math.h"
 #include "foundation/pack_float.h"
@@ -13,8 +12,7 @@
 
 #include "mikktspace.h"
 
-#include <bgfx/bgfx.h>
-
+#include <fmt/format.h>
 #include <numeric>
 
 namespace hg {
@@ -372,17 +370,17 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 	Geometry geo;
 
 	if (!ir.is_valid(h)) {
-		warn(format("Cannot load model '%1', invalid file handle").arg(name));
+		warn(fmt::format("Cannot load model '{}', invalid file handle", name));
 		return geo;
 	}
 
 	if (Read<uint32_t>(ir, h) != HarfangMagic) {
-		warn(format("Cannot load model '%1', invalid magic marker").arg(name));
+		warn(fmt::format("Cannot load model '{}', invalid magic marker", name));
 		return geo;
 	}
 
 	if (Read<uint8_t>(ir, h) != ModelMarker) {
-		warn(format("Cannot load model '%1', invalid model marker").arg(name));
+		warn(fmt::format("Cannot load model '{}', invalid model marker", name));
 		return geo;
 	}
 
@@ -393,7 +391,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 	*/
 	const auto version = Read<uint32_t>(ir, h);
 	if (version > 2) {
-		warn(format("Cannot load model '%1', unsupported version").arg(name));
+		warn(fmt::format("Cannot load model '{}', unsupported version", name));
 		return geo;
 	}
 
@@ -473,7 +471,9 @@ bool SaveGeometry(const Writer &iw, const Handle &h, const Geometry &geo) {
 	return true;
 }
 
-bool SaveGeometryToFile(const std::string &path, const Geometry &geo) { return SaveGeometry(g_file_writer, ScopedWriteHandle(g_file_write_provider, path), geo); }
+bool SaveGeometryToFile(const std::string &path, const Geometry &geo) {
+	return SaveGeometry(g_file_writer, ScopedWriteHandle(g_file_write_provider, path), geo);
+}
 
 //
 static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_vtp, const std::map<uint16_t, uint16_t> &bone_map) {
@@ -509,34 +509,32 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 	return vtx;
 }
 
-static bgfx::VertexLayout GetGeometryVertexDeclaration(const Geometry &geo) {
-	bgfx::VertexLayout vs_decl;
+static VertexLayout GetGeometryVertexDeclaration(const Geometry &geo) {
+	VertexLayout layout;
 
-	vs_decl.begin();
-	vs_decl.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float);
+	layout.AddAttrib(0, SG_VERTEXFORMAT_FLOAT3); // 0: position as float3
 
 	if (!geo.normal.empty())
-		vs_decl.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Uint8, true, true);
+		layout.AddAttrib(1, SG_VERTEXFORMAT_UBYTE4N); // 1: normal as UByte4N
 
 	if (!geo.tangent.empty()) {
-		vs_decl.add(bgfx::Attrib::Tangent, 3, bgfx::AttribType::Uint8, true, true);
-		vs_decl.add(bgfx::Attrib::Bitangent, 3, bgfx::AttribType::Uint8, true, true);
+		layout.AddAttrib(2, SG_VERTEXFORMAT_UBYTE4N); // 2: tangent as UByte4N
+		layout.AddAttrib(3, SG_VERTEXFORMAT_UBYTE4N); // 3: bitangent as UByte4N
 	}
 
 	if (!geo.color.empty())
-		vs_decl.add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Uint8, true);
+		layout.AddAttrib(4, SG_VERTEXFORMAT_UBYTE4N); // 4: color as UByte4N
+
+	if (!geo.skin.empty()) {
+		layout.AddAttrib(5, SG_VERTEXFORMAT_UBYTE4N); // 5: bone indices as UByte4N
+		layout.AddAttrib(6, SG_VERTEXFORMAT_UBYTE4N); // 6: bone weights as UByte4N
+	}
 
 	for (auto i = 0; i < geo.uv.size(); ++i)
 		if (!geo.uv[i].empty())
-			vs_decl.add(bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + i), 2, bgfx::AttribType::Float);
+			layout.AddAttrib(7 + i, SG_VERTEXFORMAT_FLOAT2);
 
-	if (!geo.skin.empty()) {
-		vs_decl.add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Uint8, true, false);
-		vs_decl.add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Uint8, true, false);
-	}
-
-	vs_decl.end();
-	return vs_decl;
+	return layout;
 }
 
 uint8_t GetMaterialCount(const Geometry &geo) {
@@ -631,7 +629,7 @@ static void GeometryToModelBuilder(const Geometry &geo, ModelBuilder &builder) {
 		bone_map.clear();
 	}
 
-	log(format("Geometry to model builder took %1 ms").arg(time_to_ms(time_now() - t)));
+	log(fmt::format("Geometry to model builder took {} ms", time_to_ms(time_now() - t)));
 }
 
 //
@@ -668,7 +666,7 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, Model
 	ModelBuilder builder;
 	GeometryToModelBuilder(geo, builder);
 
-	auto on_end_list = [](const bgfx::VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<uint8_t> &vtx,
+	auto on_end_list = [](const VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<uint8_t> &vtx,
 						   const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
 		const auto &file = *reinterpret_cast<File *>(userdata);
 
@@ -708,7 +706,7 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, Model
 		Write(file, minmax);
 		Write(file, mat);
 
-		log(format("Index size: %1, vertex size: %2").arg(idx_size).arg(vtx_size));
+		log(fmt::format("Index size: {}, vertex size: {}", idx_size, vtx_size));
 	};
 
 	builder.Make(decl, on_end_list, &file.f, optimisation_level);

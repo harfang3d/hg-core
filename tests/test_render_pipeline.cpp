@@ -2,11 +2,6 @@
 
 #include <acutest.h>
 #include <fmt/format.h>
-#define SOKOL_GFX_IMPL
-#define SOKOL_GLCORE33
-#include <sokol_gfx.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 
 #include "foundation/matrix44.h"
 #include "foundation/projection.h"
@@ -14,6 +9,14 @@
 #include "foundation/vector3.h"
 
 #include "engine/fps_controller.h"
+#include "engine/render_pipeline.h"
+#include "engine/geometry.h"
+
+#define SOKOL_GFX_IMPL
+#define SOKOL_GLCORE33
+#include <sokol_gfx.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 using namespace hg;
 
@@ -82,37 +85,6 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 }
 
 //
-struct VertexLayout {
-	VertexLayout() : attrib_count(0) {}
-
-	struct Attrib {
-		Attrib() : format(SG_VERTEXFORMAT_INVALID), offset(0) {}
-
-		sg_vertex_format format;
-		size_t offset;
-	};
-
-	void AddAttrib(size_t idx, sg_vertex_format format, size_t offset = 0);
-
-	void FillLayoutDesc(sg_layout_desc &desc) const;
-
-private:
-	Attrib attrib[SG_MAX_VERTEX_ATTRIBUTES];
-	size_t attrib_count;
-};
-
-void VertexLayout::AddAttrib(size_t idx, sg_vertex_format format, size_t offset) {
-	attrib[idx].format = format;
-	attrib[idx].offset = offset;
-}
-
-void VertexLayout::FillLayoutDesc(sg_layout_desc &layout) const {
-	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		layout.attrs[i].buffer_index = 0;
-		layout.attrs[i].format = attrib[i].format;
-		layout.attrs[i].offset = attrib[i].offset;
-	}
-}
 
 //
 sg_pipeline MakePipeline(const VertexLayout &vtx_layout, sg_shader shader) {
@@ -137,8 +109,6 @@ sg_buffer MakeVertexBuffer(const void *data, size_t size) {
 }
 
 //
-
-
 
 //
 void test_init() {

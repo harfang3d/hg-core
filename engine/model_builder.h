@@ -4,6 +4,7 @@
 
 #include "engine/render_pipeline.h"
 #include "engine/vertex.h"
+
 #include "foundation/vector2.h"
 
 #include <array>
@@ -37,13 +38,13 @@ struct ModelBuilder {
 
 	void Clear();
 
-	using end_list_cb = void (*)(const bgfx::VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data,
-		const std::vector<uint8_t> &vtx_data, const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata);
+	using end_list_cb = void (*)(const VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<uint8_t> &vtx_data,
+		const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata);
 
-	void Make(const bgfx::VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level = MOL_None,
-		bool verbose = false) const;
+	void Make(
+		const VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level = MOL_None, bool verbose = false) const;
 
-	Model MakeModel(const bgfx::VertexLayout &decl, ModelOptimisationLevel optimisation_level = MOL_None, bool verbose = false) const;
+	Model MakeModel(const VertexLayout &decl, ModelOptimisationLevel optimisation_level = MOL_None, bool verbose = false) const;
 
 private:
 	size_t hash_collision{};

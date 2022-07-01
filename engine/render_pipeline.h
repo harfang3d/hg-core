@@ -19,7 +19,9 @@
 
 #include <deque>
 #include <functional>
+#include <json.h>
 #include <map>
+#include <sokol_gfx.h>
 #include <string>
 #include <vector>
 
@@ -63,6 +65,8 @@ Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Ve
 
 //
 struct Window;
+
+#if 0
 
 bool RenderInit(Window *window, bgfx::RendererType::Enum type, bgfx::CallbackI *callback = nullptr);
 bool RenderInit(Window *window, bgfx::CallbackI *callback = nullptr);
@@ -108,12 +112,14 @@ bgfx::ProgramHandle LoadComputeProgramFromAssets(const std::string &cs_name, boo
 //
 std::vector<bgfx::ShaderHandle> GetProgramShaders(bgfx::ProgramHandle prg_h);
 
-//
-json LoadResourceMeta(const Reader &ir, const ReadProvider &ip, const std::string &name);
-json LoadResourceMetaFromFile(const std::string &path);
-json LoadResourceMetaFromAssets(const std::string &name);
+#endif
 
-bool SaveResourceMetaToFile(const std::string &path, const json &meta);
+//
+json::jobject LoadResourceMeta(const Reader &ir, const ReadProvider &ip, const std::string &name);
+json::jobject LoadResourceMetaFromFile(const std::string &path);
+json::jobject LoadResourceMetaFromAssets(const std::string &name);
+
+bool SaveResourceMetaToFile(const std::string &path, const json::jobject &meta);
 
 //
 struct PipelineInfo {
@@ -149,9 +155,36 @@ enum PipelineProgramFeature {
 	Count,
 };
 
-std::vector<PipelineProgramFeature> LoadPipelineProgramFeatures(const Reader &ir, const ReadProvider &ip, const std::string &name, bool &success, bool silent = false);
+std::vector<PipelineProgramFeature> LoadPipelineProgramFeatures(
+	const Reader &ir, const ReadProvider &ip, const std::string &name, bool &success, bool silent = false);
 std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromFile(const std::string &path, bool &success, bool silent = false);
 std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromAssets(const std::string &name, bool &success, bool silent = false);
+
+//
+struct VertexLayout {
+	VertexLayout() : attrib_count(0) {}
+
+	struct Attrib {
+		Attrib() : format(SG_VERTEXFORMAT_INVALID), offset(0) {}
+
+		sg_vertex_format format;
+		size_t offset;
+	};
+
+	void AddAttrib(size_t idx, sg_vertex_format format, size_t offset = 0);
+
+	void FillLayoutDesc(sg_layout_desc &desc) const;
+
+private:
+	Attrib attrib[SG_MAX_VERTEX_ATTRIBUTES];
+	size_t attrib_count;
+};
+
+struct Model {
+	std::vector<Mat4> bind_pose; // per-bone
+};
+
+#if 0
 
 //
 struct PipelineProgram;
@@ -721,5 +754,7 @@ bimg::ImageContainer *LoadImage(const Reader &ir, const ReadProvider &ip, const 
 bimg::ImageContainer *LoadImageFromFile(const std::string &name);
 bimg::ImageContainer *LoadImageFromAssets(const std::string &name);
 void UpdateTextureFromImage(Texture &tex, bimg::ImageContainer *img, bool auto_delete = true);
+
+#endif
 
 } // namespace hg

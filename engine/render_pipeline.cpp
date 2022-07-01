@@ -3,49 +3,24 @@
 #include "engine/render_pipeline.h"
 #include "engine/assets_rw_interface.h"
 #include "engine/file_format.h"
-#include "engine/meta.h"
+//#include "engine/meta.h"
 
 #include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
-#include "foundation/format.h"
-#include "foundation/kv_store.h"
 #include "foundation/log.h"
 #include "foundation/matrix3.h"
 #include "foundation/matrix4.h"
 #include "foundation/matrix44.h"
 #include "foundation/path_tools.h"
-#include "foundation/profiler.h"
 #include "foundation/projection.h"
 #include "foundation/time.h"
 
-#include "platform/window_system.h"
-
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
-#include <bimg/decode.h>
-#include <bx/allocator.h>
-#include <bx/bx.h>
-
-#include <json.hpp>
-
+#include <json.h>
 #include <set>
 
-using json = nlohmann::json;
-
-namespace bgfx {
-
-NLOHMANN_JSON_SERIALIZE_ENUM(UniformType::Enum, {
-													{UniformType::Enum::Sampler, "sampler"},
-													{UniformType::Enum::End, "end"},
-													{UniformType::Enum::Vec4, "vec4"},
-													{UniformType::Enum::Mat3, "mat3"},
-													{UniformType::Enum::Mat4, "mat4"},
-												});
-
-void getTextureSizeFromRatio(BackbufferRatio::Enum _ratio, uint16_t &_width, uint16_t &_height);
-} // namespace bgfx
-
 namespace hg {
+
+#if 0
 
 static bool bgfx_is_up = false;
 
@@ -63,9 +38,10 @@ bgfxMatrix4 to_bgfx(const Mat4 &m) {
 
 bgfxMatrix3 to_bgfx(const Mat3 &m) { return {m.m[0][0], m.m[1][0], m.m[2][0], m.m[0][1], m.m[1][1], m.m[2][1], m.m[0][2], m.m[1][2], m.m[2][2]}; }
 
+#endif
+
 //
 ViewState ComputeOrthographicViewState(const Mat4 &world, float size, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset) {
-	const bgfx::Caps *caps = bgfx::getCaps();
 	const auto view = InverseFast(world);
 	const auto proj = ComputeOrthographicProjectionMatrix(znear, zfar, size, aspect_ratio, offset);
 	const auto frustum = MakeFrustum(proj, world);
@@ -73,14 +49,13 @@ ViewState ComputeOrthographicViewState(const Mat4 &world, float size, float znea
 }
 
 ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset) {
-	const bgfx::Caps *caps = bgfx::getCaps();
 	const auto view = InverseFast(world);
 	const auto proj = ComputePerspectiveProjectionMatrix(znear, zfar, FovToZoomFactor(fov), aspect_ratio, offset);
 	const auto frustum = MakeFrustum(proj, world);
 	return {frustum, proj, view};
 }
 
-//
+//l
 Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Vec3 &scale) {
 	return ComputeBillboardMat4(pos, Transpose(GetRotationMatrix(view_state.view)), scale);
 }
@@ -95,6 +70,23 @@ uint32_t ComputeSortKey(float view_depth) {
 
 uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view) { return ComputeSortKey((view * T).z); }
 uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &model) { return ComputeSortKey(((view * model) * T).z); }
+
+//
+void VertexLayout::AddAttrib(size_t idx, sg_vertex_format format, size_t offset) {
+	attrib[idx].format = format;
+	attrib[idx].offset = offset;
+}
+
+void VertexLayout::FillLayoutDesc(sg_layout_desc &layout) const {
+	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+		layout.attrs[i].buffer_index = 0;
+		layout.attrs[i].format = attrib[i].format;
+		layout.attrs[i].offset = attrib[i].offset;
+	}
+}
+
+
+#if 0
 
 //
 UniformSetValue::UniformSetValue(const UniformSetValue &v) { *this = v; }
@@ -2937,5 +2929,7 @@ void UpdateTextureFromImage(Texture &tex, bimg::ImageContainer *img, bool auto_d
 		img->m_data, img->m_size, auto_delete ? [](void *ptr, void *user) { bimg::imageFree((bimg::ImageContainer *)user); } : (bgfx::ReleaseFn)0, img);
 	bgfx::updateTexture2D(tex.handle, 0, 0, 0, 0, img->m_width, img->m_height, mem);
 }
+
+#endif
 
 } // namespace hg
