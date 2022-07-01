@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 
 namespace hg {
 
 class Data {
 public:
-	Data() = default;
+	Data();
 	~Data();
 
 	explicit Data(size_t size) { Resize(size); }
@@ -52,11 +52,11 @@ public:
 	void Free();
 
 private:
-	uint8_t *data_{nullptr};
-	size_t size_{0}, capacity_{0};
+	uint8_t *data_;
+	size_t size_, capacity_;
 
-	bool has_ownership{false};
-	mutable size_t cursor{0};
+	bool has_ownership;
+	mutable size_t cursor;
 };
 
 //
@@ -82,7 +82,7 @@ template <typename T> struct DeferredDataWrite {
 	}
 
 	void Commit(const T &v) {
-		const auto seek_ = data.GetCursor();
+		const size_t seek_ = data.GetCursor();
 
 		data.SetCursor(cursor);
 		data.Write(&v, sizeof(T));
@@ -91,7 +91,7 @@ template <typename T> struct DeferredDataWrite {
 	}
 
 	void CommitAsChunkSize() {
-		const auto chunk_size = data.GetCursor() - (cursor + sizeof(T));
+		const size_t chunk_size = data.GetCursor() - (cursor + sizeof(T));
 		Commit(T(chunk_size));
 	}
 

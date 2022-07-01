@@ -12,6 +12,7 @@ if(WIN32)
 endif()
 
 # fmt::format
+set(FMT_USE_CPP11 OFF CACHE BOOL "")
 add_subdirectory(extern/fmt)
 
 # foundation

@@ -5,6 +5,14 @@
 
 namespace hg {
 
+Data::Data()
+	: data_(NULL)
+	, size_(0)
+	, capacity_(0)
+	, has_ownership(false)
+	, cursor(0)
+{}
+
 Data::~Data() { Free(); }
 
 Data &Data::operator=(const Data &data) {
@@ -42,10 +50,10 @@ Data &Data::operator=(Data &&data) {
 */
 
 void Data::Reserve(size_t size) {
-	const auto new_capacity = (size / 8192 + 1) * 8192; // grow in 8KB increments
+	const size_t new_capacity = (size / 8192 + 1) * 8192; // grow in 8KB increments
 
 	if (new_capacity > capacity_) {
-		auto _data_ = new uint8_t[new_capacity];
+		uint8_t* _data_ = new uint8_t[new_capacity];
 
 		if (data_)
 			std::copy(data_, data_ + size_, _data_);
@@ -102,7 +110,7 @@ void Data::Free() {
 	if (has_ownership)
 		delete[] data_;
 
-	data_ = nullptr;
+	data_ = NULL;
 	size_ = 0;
 	capacity_ = 0;
 
@@ -128,17 +136,17 @@ bool Read(Data &data, std::string &str) {
 }
 
 bool Write(Data &data, const std::string &s) {
-	const auto size = uint16_t(s.size());
+	const uint16_t size = uint16_t(s.size());
 	return Write(data, size) && data.Write(s.data(), size) == size;
 }
 
 //
 bool LoadDataFromFile(const std::string &path, Data &data) {
-	const auto file = Open(path);
+	const File file = Open(path);
 	if (!IsValid(file))
 		return false;
 
-	const auto size = GetSize(file);
+	const size_t size = GetSize(file);
 	data.Reserve(size);
 	Read(file, data.GetCursorPtr(), size);
 	data.Skip(size);
@@ -148,11 +156,11 @@ bool LoadDataFromFile(const std::string &path, Data &data) {
 }
 
 bool SaveDataToFile(const std::string &path, const Data &data) {
-	const auto file = OpenWrite(path);
+	const File file = OpenWrite(path);
 	if (!IsValid(file))
 		return false;
 
-	const auto wsize = Write(file, data.GetData(), data.GetSize());
+	const size_t wsize = Write(file, data.GetData(), data.GetSize());
 
 	Close(file);
 	return wsize == data.GetSize();
