@@ -29,13 +29,13 @@ class vector_list {
 public:
 	static const uint32_t invalid_idx = 0xffffffff;
 
-	vector_list() = default;
+	vector_list() : storage_capacity_(0), storage_(nullptr), idx_(), size_(0), free_(0) {}
 	explicit vector_list(size_t count) { reserve(count); }
 
 	//
 	void reserve(size_t count) {
 		__ASSERT__(count < 0x00ffffff);
-		const auto capacity_ = uint32_t(idx_.size());
+		const uint32_t capacity_ = uint32_t(idx_.size());
 
 		if (count > capacity_) {
 			reserve_storage_(count);
@@ -50,7 +50,7 @@ public:
 	size_t capacity() const { return idx_.size(); }
 
 	void clear() {
-		for (auto i = first(); i != invalid_idx; i = next(i))
+		for (uint32_t i = first(); i != invalid_idx; i = next(i))
 			reinterpret_cast<T *>(storage_)[i].~T();
 
 		free(storage_);
@@ -116,8 +116,8 @@ public:
 		uint32_t i;
 	};
 
-	iterator begin() { return {this, first()}; }
-	iterator end() { return {this, invalid_idx}; }
+	iterator begin() { return iterator(this, first()); }
+	iterator end() { return iterator(this, invalid_idx); }
 
 	struct const_iterator {
 	public:
@@ -137,8 +137,8 @@ public:
 		uint32_t i;
 	};
 
-	const_iterator begin() const { return {this, first()}; }
-	const_iterator end() const { return {this, invalid_idx}; }
+	const_iterator begin() const { return const_iterator(this, first()); }
+	const_iterator end() const { return const_iterator(this, invalid_idx); }
 
 	//
 	uint32_t add(const T &v) {
@@ -159,7 +159,7 @@ public:
 		++size_;
 		return i;
 	}
-
+#if __cpluplus >= 201103L
 	uint32_t add(T &&v) {
 		__ASSERT__(size_ < 0x00ffffff);
 		const size_t capacity_ = capacity();
@@ -178,9 +178,9 @@ public:
 		++size_;
 		return i;
 	}
-
+#endif
 	uint32_t remove(uint32_t i) {
-		const auto n = next(i); // next entry in use
+		const uint32_t n = next(i); // next entry in use
 
 		{
 			const uint32_t idx = idx_[i];
@@ -220,7 +220,11 @@ public:
 			const uint32_t idx = idx_[i];
 			if (!is_free_idx(idx)) {
 				idx_[i] = c;
+#if __cplusplus >= 201103L
 				reinterpret_cast<T *>(new_storage)[c] = std::move(reinterpret_cast<T *>(storage_)[idx]);
+#else
+				reinterpret_cast<T *>(new_storage)[c] = reinterpret_cast<T *>(storage_)[idx];
+#endif
 				++c;
 				++i;
 			} else {
@@ -242,9 +246,10 @@ public:
 	}
 
 private:
-	size_t storage_capacity_{}; //, storage_size_{};
-	void *storage_{};
+	size_t storage_capacity_; //, storage_size_;
+	void *storage_;
 
+#if __cplusplus >= 201103L
 	template <typename U=T>
 	inline typename std::enable_if<std::is_trivially_copyable<U>::value, void>::type
 	transfer_storage(U *new_storage) {
@@ -270,12 +275,22 @@ private:
 			new (dst) U(*src);
 		}
 	}
+#else
+	template <typename U>
+	inline void transfer_storage(U *new_storage) {
+		for (uint32_t i = first(); i != invalid_idx; i = next(i)) {
+			U *dst = reinterpret_cast<U *>(new_storage) + i;
+			U *src = reinterpret_cast<U *>(storage_) + i;
+			new (dst) U(*src);
+		}
+	}
+#endif // __cplusplus >= 201103L
 
 	void reserve_storage_(size_t capacity) {
 		if (capacity > storage_capacity_) {
 			void *new_storage_ = malloc(sizeof(T) * capacity);
 			transfer_storage((T*)new_storage_);
-			for (auto i = first(); i != invalid_idx; i = next(i))
+			for (uint32_t i = first(); i != invalid_idx; i = next(i))
 				reinterpret_cast<T *>(storage_)[i].~T();
 			free(storage_);
 			storage_ = new_storage_;
@@ -285,8 +300,8 @@ private:
 
 	std::vector<uint32_t> idx_;
 
-	size_t size_{};
-	uint32_t free_{};
+	size_t size_;
+	uint32_t free_;
 
 	static size_t get_storage_adjusted_reserve(size_t size) { return size + size / 8; }
 

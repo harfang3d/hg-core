@@ -140,7 +140,7 @@ Vec3 GetTranslation(const Mat4 &m) { return GetT(m); }
 
 Vec3 GetR(const Mat4 &m, RotationOrder order) {
 	Vec3 rotation;
-	Decompose(m, NULL, &rotation, NULL, order);
+	Decompose(m, nullptr, &rotation, nullptr, order);
 	return rotation;
 }
 
@@ -151,7 +151,7 @@ Vec3 GetScale(const Mat4 &m) { return GetS(m); }
 
 Mat3 GetRMatrix(const Mat4 &m) {
 	Mat3 rotation;
-	Decompose(m, NULL, &rotation, NULL);
+	Decompose(m, nullptr, &rotation, nullptr);
 	return rotation;
 }
 

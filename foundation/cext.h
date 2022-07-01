@@ -11,6 +11,10 @@
 
 namespace hg {
 
+#if __cplusplus <= 201103L // upto C++11
+#define nullptr NULL
+#endif
+
 template <typename T> inline bool asbool(const T &v) { return v ? true : false; }
 
 #define forever while (true)
@@ -35,6 +39,7 @@ template <typename T> inline bool set_if_not_equal(T &variable, const T &value) 
 	return r;
 }
 
+#if __cplusplus >= 201103L
 /// Set 'variable' value if it does not compare equal to 'value', return true if 'variable' was modified.
 template <typename T> inline bool set_if_not_equal(T &variable, const T &&value) {
 	bool r = variable != value;
@@ -42,6 +47,7 @@ template <typename T> inline bool set_if_not_equal(T &variable, const T &&value)
 		variable = std::move(value);
 	return r;
 }
+#endif
 
 /// Set a bool variable to false prior to returning its original value.
 inline bool bool_gate(bool &cond) {
@@ -50,11 +56,12 @@ inline bool bool_gate(bool &cond) {
 	return _cond;
 }
 
+#if __cplusplus >= 201103L
+
 /// Bind shared_ptr<T> to functions expecting T&, const T&, T* or const T*.
 template <typename T> struct shared_ref_ {
 	explicit shared_ref_(const std::shared_ptr<T> &r_) : r(r_) {}
 	explicit shared_ref_(std::shared_ptr<T> &&r_) : r(std::move(r_.r)) {}
-
 	operator T &() const { return *r; }
 	operator T *() const { return r.get(); }
 
@@ -71,7 +78,6 @@ struct bind_string {
 	explicit bind_string(const char *s_) : str(s_) {}
 	explicit bind_string(std::string s_) : str(std::move(s_)) {}
 	explicit bind_string(const std::string &&s_) : str(std::move(s_)) {}
-
 	operator const char *() const { return str.c_str(); }
 
 	std::string str;
@@ -155,9 +161,7 @@ template <class CastType, class Type> CastType numeric_cast(Type v) {
 	return CastType(v);
 }
 
-#if __cplusplus <= 201103L // upto C++11
 template <typename T, typename... Args> std::unique_ptr<T> make_unique(Args &&... args) { return std::unique_ptr<T>(new T(std::forward<Args>(args)...)); }
-#endif
 
 template <typename C, typename V> int index_of(const C &c, const V &v, int if_missing = -1) {
 	const auto i = std::find(c.begin(), c.end(), v);
@@ -165,5 +169,6 @@ template <typename C, typename V> int index_of(const C &c, const V &v, int if_mi
 		return if_missing;
 	return numeric_cast<int, size_t>(std::distance(std::begin(c), i));
 }
+#endif
 
 } // namespace hg

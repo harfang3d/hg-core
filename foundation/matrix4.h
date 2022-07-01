@@ -48,7 +48,7 @@ Mat4 Orthonormalize(const Mat4 &m);
 Mat4 Normalize(const Mat4 &m);
 
 /// Decompose a transformation matrix into a position vector, a scale vector and a 3x3 rotation matrix.
-void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation = NULL, Vec3 *scale = NULL);
+void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation = nullptr, Vec3 *scale = nullptr);
 /// Decompose a transformation matrix into a position vector, a scale vector and a rotation vector.
 void Decompose(const Mat4 &m, Vec3 *position, Vec3 *rotation, Vec3 *scale, RotationOrder order = RO_Default);
 

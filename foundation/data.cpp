@@ -6,7 +6,7 @@
 namespace hg {
 
 Data::Data()
-	: data_(NULL)
+	: data_(nullptr)
 	, size_(0)
 	, capacity_(0)
 	, has_ownership(false)
@@ -110,7 +110,7 @@ void Data::Free() {
 	if (has_ownership)
 		delete[] data_;
 
-	data_ = NULL;
+	data_ = nullptr;
 	size_ = 0;
 	capacity_ = 0;
 

@@ -18,7 +18,7 @@ namespace hg {
 struct Handle { // 16 bytes
 	uint32_t v[4];
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
-	bool debug{false};
+	bool debug;
 #endif
 };
 
@@ -151,7 +151,7 @@ template <typename T> struct DeferredWrite {
 	}
 
 	bool Commit(const T &v) {
-		const auto seek_ = Tell(iw, h);
+		const size_t seek_ = Tell(iw, h);
 
 		if (!Seek(iw, h, cursor, SM_Start) || !Write(iw, h, v) || !Seek(iw, h, seek_, SM_Start))
 			return false;
