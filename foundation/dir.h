@@ -12,7 +12,7 @@ namespace hg {
 enum DirEntryType { DE_File = 0x1, DE_Dir = 0x2, DE_Link = 0x4, DE_All = 0xffff };
 
 struct DirEntry {
-	int type{};
+	int type;
 	std::string name;
 	time_ns last_modified;
 	size_t size;

@@ -8,17 +8,29 @@
 
 namespace hg {
 
+#if __cplusplus >= 201103L
 enum case_sensitivity { insensitive, sensitive };
+#else
+struct case_sensitivity {
+	enum value_t {insensitive, sensitive } value;
+	case_sensitivity(const case_sensitivity::value_t &v) : value(v) {}
+};
+bool operator==(const case_sensitivity &a, const case_sensitivity &b) { return a.value == b.value; }
+bool operator!=(const case_sensitivity &a, const case_sensitivity &b) { return a.value != b.value; }
+#endif
 
 inline char to_lower(char c) { return c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c; }
+
+static bool case_sensitive_eq_func(const char &a, const char &b) { return a == b; }
+static bool case_insensitive_eq_func(const char &a, const char &b) { return to_lower(a) == to_lower(b); }
 
 inline bool starts_with(const std::string &value, const std::string &prefix, case_sensitivity sensitivity = case_sensitivity::sensitive) {
 	if (prefix.size() > value.size())
 		return false;
 
 	return sensitivity == case_sensitivity::sensitive
-			   ? equal(prefix.begin(), prefix.end(), value.begin(), [](const char &a, const char &b) { return a == b; })
-			   : equal(prefix.begin(), prefix.end(), value.begin(), [](const char &a, const char &b) { return to_lower(a) == to_lower(b); });
+			   ? equal(prefix.begin(), prefix.end(), value.begin(), case_sensitive_eq_func)
+			   : equal(prefix.begin(), prefix.end(), value.begin(), case_insensitive_eq_func);
 }
 
 inline bool ends_with(const std::string &value, const std::string &suffix, case_sensitivity sensitivity = case_sensitivity::sensitive) {
@@ -26,8 +38,8 @@ inline bool ends_with(const std::string &value, const std::string &suffix, case_
 		return false;
 
 	return sensitivity == case_sensitivity::sensitive
-			   ? equal(suffix.rbegin(), suffix.rend(), value.rbegin(), [](const char &a, const char &b) { return a == b; })
-			   : equal(suffix.rbegin(), suffix.rend(), value.rbegin(), [](const char &a, const char &b) { return to_lower(a) == to_lower(b); });
+			   ? equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_sensitive_eq_func)
+			   : equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_insensitive_eq_func);
 }
 
 /// In-place replace all occurrences of 'what' by 'by'. Returns the number of occurrence replaced.
@@ -49,10 +61,10 @@ std::string reduce(const std::string &str, const std::string &fill = " ", const 
 
 /// Join several std::strings with a separator std::string.
 template <typename T> std::string join(T begin_it, T end_it, const std::string &separator) {
-	const auto count = std::distance(begin_it, end_it);
+	const ptrdiff_t count = std::distance(begin_it, end_it);
 
 	if (count <= 0)
-		return {};
+		return std::string();
 	if (count == 1)
 		return *begin_it;
 
@@ -61,7 +73,7 @@ template <typename T> std::string join(T begin_it, T end_it, const std::string &
 	std::string out;
 	out.reserve((64 + 2) * count);
 
-	for (auto i = begin_it; i != end_it; ++i) {
+	for (T i = begin_it; i != end_it; ++i) {
 		out += *i;
 		out += separator;
 	}
@@ -71,14 +83,14 @@ template <typename T> std::string join(T begin_it, T end_it, const std::string &
 }
 
 template <typename T> std::string join(T begin_it, T end_it, const std::string &separator, const std::string &last_separator) {
-	const auto count = std::distance(begin_it, end_it);
+	const ptrdiff_t count = std::distance(begin_it, end_it);
 
 	if (count <= 0)
-		return {};
+		return std::string();
 	if (count == 1)
 		return *begin_it;
 
-	auto e = std::prev(end_it);
+	T e = end_it - 1;
 
 	std::string out;
 	out = join(begin_it, e, separator) + last_separator;

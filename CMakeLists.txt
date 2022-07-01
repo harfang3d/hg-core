@@ -8,6 +8,9 @@ project(harfang_core VERSION ${HG_VERSION} LANGUAGES CXX C HOMEPAGE_URL "https:/
 set(CMAKE_CXX_STANDARD 98)
 
 if(WIN32)
+	if(MSVC)
+		add_compile_options(/Zc:__cplusplus)
+	endif()
 	add_compile_definitions(GLFW_WIN32=1)
 endif()
 

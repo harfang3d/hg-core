@@ -10,9 +10,10 @@ namespace hg {
 
 struct gen_ref {
 	uint32_t idx, gen;
+	gen_ref() : idx(0xffffffff), gen(0xffffffff) {}
 };
 
-static const gen_ref invalid_gen_ref = {0xffffffff ,0xffffffff};
+static const gen_ref invalid_gen_ref;
 
 inline bool operator==(gen_ref a, gen_ref b) { return a.idx == b.idx && a.gen == b.gen; }
 inline bool operator!=(gen_ref a, gen_ref b) { return a.idx != b.idx || a.gen != b.gen; }
