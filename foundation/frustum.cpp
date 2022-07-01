@@ -5,7 +5,7 @@
 #include "foundation/matrix44.h"
 #include "foundation/minmax.h"
 #include "foundation/vector4.h"
-#include <cmath>
+#include <math.h>
 
 namespace hg {
 
@@ -15,21 +15,33 @@ static inline Plane NormalizePlane(const Plane &p) {
 }
 
 Frustum MakeFrustum(const Mat44 &projection) {
-	const auto X = GetRow(projection, 0), Y = GetRow(projection, 1), Z = GetRow(projection, 2), W = GetRow(projection, 3);
-	return {Opposite(NormalizePlane(W + Y)), Opposite(NormalizePlane(W - Y)), Opposite(NormalizePlane(W + X)), Opposite(NormalizePlane(W - X)),
-		Opposite(NormalizePlane(W + Z)), Opposite(NormalizePlane(W - Z))};
+	const hg::Vec4 X = GetRow(projection, 0), Y = GetRow(projection, 1), Z = GetRow(projection, 2), W = GetRow(projection, 3);
+
+	Frustum out;
+	out[FP_Top] = Opposite(NormalizePlane(W + Y));
+	out[FP_Bottom] = Opposite(NormalizePlane(W - Y));
+	out[FP_Left] = Opposite(NormalizePlane(W + X));
+	out[FP_Right] = Opposite(NormalizePlane(W - X));
+	out[FP_Near] = Opposite(NormalizePlane(W + Z));
+	out[FP_Far] = Opposite(NormalizePlane(W - Z));
+	return out;
 }
 
 Frustum MakeFrustum(const Mat44 &projection, const Mat4 &m) { return TransformFrustum(MakeFrustum(projection), m); }
 
 Frustum TransformFrustum(const Frustum &frustum, const Mat4 &m) {
 	const auto iMt = Transpose(Mat44(InverseFast(m)));
-	return {iMt * frustum[FP_Top], iMt * frustum[FP_Bottom], iMt * frustum[FP_Left], iMt * frustum[FP_Right], iMt * frustum[FP_Near], iMt * frustum[FP_Far]};
+
+	Frustum out;
+	for (size_t i = 0; i < FP_Count; i++) {
+		out[i] = iMt * frustum[i];
+	}
+	return out;
 }
 
 //
 Visibility TestVisibility(const Frustum &planes, uint32_t count, const Vec3 *point, float distance) {
-	auto vis = V_Inside;
+	Visibility vis = V_Inside;
 	for (uint32_t n = 0; n < FP_Count; ++n) {
 		uint32_t out = 0;
 		for (uint32_t i = 0; i < count; ++i)
@@ -45,7 +57,7 @@ Visibility TestVisibility(const Frustum &planes, uint32_t count, const Vec3 *poi
 }
 
 Visibility TestVisibility(const Frustum &planes, const Vec3 &point, float radius) {
-	auto vis = V_Inside;
+	Visibility vis = V_Inside;
 	for (uint32_t n = 0; n < FP_Count; ++n) {
 		const float d = DistanceToPlane(planes[n], point);
 		if (d > radius)
@@ -57,13 +69,13 @@ Visibility TestVisibility(const Frustum &planes, const Vec3 &point, float radius
 }
 
 Visibility TestVisibility(const Frustum &planes, const MinMax &minmax) {
-	const auto center_x2 = minmax.mn + minmax.mx;
-	const auto extend_x2 = minmax.mx - minmax.mn;
+	const Vec3 center_x2 = minmax.mn + minmax.mx;
+	const Vec3 extend_x2 = minmax.mx - minmax.mn;
 
 	auto vis = V_Inside;
 	for (uint32_t n = 0; n < FP_Count; ++n) {
 		// complete demonstration at: https://fgiesen.wordpress.com/2010/10/17/view-frustum-culling/
-		const auto &plane = planes[n];
+		const Plane &plane = planes[n];
 
 		const float d = Dot({plane.x, plane.y, plane.z}, center_x2);
 		const float r = Dot(Abs(Vec3(plane.x, plane.y, plane.z)), extend_x2); // "where there's one, there's many" would take care of that Abs()

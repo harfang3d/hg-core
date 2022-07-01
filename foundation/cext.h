@@ -177,5 +177,75 @@ template <typename C, typename V> int index_of(const C &c, const V &v, int if_mi
 namespace std {
 typedef uint32_t char32_t;
 typedef basic_string<char32_t, char_traits<char32_t>, allocator<char32_t> > u32string;
+}
+#endif
+
+#if __cplusplus >= 201103L
+#include <array>
+#else
+namespace std {
+// swap is not implemented
+template <typename T, size_t N> class array {
+public:
+	typedef T *iterator;
+	typedef const T *const_iterator;
+	typedef std::reverse_iterator<iterator> reverse_iterator;
+	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
+	array() {}
+	array(const T &v) { std::fill(begin(), end(), v); }
+	array(const T *ptr) { std::copy(ptr, ptr + N, begin()); }
+	array(const array &a) { std::copy(a.begin(), a.end(), begin()); }
+
+	inline T &at(size_t offset) { return _elmnt[offset]; }
+	inline const T &at(size_t offset) const { return _elmnt[offset]; }
+
+	inline T &operator[](size_t offset) { return at(offset); }
+	inline const T &operator[](size_t offset) const { return at(offset); }
+
+	inline T &front() { return at(0); }
+	inline const T &front() const { return at(0); }
+
+	inline T &back() { return at(N - 1); }
+	inline const T &back() const { return N ? at(N - 1) : at(N); }
+
+	T *data() { return &_elmnt[0]; }
+	const T *data() const { return &_elmnt[0]; }
+
+	size_t size() const { return N; }
+	bool empty() const { return size() == 0; }
+
+	iterator begin() { return iterator(data()); }
+	const_iterator begin() const { return const_iterator(data()); }
+
+	iterator end() { return iterator(data() + N); }
+	const_iterator end() const { return const_iterator(data() + N); }
+
+	reverse_iterator rbegin() { return reverse_iterator(end()); }
+	const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+
+	reverse_iterator rend() { return reverse_iterator(begin()); }
+	const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
+	array &operator=(const array &a) {
+		std::copy(a.begin(), a.end(), begin());
+		return *this;
+	}
+
+	void fill(const T &value) { std::fill(begin(), end(), value); }
+
+	private:
+	T _elmnt[N];
 };
+
+template <typename T, size_t N> bool operator==(const array<T, N> &lhs, const array<T, N> &rhs) { return std::equal(lhs.begin(), lhs.end(), rhs.begin()); }
+template <typename T, size_t N> bool operator!=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs == rhs); }
+template <typename T, size_t N> bool operator<(const array<T, N> &lhs, const array<T, N> &rhs) {
+	return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+template <typename T, size_t N> bool operator>(const array<T, N> &lhs, const array<T, N> &rhs) { return rhs > lhs; }
+template <typename T, size_t N> bool operator<=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs > rhs); }
+template <typename T, size_t N> bool operator>=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs < rhs); }
+
+}
 #endif

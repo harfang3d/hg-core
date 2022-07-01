@@ -10,7 +10,7 @@ namespace hg {
 struct Mat4;
 
 struct MinMax {
-	MinMax() = default;
+	MinMax() {}
 	MinMax(const Vec3 &min, const Vec3 &max) : mn(min), mx(max) {}
 
 	Vec3 mn, mx;
@@ -44,9 +44,9 @@ inline bool Contains(const MinMax &mm, const Vec3 &p) {
 }
 
 /// Return the union of two minmax.
-inline MinMax Union(const MinMax &a, const MinMax &b) { return {Min(a.mn, b.mn), Max(a.mx, b.mx)}; }
+inline MinMax Union(const MinMax &a, const MinMax &b) { return MinMax(Min(a.mn, b.mn), Max(a.mx, b.mx)); }
 /// Return the union of a minmax and vector.
-inline MinMax Union(const MinMax &mm, const Vec3 &p) { return {Min(mm.mn, p), Max(mm.mx, p)}; }
+inline MinMax Union(const MinMax &mm, const Vec3 &p) { return MinMax(Min(mm.mn, p), Max(mm.mx, p)); }
 
 /// Return a transformed copy of a minmax instance.
 MinMax operator*(const MinMax &mm, const Mat4 &m);
@@ -61,6 +61,6 @@ bool ClassifyLine(const MinMax &mm, const Vec3 &p, const Vec3 &d, Vec3 &i, Vec3 
 bool ClassifySegment(const MinMax &mm, const Vec3 &p1, const Vec3 &p2, Vec3 &itr, Vec3 *n = nullptr);
 
 /// Set from position and size.
-inline MinMax MinMaxFromPositionSize(const Vec3 &p, const Vec3 &s) { return {p - s * 0.5f, p + s * 0.5f}; }
+inline MinMax MinMaxFromPositionSize(const Vec3 &p, const Vec3 &s) { return MinMax(p - s * 0.5f, p + s * 0.5f); }
 
 } // namespace hg

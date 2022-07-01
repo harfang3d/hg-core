@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "foundation/cext.h"
 #include "foundation/rotation_order.h"
 #include "foundation/vector3.h"
 

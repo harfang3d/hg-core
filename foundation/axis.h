@@ -4,6 +4,6 @@
 
 namespace hg {
 
-enum Axis : unsigned char { A_X, A_Y, A_Z, A_RotX, A_RotY, A_RotZ, A_Last };
+enum Axis { A_X, A_Y, A_Z, A_RotX, A_RotY, A_RotZ, A_Last };
 
 } // namespace hg

@@ -13,7 +13,7 @@ struct Mat4;
 	@short Plane
 	ax + by + cz + d = 0
 */
-using Plane = Vec4;
+typedef Vec4 Plane;
 
 Plane MakePlane(const Vec3 &p, const Vec3 &n);
 Plane MakePlane(const Vec3 &p, const Vec3 &n, const Mat4 &m);
