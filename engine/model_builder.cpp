@@ -95,7 +95,15 @@ void ModelBuilder::AddTriangle(VtxIdxType a, VtxIdxType b, VtxIdxType c) {
 	list.idx.push_back(c);
 }
 
-void ModelBuilder::AddQuad(VtxIdxType a, VtxIdxType b, VtxIdxType c, VtxIdxType d) { AddPolygon({a, b, c, d}); }
+void ModelBuilder::AddQuad(VtxIdxType a, VtxIdxType b, VtxIdxType c, VtxIdxType d) {
+	AddTriangle(a, b, c);
+	AddTriangle(a, c, d);
+}
+
+void ModelBuilder::AddPolygon(const VtxIdxType *idxs, size_t n) {
+	for (size_t i = 1; i < n - 1; ++i)
+		AddTriangle(idxs[0], idxs[i], idxs[i + 1]);
+}
 
 void ModelBuilder::AddPolygon(const std::vector<VtxIdxType> &idxs) {
 	for (int i = 1; i < idxs.size() - 1; ++i)

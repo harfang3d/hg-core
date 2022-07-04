@@ -13,7 +13,7 @@
 
 namespace hg {
 
-using VtxIdxType = uint32_t;
+typedef uint32_t VtxIdxType;
 
 enum ModelOptimisationLevel {
 	MOL_None, // fastest
@@ -28,6 +28,7 @@ struct ModelBuilder {
 
 	void AddTriangle(VtxIdxType a, VtxIdxType b, VtxIdxType c);
 	void AddQuad(VtxIdxType a, VtxIdxType b, VtxIdxType c, VtxIdxType d);
+	void AddPolygon(const VtxIdxType *idxs, size_t n);
 	void AddPolygon(const std::vector<VtxIdxType> &idxs);
 	void AddBoneIdx(uint16_t AddBoneIdx);
 
@@ -38,7 +39,7 @@ struct ModelBuilder {
 
 	void Clear();
 
-	using end_list_cb = void (*)(const VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
+	typedef void (*end_list_cb)(const VertexLayout &decl, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
 		const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata);
 
 	void Make(
@@ -47,7 +48,7 @@ struct ModelBuilder {
 	Model MakeModel(const VertexLayout &decl, ModelOptimisationLevel optimisation_level = MOL_None, bool verbose = false) const;
 
 private:
-	size_t hash_collision{};
+	size_t hash_collision;
 
 	struct List {
 		std::vector<VtxIdxType> idx;
@@ -57,7 +58,7 @@ private:
 		std::map<uint64_t, VtxIdxType> vtx_lookup;
 		uint16_t mat;
 
-		MinMax minmax{Vec3::Max, Vec3::Min};
+		MinMax minmax;
 	};
 
 	std::vector<List> lists;

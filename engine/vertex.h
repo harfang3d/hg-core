@@ -22,6 +22,6 @@ struct Vertex {
 	float weight[4];
 };
 
-Vertex MakeVertex(const Vec3 &pos, const Vec3 &nrm = {0.f, 1.f, 0.f}, const Vec2 &uv = {0.f, 0.f}, const Color &color = {1.f, 1.f, 1.f, 1.f});
+Vertex MakeVertex(const Vec3 &pos, const Vec3 &nrm = Vec3::Up, const Vec2 &uv = Vec2::Zero, const Color &color = Color::One);
 
 } // namespace hg

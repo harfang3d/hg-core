@@ -11,7 +11,7 @@ namespace hg {
 struct Mat4;
 
 struct MinMax {
-	MinMax() {}
+	MinMax() : mn(Vec3::Max), mx(Vec3::Min) {}
 	MinMax(const Vec3 &min, const Vec3 &max) : mn(min), mx(max) {}
 
 	Vec3 mn, mx;

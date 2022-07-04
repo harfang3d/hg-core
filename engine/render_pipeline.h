@@ -58,10 +58,10 @@ struct ViewState {
 	Mat4 view;
 };
 
-ViewState ComputeOrthographicViewState(const Mat4 &world, float size, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset = {});
-ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset = {});
+ViewState ComputeOrthographicViewState(const Mat4 &world, float size, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset = Vec2::Zero);
+ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset = Vec2::Zero);
 
-Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Vec3 &scale = {1, 1, 1});
+Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Vec3 &scale = Vec3::One);
 
 //
 struct Window;
@@ -124,7 +124,7 @@ bool SaveResourceMetaToFile(const std::string &path, const json::jobject &meta);
 //
 struct PipelineInfo {
 	std::string name;
-	std::vector<std::vector<std::string>> configs;
+	std::vector<std::vector<std::string> > configs;
 };
 
 struct PipelineResources;
