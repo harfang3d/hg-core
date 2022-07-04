@@ -17,6 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: install dependencies
+        run: |
+            sudo apt update
+            sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       - name: prepare
         run: mkdir -p build/cmake
       - name: configure
