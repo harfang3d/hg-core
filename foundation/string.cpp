@@ -191,7 +191,8 @@ std::wstring utf8_to_wchar(const std::string &str) {
 //
 std::wstring ansi_to_wchar(const std::string &str) {
 	std::wstring ret;
-	std::mbstate_t state = {};
+	std::mbstate_t state;
+	memset(&state, 0, sizeof(std::mbstate_t));
 	const char *src = str.data();
 
 	size_t len = std::mbsrtowcs(nullptr, &src, 0, &state);
@@ -203,7 +204,7 @@ std::wstring ansi_to_wchar(const std::string &str) {
 		if (static_cast<size_t>(-1) != len)
 			ret.assign(buff, len);
 
-		delete [] buff;
+		delete[] buff;
 	}
 	return ret;
 }
@@ -275,7 +276,7 @@ std::string word_wrap(const std::string &str, int width, int lead, char lead_cha
 std::string name_to_path(std::string name) {
 	name = tolower(name);
 	static const std::string blacklist[5] = {" ", "\\", "/", "!", "@"};
-	for (size_t i=0; i<5; i++)
+	for (size_t i = 0; i < 5; i++)
 		replace_all(name, blacklist[i], "-");
 	return name;
 }

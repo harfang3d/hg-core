@@ -242,12 +242,11 @@ std::string GetCurrentWorkingDirectory() {
 bool SetCurrentWorkingDirectory(const std::string &path) { return SetCurrentDirectoryW(utf8_to_wchar(path).c_str()) == TRUE; }
 
 std::string GetUserFolder() {
-	HRESULT res;
 	PWSTR path;
-	res = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &path);
-	if (FAILED(res)) {
-		return {};
-	}
+	HRESULT res = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &path);
+	if (FAILED(res))
+		return "";
+
 	std::string ret = wchar_to_utf8(path);
 	CoTaskMemFree(path);
 	return ret;
