@@ -23,25 +23,28 @@ private:
 		T T_;
 	};
 
+	typedef typename std::map<const std::string, R>::iterator dict_iterator;
+	typedef typename std::map<const std::string, R>::const_iterator const_dict_iterator;
+
+	typedef typename generational_vector_list<name_T>::iterator res_iterator;
+	typedef typename generational_vector_list<name_T>::const_iterator const_res_iterator;
+
+	inline R add_ref(const std::string &name, const T &res) { 
+		name_T in = {name, res};
+		gen_ref ref = resources.add_ref(in);
+		R out = {ref};
+		return out;
+	}
+
 public:
 	ResourceCache(void (*destroy)(T &)) : _destroy(destroy) {}
 
 	R Add(const std::string &name, const T &res) {
-		auto i = name_to_ref.find(name);
-		if (i != std::end(name_to_ref))
+		dict_iterator i = name_to_ref.find(name);
+		if (i != name_to_ref.end())
 			return i->second;
 
-		R ref = {resources.add_ref({name, res})};
-		name_to_ref[name] = ref;
-		return ref;
-	}
-
-	R Add(const std::string &name, T &&res) {
-		auto i = name_to_ref.find(name);
-		if (i != std::end(name_to_ref))
-			return i->second;
-
-		R ref = {resources.add_ref({name, std::move(res)})};
+		R ref = {resources.add_ref(name, res)};
 		name_to_ref[name] = ref;
 		return ref;
 	}
@@ -50,13 +53,6 @@ public:
 		if (resources.is_valid(ref.ref)) {
 			_destroy(resources[ref.ref.idx].T_);
 			resources[ref.ref.idx].T_ = res;
-		}
-	}
-
-	void Update(R ref, T &&res) {
-		if (resources.is_valid(ref.ref)) {
-			_destroy(resources[ref.ref.idx].T_);
-			resources[ref.ref.idx].T_ = std::move(res);
 		}
 	}
 
@@ -69,8 +65,9 @@ public:
 	}
 
 	void DestroyAll() {
-		for (auto &i : resources)
+		for (res_iterator i = resources.begin(); i < resources.end(); i++) {
 			_destroy(i.T_);
+		}
 		resources.clear();
 		name_to_ref.clear();
 	}
@@ -78,11 +75,11 @@ public:
 	bool IsValidRef(R ref) const { return resources.is_valid(ref.ref); }
 
 	// get a resource index for code that does not carry a full reference to the resource.
-	uint16_t GetValidatedRefIndex(R ref) const { return resources.is_valid(ref.ref) ? numeric_cast<uint16_t>(ref.ref.idx) : 0xffff; }
+	uint16_t GetValidatedRefIndex(R ref) const { return resources.is_valid(ref.ref) ? uint16_t(ref.ref.idx) : 0xffff; }
 
 	R Has(const std::string &name) const {
-		auto i = name_to_ref.find(name);
-		return i != std::end(name_to_ref) ? i->second : R{};
+		dict_iterator i = name_to_ref.find(name);
+		return i != name_to_ref.end() ? i->second : R();
 	}
 
 	size_t GetCount() const { return resources.size(); }
@@ -99,14 +96,14 @@ public:
 		}
 	}
 
-	std::string GetName(R ref) const { return resources.is_valid(ref.ref) ? resources[ref.ref.idx].name : std::string{}; }
+	std::string GetName(R ref) const { return resources.is_valid(ref.ref) ? resources[ref.ref.idx].name : std::string(); }
 
 	std::string GetName_unsafe_(uint16_t idx) const {
 		if (idx != 0xffff) {
 			__ASSERT__(resources.is_used(idx));
 			return resources[idx].name;
 		}
-		return {};
+		return std::string();
 	}
 
 	const T &Get(R ref) const { return resources.is_valid(ref.ref) ? resources[ref.ref.idx].T_ : dflt; }
@@ -120,8 +117,8 @@ public:
 	}
 
 	const T &Get(const std::string &name) const {
-		auto i = name_to_ref.find(name);
-		return i != std::end(name_to_ref) ? resources[i->second.idx].T_ : dflt;
+		dict_iterator i = name_to_ref.find(name);
+		return i != name_to_ref.end() ? resources[i->second.idx].T_ : dflt;
 	}
 
 	T &Get(R ref) {
@@ -131,6 +128,25 @@ public:
 
 	gen_ref first_ref() const { return resources.first_ref(); }
 	gen_ref next_ref(gen_ref ref) const { return resources.next_ref(ref); }
+
+#if __cplusplus >= 201103L
+	R Add(const std::string &name, T &&res) {
+		auto i = name_to_ref.find(name);
+		if (i != name_to_ref.end())
+			return i->second;
+
+		R ref = {resources.add_ref({name, std::move(res)})};
+		name_to_ref[name] = ref;
+		return ref;
+	}
+
+	void Update(R ref, T &&res) {
+		if (resources.is_valid(ref.ref)) {
+			_destroy(resources[ref.ref.idx].T_);
+			resources[ref.ref.idx].T_ = std::move(res);
+		}
+	}
+#endif
 
 private:
 	T dflt;
