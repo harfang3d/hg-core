@@ -211,7 +211,7 @@ std::string ReadString(File file) {
 
 bool WriteString(File file, const std::string &v) {
 	const size_t len = v.length();
-	return Write(file, uint32_t(len)) && Write(file, v.data(), len) == len;
+	return Write(file, numeric_cast<uint32_t>(len)) && Write(file, v.data(), len) == len;
 }
 
 bool WriteStringAsText(File file, const std::string &v) { return Write(file, v.data(), v.length()) == v.length(); }

@@ -197,3 +197,67 @@ template <typename T> struct is_signed : public detail::is_signed<T>::type {};
 
 }
 #endif
+
+// static assert
+#if __cplusplus < 201103L
+namespace detail {
+template <int> struct CompileTimeError;
+template <> struct CompileTimeError<true> {};
+} // detail
+#define static_assert(cond, msg)                                        \
+	do {                                                                \
+		detail::CompileTimeError<(cond) != 0> static_assertion_failed;  \
+		(void)static_assertion_failed;                                  \
+	} while (0)
+#endif
+
+// plain raw memory block
+template <typename T> struct memory_block {
+	memory_block() : data(nullptr), size(0) {}
+	memory_block(const T *data_, size_t size_) : data(new char[size_]), size(size_) {
+		if (data_)
+			memcpy(data, data_, size_);
+	}
+	~memory_block() { delete[] data; }
+
+	operator const T *() const { return reinterpret_cast<T *>(data); }
+
+	T *get_data() const { return reinterpret_cast<T *>(data); }
+	size_t get_size() const { return size; }
+
+private:
+	char *data;
+	size_t size;
+};
+
+// perform a numeric cast after asserting that the input value fits in the target type
+template <class CastType, class Type> CastType numeric_cast(Type v) {
+	static_assert(std::is_integral<CastType>::value && std::is_integral<Type>::value, "numeric_cast is only valid for integral types");
+
+#if _DEBUG
+	auto mn = std::numeric_limits<CastType>::min(), mx = std::numeric_limits<CastType>::max();
+
+	bool r;
+	if (std::is_signed<CastType>::value && !std::is_signed<Type>::value) { // int/size_t
+		r = size_t(v) <= size_t(mx);
+	} else if (!std::is_signed<CastType>::value && std::is_signed<Type>::value) {
+		r = v >= 0 && size_t(v) <= size_t(mx);
+	} else if (std::is_signed<CastType>::value && std::is_signed<Type>::value) {
+		r = ptrdiff_t(v) >= ptrdiff_t(mn) && ptrdiff_t(v) <= ptrdiff_t(mx);
+	} else { // both non-signed
+		r = size_t(v) >= size_t(mn) && size_t(v) <= size_t(mx);
+	}
+
+	if (!r)
+		trigger_assert(__FILE__, __LINE__, __FUNCTION__, "numeric_cast", "Cast operation will result in truncation");
+#endif
+
+	return CastType(v);
+}
+
+template <typename C, typename V> int index_of(const C &c, const V &v, int if_missing = -1) {
+	typename C::const_iterator i = std::find(c.begin(), c.end(), v);
+	if (i == c.end())
+		return if_missing;
+	return numeric_cast<int, size_t>(std::distance(c.begin(), i));
+}
