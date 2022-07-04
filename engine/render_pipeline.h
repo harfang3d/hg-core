@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#if WIN32
+#if _WIN32
 #undef GetObject // stop Windows.h from polluting global namespace
 #endif
 

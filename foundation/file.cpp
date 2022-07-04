@@ -10,6 +10,7 @@
 #if _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <sys/stat.h>
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -31,7 +32,7 @@ static FILE *_Open(const std::string &path, const std::string &mode, bool silent
 	std::wstring wpath = utf8_to_wchar(path);
 	std::wstring wmode = utf8_to_wchar(mode);
 
-	const auto err = _wfopen_s(&file, wpath.data(), wmode.data());
+	const errno_t err = _wfopen_s(&file, wpath.data(), wmode.data());
 
 	if (!silent && err != 0) {
 		char errmsg[256];
@@ -44,7 +45,7 @@ static FILE *_Open(const std::string &path, const std::string &mode, bool silent
 	return file;
 }
 
-static inline File from_posix_FILE(FILE* f) {
+static inline File from_posix_FILE(FILE *f) {
 	File out = {f ? files.add_ref(f) : invalid_gen_ref};
 	return out;
 }
@@ -70,7 +71,7 @@ bool IsEOF(File file) { return files.is_valid(file.ref) ? feof(files[file.ref.id
 size_t GetSize(File file) {
 	if (!files.is_valid(file.ref))
 		return 0;
-	FILE* s = files[file.ref.idx];
+	FILE *s = files[file.ref.idx];
 	long t = ftell(s);
 	fseek(s, 0, SEEK_END);
 	long size = ftell(s);

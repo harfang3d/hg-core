@@ -163,7 +163,7 @@ void test_init() {
 	sg_bindings bind;
 	memset(&bind, 0, sizeof(sg_bindings));
 
-	const auto &list = cube_model.lists[0];
+	const DisplayList &list = cube_model.lists[0];
 	bind.index_buffer = list.index_buffer;
 	bind.vertex_buffers[0] = list.vertex_buffer;
 

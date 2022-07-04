@@ -33,8 +33,8 @@ bool ModelBuilder::EndList(uint16_t material) {
 }
 
 static uint64_t fnv1a64(const void *buf, size_t len) {
-	static const uint64_t fnv64_prime = UINT64_C(1099511628211);
-	static const uint64_t fnv64_offset = UINT64_C(14695981039346656037);
+	static const uint64_t fnv64_prime = 1099511628211ULL;
+	static const uint64_t fnv64_offset = 14695981039346656037ULL;
 
 	const uint8_t *pointer = reinterpret_cast<const uint8_t *>(buf);
 	const uint8_t *buf_end = pointer + len;

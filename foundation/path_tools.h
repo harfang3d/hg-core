@@ -49,6 +49,8 @@ bool PathStartsWith(const std::string &path, const std::string &with);
 std::string PathStripPrefix(const std::string &path, const std::string &prefix);
 std::string PathStripSuffix(const std::string &path, const std::string &suffix);
 std::string PathJoin(const std::vector<std::string> &elements);
+std::string PathJoin(const std::string &a, const std::string &b);
+std::string PathJoin(const std::string &a, const std::string &b, const std::string &c);
 
 std::string SwapFileExtension(const std::string &path, const std::string &ext);
 

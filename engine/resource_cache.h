@@ -154,7 +154,7 @@ private:
 	generational_vector_list<name_T> resources;
 	std::map<const std::string, R> name_to_ref;
 
-	void (*_destroy)(T &) = nullptr;
+	void (*_destroy)(T &);
 };
 
 } // namespace hg

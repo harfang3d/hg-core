@@ -91,6 +91,21 @@ std::string PathJoin(const std::vector<std::string> &elements) {
 	return CleanPath(join(stripped_elements.begin(), stripped_elements.end(), "/"));
 }
 
+std::string PathJoin(const std::string &a, const std::string &b) {
+	std::vector<std::string> elms;
+	elms.push_back(a);
+	elms.push_back(b);
+	return PathJoin(elms);
+}
+
+std::string PathJoin(const std::string &a, const std::string &b, const std::string &c) {
+	std::vector<std::string> elms;
+	elms.push_back(a);
+	elms.push_back(b);
+	elms.push_back(c);
+	return PathJoin(elms);
+}
+
 //
 std::string CutFilePath(const std::string &path) {
 	if (path.empty())
