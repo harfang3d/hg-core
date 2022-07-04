@@ -201,10 +201,9 @@ static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const
 	Model &model = *reinterpret_cast<Model *>(userdata);
 
 	DisplayList list;
-	// list.index_buffer;
+			list.element_count = idx_data.size();
+			list.index_buffer = MakeIndexBuffer(idx_data.data(), idx_data.size() * sizeof(uint32_t));
 	list.vertex_buffer = MakeVertexBuffer(vtx_data.data(), vtx_data.size());
-	// const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))), BGFX_BUFFER_INDEX32);
-	// const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
 
 	model.bounds.push_back(minmax);
 	model.lists.push_back(list);

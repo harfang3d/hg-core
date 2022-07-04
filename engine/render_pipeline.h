@@ -219,6 +219,7 @@ private:
 };
 
 struct DisplayList {
+	size_t element_count;
 	sg_buffer index_buffer;
 	sg_buffer vertex_buffer;
 	std::vector<uint16_t> bones_table;
@@ -232,6 +233,7 @@ struct Model { // 96B (+heap)
 };
 
 //
+sg_buffer MakeIndexBuffer(const void *data, size_t size);
 sg_buffer MakeVertexBuffer(const void *data, size_t size);
 
 #if 0

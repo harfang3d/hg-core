@@ -92,7 +92,13 @@ sg_pipeline MakePipeline(const VertexLayout &vtx_layout, sg_shader shader) {
 	sg_pipeline_desc pipeline_desc;
 
 	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
+	pipeline_desc.index_type = SG_INDEXTYPE_UINT32;
 	pipeline_desc.shader = shader;
+
+	pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+	pipeline_desc.depth.write_enabled = true;
+	pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+
 	vtx_layout.FillLayoutDesc(pipeline_desc.layout);
 
 	return sg_make_pipeline(&pipeline_desc);
@@ -120,11 +126,11 @@ void test_init() {
 	shader_desc.vs.source = "#version 330\n"
 							"uniform mat4 mvp;\n"
 							"layout(location = 0) in vec4 position;\n"
-							"layout(location = 1) in vec4 color0;\n"
-							"out vec4 color;\n"
+							"layout(location = 1) in vec3 normal;\n"
+							"out vec3 _normal;\n"
 							"void main() {\n"
 							"	gl_Position = mvp * position;\n"
-							"	color = color0;\n"
+							"	_normal = normal;\n"
 							"}\n";
 
 	shader_desc.vs.uniform_blocks[0].size = sizeof(shader_vs_params);
@@ -132,10 +138,11 @@ void test_init() {
 	shader_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
 
 	shader_desc.fs.source = "#version 330\n"
-							"in vec4 color;\n"
-							"out vec4 frag_color;\n"
+							"in vec3 _normal;\n"
+							"out vec4 color;\n"
 							"void main() {\n"
-							"	frag_color = color;\n"
+							"	float k = normalize(_normal).z;\n"
+							"	color = vec4(k, k, k, 1);\n"
 							"}\n";
 
 	sg_shader shd = sg_make_shader(&shader_desc);
@@ -143,17 +150,24 @@ void test_init() {
 	// a pipeline state object (default render states are fine for triangle)
 	VertexLayout layout;
 	layout.AddAttrib(VAS_Position, SG_VERTEXFORMAT_FLOAT3);
-	layout.AddAttrib(VAS_Color, SG_VERTEXFORMAT_FLOAT4);
+	layout.AddAttrib(VAS_Normal, SG_VERTEXFORMAT_FLOAT3);
 	layout.End();
 
+	Model cube_model = CreateSphereModel(layout, 1.f, 32, 16);
+
+	//
 	sg_pipeline pip = MakePipeline(layout, shd);
 
-	Model cube_model = CreateCubeModel(layout, 1.f, 1.f, 1.f);
 
 	// resource bindings
 	sg_bindings bind;
 	memset(&bind, 0, sizeof(sg_bindings));
-	bind.vertex_buffers[0] = vbuf;
+
+	const auto &list = cube_model.lists[0];
+	bind.index_buffer = list.index_buffer;
+	bind.vertex_buffers[0] = list.vertex_buffer;
+
+	//bind.vertex_buffers[0] = vbuf;
 
 	// default pass action (clear to grey)
 	sg_pass_action pass_action = {0};
@@ -175,9 +189,9 @@ void test_init() {
 		fmt::print("dx={} dy={} up={} down={} left={} right={}\n", xdelta, ydelta, key_up, key_down, key_left, key_right);
 
 		//
-		FpsController(key_up, key_down, key_left, key_right, true, float(-xdelta), float(-ydelta), pos, rot, 2.f, time_from_ms(16));
+		FpsController(key_up, key_down, key_left, key_right, true, float(xdelta), float(ydelta), pos, rot, 2.f, time_from_ms(16));
 
-		const Mat44 proj = ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
+		const Mat44 proj = ScaleMat4(Vec3(1, -1, 1)) * ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
 		const Mat4 view = InverseFast(TransformationMat4(pos, rot));
 
 		vs_params.mvp = Transpose(proj * view);
@@ -196,7 +210,7 @@ void test_init() {
 			range.size = sizeof(vs_params);
 			sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, range);
 		}
-		sg_draw(0, 3, 1);
+		sg_draw(0, list.element_count, 1);
 
 		sg_end_pass();
 
