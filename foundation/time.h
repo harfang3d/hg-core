@@ -41,4 +41,6 @@ inline time_ns time_from_ns(int64_t ns) { return ns; }
 time_ns time_now();
 time_ns wall_clock();
 
+void sleep_for(const time_ns &t);
+
 } // namespace hg

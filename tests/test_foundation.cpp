@@ -1,9 +1,8 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
-#include <thread>
-
 #include "acutest.h"
 
+#include "foundation/time.h"
 #include "foundation/clock.h"
 #include "foundation/vector2.h"
 #include "foundation/vector3.h"
@@ -20,13 +19,13 @@ void test_clock_update() {
 	TEST_CHECK(get_clock_dt() == 1);
 
 	tick_clock();
-	std::this_thread::sleep_for(std::chrono::milliseconds(16));
+	sleep_for(time_from_ms(16));
 	tick_clock();
 
 	TEST_CHECK(time_to_us(get_clock_dt()) >= 15000);
 
 	for (int n = 0; n < 16; ++n) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(16));
+		sleep_for(time_from_ms(16));
 		tick_clock();
 	}
 }

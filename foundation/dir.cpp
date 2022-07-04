@@ -51,7 +51,7 @@ std::vector<DirEntry> ListDir(const std::string &path, int mask) {
 		size.LowPart = data.nFileSizeLow;
 
 		if (mask & type)
-			entries.push_back({type, std::move(name), last_modified, numeric_cast<size_t>(size.QuadPart)});
+			entries.push_back({type, std::move(name), last_modified, size_t(size.QuadPart)});
 	} while (FindNextFileW(hFind, &data));
 
 	FindClose(hFind);

@@ -60,7 +60,7 @@ std::vector<VertexToPolygon> ComputeVertexToPolygon(const Geometry &geo) {
 	for (auto i = 0; i < geo.pol.size(); ++i) {
 		for (auto j = 0; j < geo.pol[i].vtx_count; ++j) {
 			const auto v = geo.binding[tt + j];
-			vtx_to_pol[v].pol_index[vtx_to_pol[v].pol_count] = numeric_cast<uint32_t>(i);
+			vtx_to_pol[v].pol_index[vtx_to_pol[v].pol_count] = uint32_t(i);
 			vtx_to_pol[v].vtx_index[vtx_to_pol[v].pol_count] = j;
 			++vtx_to_pol[v].pol_count;
 		}
@@ -502,7 +502,7 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 			auto bone_idx = geo.skin[i_vtx].index[i];
 			auto bone_map_it = bone_map.find(bone_idx);
 			__ASSERT__(bone_map_it != bone_map.end());
-			vtx.index[i] = numeric_cast<uint8_t>(bone_map_it->second);
+			vtx.index[i] = uint8_t(bone_map_it->second);
 			vtx.weight[i] = unpack_float(geo.skin[i_vtx].weight[i]);
 		}
 
@@ -713,7 +713,7 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, Model
 
 	Write<uint8_t>(file, 0); // EOLists
 
-	Write(file, numeric_cast<uint32_t>(geo.bind_pose.size())); // version 1: add bind poses
+	Write(file, uint32_t(geo.bind_pose.size())); // version 1: add bind poses
 	for (auto &mtx : geo.bind_pose)
 		Write(file, mtx);
 
