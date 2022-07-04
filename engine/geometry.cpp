@@ -19,11 +19,11 @@ namespace hg {
 
 uint8_t GetModelBinaryFormatVersion() { return 2; }
 
-static size_t _Count0(int v, const Geometry::Polygon &pol) { return v + pol.vtx_count; };
-size_t ComputeBindingCount(const Geometry &geo) { return std::accumulate(geo.pol.begin(), geo.pol.end(), 0, _Count0); }
+static size_t _Count0(size_t v, const Geometry::Polygon &pol) { return v + pol.vtx_count; };
+size_t ComputeBindingCount(const Geometry &geo) { return std::accumulate(geo.pol.begin(), geo.pol.end(), size_t(0), _Count0); }
 
-static size_t _Count1(int v, const Geometry::Polygon &pol) { return v + (pol.vtx_count > 2 ? pol.vtx_count - 2 : 0); }
-size_t ComputeTriangleCount(const Geometry &geo) { return std::accumulate(geo.pol.begin(), geo.pol.end(), 0, _Count1); }
+static size_t _Count1(size_t v, const Geometry::Polygon &pol) { return v + (pol.vtx_count > 2 ? pol.vtx_count - 2 : 0); }
+size_t ComputeTriangleCount(const Geometry &geo) { return std::accumulate(geo.pol.begin(), geo.pol.end(), size_t(0), _Count1); }
 
 std::vector<uint32_t> ComputePolygonIndex(const Geometry &geo) {
 	std::vector<uint32_t> out;

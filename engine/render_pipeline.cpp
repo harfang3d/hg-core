@@ -42,17 +42,19 @@ bgfxMatrix3 to_bgfx(const Mat3 &m) { return {m.m[0][0], m.m[1][0], m.m[2][0], m.
 
 //
 ViewState ComputeOrthographicViewState(const Mat4 &world, float size, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset) {
-	const auto view = InverseFast(world);
-	const auto proj = ComputeOrthographicProjectionMatrix(znear, zfar, size, aspect_ratio, offset);
-	const auto frustum = MakeFrustum(proj, world);
-	return {frustum, proj, view};
+	ViewState out;
+	out.view = InverseFast(world);
+	out.proj = ComputeOrthographicProjectionMatrix(znear, zfar, size, aspect_ratio, offset);
+	out.frustum = MakeFrustum(out.proj, world);
+	return out;
 }
 
 ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear, float zfar, const Vec2 &aspect_ratio, const Vec2 &offset) {
-	const auto view = InverseFast(world);
-	const auto proj = ComputePerspectiveProjectionMatrix(znear, zfar, FovToZoomFactor(fov), aspect_ratio, offset);
-	const auto frustum = MakeFrustum(proj, world);
-	return {frustum, proj, view};
+	ViewState out;
+	out.view = InverseFast(world);
+	out.proj = ComputePerspectiveProjectionMatrix(znear, zfar, FovToZoomFactor(fov), aspect_ratio, offset);
+	out.frustum = MakeFrustum(out.proj, world);
+	return out;
 }
 
 // l

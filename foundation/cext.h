@@ -230,6 +230,10 @@ private:
 	size_t size;
 };
 
+namespace hg {
+#undef min
+#undef max
+
 // perform a numeric cast after asserting that the input value fits in the target type
 template <class CastType, class Type> CastType numeric_cast(Type v) {
 	static_assert(std::is_integral<CastType>::value && std::is_integral<Type>::value, "numeric_cast is only valid for integral types");
@@ -261,3 +265,5 @@ template <typename C, typename V> int index_of(const C &c, const V &v, int if_mi
 		return if_missing;
 	return numeric_cast<int, size_t>(std::distance(c.begin(), i));
 }
+
+} // namespace hg
