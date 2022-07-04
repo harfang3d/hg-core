@@ -23,8 +23,9 @@ uint8_t GetModelBinaryFormatVersion();
 // Platform agnostic geometry
 struct Geometry {
 	struct Polygon { // 2B
-		uint8_t vtx_count{0};
-		uint8_t material{0};
+		uint8_t vtx_count;
+		uint8_t material;
+		Polygon() : vtx_count(0), material(0) {}
 	};
 
 	std::vector<Vec3> vtx;
@@ -41,7 +42,7 @@ struct Geometry {
 
 	std::vector<TangentFrame> tangent; // per-polygon-vertex
 
-	using UVSet = std::vector<Vec2>; // 24B
+	typedef std::vector<Vec2> UVSet; // 24B
 
 	std::array<UVSet, 8> uv; // per-polygon-vertex
 

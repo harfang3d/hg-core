@@ -127,7 +127,7 @@ Color GetPixelRGBA(const Picture &pic, uint16_t x, uint16_t y) {
 		return Color::Zero;
 
 	const int size = size_of(pic.GetFormat());
-	int offset = int((x + (size_t)pic.GetWidth() * y) * size);
+	int offset = numeric_cast<int>((x + (size_t)pic.GetWidth() * y) * size);
 	Color out(Color::Zero);
 	const uint8_t *data = pic.GetData();
 
@@ -142,7 +142,7 @@ void SetPixelRGBA(Picture &pic, uint16_t x, uint16_t y, const Color &col) {
 		return;
 
 	const int size = size_of(pic.GetFormat());
-	int offset = int((x + (size_t)pic.GetWidth() * y) * size);
+	int offset = numeric_cast<int>((x + (size_t)pic.GetWidth() * y) * size);
 	uint8_t *data = pic.GetData();
 
 	for (int i = 0; i < size;)
@@ -155,12 +155,9 @@ struct STB_callbacks {
 	stbi_io_callbacks clbk;
 };
 
-
-
 static int stb_read_impl(void *user, char *data, int size) { return int(Read(*reinterpret_cast<ScopedFile *>(user), data, size)); }
 static void stb_skip_impl(void *user, int n) { Seek(*reinterpret_cast<ScopedFile *>(user), n, SM_Current); }
 static int stb_eof_impl(void *user) { return IsEOF(*reinterpret_cast<ScopedFile *>(user)) ? 0 : 1; }
-
 
 STB_callbacks open_STB_file(const std::string &path) {
 	STB_callbacks out = {Open(path), {stb_read_impl, stb_skip_impl, stb_eof_impl}};

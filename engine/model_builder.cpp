@@ -11,13 +11,13 @@ namespace hg {
 
 ModelBuilder::ModelBuilder() {
 	lists.reserve(4);
-	lists.push_back({});
+	lists.resize(1);
 }
 
 size_t ModelBuilder::GetCurrentListIndexCount() const { return lists.back().idx.size(); }
 
 bool ModelBuilder::EndList(uint16_t material) {
-	auto &list = lists.back();
+	hg::ModelBuilder::List &list = lists.back();
 
 	if (list.idx.empty()) {
 		list.vtx.clear();
@@ -36,7 +36,7 @@ static uint64_t fnv1a64(const void *buf, size_t len) {
 	static const uint64_t fnv64_prime = UINT64_C(1099511628211);
 	static const uint64_t fnv64_offset = UINT64_C(14695981039346656037);
 
-	auto pointer = reinterpret_cast<const uint8_t *>(buf);
+	const uint8_t *pointer = reinterpret_cast<const uint8_t *>(buf);
 	const uint8_t *buf_end = pointer + len;
 	uint64_t hash = fnv64_offset;
 
@@ -58,27 +58,27 @@ static bool operator==(const Vertex &a, const Vertex &b) {
 }
 
 VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
-	auto &list = lists.back();
+	hg::ModelBuilder::List &list = lists.back();
 
 	size_t idx = list.vtx.size();
 
-	const auto hash = fnv1a64(&vtx, sizeof(Vertex));
-	const auto i_vtx = list.vtx_lookup.find(hash);
+	const uint64_t hash = fnv1a64(&vtx, sizeof(Vertex));
+	const std::map<uint64_t, VtxIdxType>::iterator i_vtx = list.vtx_lookup.find(hash);
 
-	if (i_vtx == std::end(list.vtx_lookup)) {
+	if (i_vtx == list.vtx_lookup.end()) {
 		list.vtx_lookup[hash] = VtxIdxType(idx); // store hash
 		list.vtx.push_back(vtx); // commit candidate
 	} else {
-		const auto hashed_idx = i_vtx->second;
+		const hg::VtxIdxType hashed_idx = i_vtx->second;
 
 		if (list.vtx[hashed_idx] == vtx) {
 			idx = hashed_idx;
 		} else {
 			++hash_collision;
 
-			auto i = std::find(std::begin(list.vtx), std::end(list.vtx), vtx);
-			if (i != std::end(list.vtx))
-				idx = std::distance(std::begin(list.vtx), i);
+			std::vector<hg::Vertex>::iterator i = std::find(list.vtx.begin(), list.vtx.end(), vtx);
+			if (i != list.vtx.end())
+				idx = std::distance(list.vtx.begin(), i);
 			else
 				list.vtx.push_back(vtx); // commit candidate
 		}
@@ -88,7 +88,7 @@ VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
 
 //
 void ModelBuilder::AddTriangle(VtxIdxType a, VtxIdxType b, VtxIdxType c) {
-	auto &list = lists.back();
+	hg::ModelBuilder::List &list = lists.back();
 
 	list.idx.push_back(a);
 	list.idx.push_back(b);
@@ -111,29 +111,31 @@ void ModelBuilder::AddPolygon(const std::vector<VtxIdxType> &idxs) {
 }
 
 void ModelBuilder::AddBoneIdx(uint16_t idx) {
-	auto &list = lists.back();
+	hg::ModelBuilder::List &list = lists.back();
 	list.bones_table.push_back(idx);
 	__ASSERT__(list.bones_table.size() <= max_skinned_model_matrix_count);
 }
 
 //
 void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level, bool verbose) const {
-	const auto stride = decl.GetStride();
+	const size_t stride = decl.GetStride();
 
 	Model model;
 	model.lists.reserve(lists.size());
 
 	size_t vtx_count = 0;
-	for (auto &list : lists) {
+	for (size_t i = 0; i < lists.size(); i++) {
+		const List &list = lists[i];
 		if (list.idx.empty() || list.vtx.empty())
 			continue;
 
-		MinMax minmax = {Vec3::Max, Vec3::Min};
+		MinMax minmax;
 
 		std::vector<int8_t> vtx_data(list.vtx.size() * stride);
 		int8_t *p_vtx = vtx_data.data();
 
-		for (const auto &vtx : list.vtx) {
+		for (size_t j = 0; j < list.vtx.size(); j++) {
+			const hg::Vertex &vtx = list.vtx[j];
 			decl.PackVertex(VAS_Position, &vtx.pos.x, 3, p_vtx);
 
 			if (decl.Has(VAS_Normal))
@@ -194,34 +196,33 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 	}
 }
 
+static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
+	const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
+	Model &model = *reinterpret_cast<Model *>(userdata);
+
+	DisplayList list;
+	// list.index_buffer;
+	list.vertex_buffer = MakeVertexBuffer(vtx_data.data(), vtx_data.size());
+	// const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))), BGFX_BUFFER_INDEX32);
+	// const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
+
+	model.bounds.push_back(minmax);
+	model.lists.push_back(list);
+	model.mats.push_back(mat);
+}
+
 Model ModelBuilder::MakeModel(const VertexLayout &layout, ModelOptimisationLevel optimisation_level, bool verbose) const {
 	Model model;
 	model.lists.reserve(16);
 
-	Make(
-		layout,
-		[](const VertexLayout &layout, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
-			const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
-			Model &model = *reinterpret_cast<Model *>(userdata);
-
-			DisplayList list;
-			// list.index_buffer;
-			list.vertex_buffer = MakeVertexBuffer(vtx_data.data(), vtx_data.size());
-			// const auto idx_hnd = bgfx::createIndexBuffer(bgfx::copy(idx_data.data(), uint32_t(idx_data.size() * sizeof(uint32_t))), BGFX_BUFFER_INDEX32);
-			// const auto vtx_hnd = bgfx::createVertexBuffer(bgfx::copy(vtx_data.data(), uint32_t(vtx_data.size())), decl);
-
-			model.bounds.push_back(minmax);
-			model.lists.push_back(list);
-			model.mats.push_back(mat);
-		},
-		&model, optimisation_level, verbose);
+	Make(layout, Model_end_cb, &model, optimisation_level, verbose);
 
 	return model;
 }
 
 //
 void ModelBuilder::NewList() {
-	lists.push_back({});
+	lists.push_back(hg::ModelBuilder::List());
 	lists.back().idx.reserve(256);
 	lists.back().vtx.reserve(256);
 }

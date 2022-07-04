@@ -33,7 +33,7 @@ namespace hg {
 
 class Data;
 
-static constexpr int max_skinned_model_matrix_count = 32; // make sure this stays in sync with bgfx_shader.sh
+static const int max_skinned_model_matrix_count = 32; // make sure this stays in sync with bgfx_shader.sh
 
 /*
 using bgfxMatrix3 = std::array<float, 9>;

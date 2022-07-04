@@ -75,7 +75,7 @@ public:
 	bool IsValidRef(R ref) const { return resources.is_valid(ref.ref); }
 
 	// get a resource index for code that does not carry a full reference to the resource.
-	uint16_t GetValidatedRefIndex(R ref) const { return resources.is_valid(ref.ref) ? uint16_t(ref.ref.idx) : 0xffff; }
+	uint16_t GetValidatedRefIndex(R ref) const { return resources.is_valid(ref.ref) ? numeric_cast<uint16_t>(ref.ref.idx) : 0xffff; }
 
 	R Has(const std::string &name) const {
 		dict_iterator i = name_to_ref.find(name);
