@@ -152,7 +152,7 @@ enum PipelineProgramFeature {
 	OptionalSkinning, // ENABLE_SKINNING
 	OptionalAlphaCut, // ENABLE_ALPHA_CUT
 
-	Count,
+	Count
 };
 
 std::vector<PipelineProgramFeature> LoadPipelineProgramFeatures(

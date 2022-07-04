@@ -16,6 +16,8 @@ if(WIN32)
 	add_compile_definitions(GLFW_WIN32=1)
 endif()
 
+# add_compile_options(-pedantic)
+
 # fmt::format
 set(FMT_USE_CPP11 OFF CACHE BOOL "")
 add_subdirectory(extern/fmt)

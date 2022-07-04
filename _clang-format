@@ -15,3 +15,4 @@ AllowAllParametersOfDeclarationOnNextLine: true
 BinPackParameters: true
 BinPackArguments: true
 AlwaysBreakTemplateDeclarations: false
+Standard: Cpp03

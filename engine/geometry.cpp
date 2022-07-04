@@ -197,17 +197,17 @@ struct SMikkTSpaceContextData {
 };
 
 static int MikkT_getNumFace(const SMikkTSpaceContext *pContext) {
-	const SMikkTSpaceContextData* data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
+	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
 	return int(data->geo.pol.size());
 }
 
 static int MikkT_getNumVerticesOfFace(const SMikkTSpaceContext *pContext, const int iFace) {
-	const SMikkTSpaceContextData* data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
+	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
 	return data->geo.pol[iFace].vtx_count;
 }
 
 static void MikkT_getPosition(const SMikkTSpaceContext *pContext, float fvPosOut[], const int iFace, const int iVert) {
-	const SMikkTSpaceContextData* data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
+	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
 	const Vec3 &T = data->geo.vtx[data->geo.binding[data->pol_idx[iFace] + iVert]];
 
 	fvPosOut[0] = T.x;
@@ -216,7 +216,7 @@ static void MikkT_getPosition(const SMikkTSpaceContext *pContext, float fvPosOut
 }
 
 static void MikkT_getNormal(const SMikkTSpaceContext *pContext, float fvNormOut[], const int iFace, const int iVert) {
-	const SMikkTSpaceContextData* data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
+	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
 	const Vec3 &N = data->nrm[data->pol_idx[iFace] + iVert];
 
 	fvNormOut[0] = N.x;
@@ -225,7 +225,7 @@ static void MikkT_getNormal(const SMikkTSpaceContext *pContext, float fvNormOut[
 }
 
 static void MikkT_getTexCoord(const SMikkTSpaceContext *pContext, float fvTexcOut[], const int iFace, const int iVert) {
-	const SMikkTSpaceContextData* data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
+	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
 
 	if (data->uv_index < data->geo.uv.size()) {
 		const Vec2 &UV = data->geo.uv[data->uv_index][data->pol_idx[iFace] + iVert];
@@ -238,7 +238,7 @@ static void MikkT_getTexCoord(const SMikkTSpaceContext *pContext, float fvTexcOu
 }
 
 static void MikkT_setTSpaceBasic(const SMikkTSpaceContext *pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert) {
-	const SMikkTSpaceContextData* data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
+	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
 	const uint32_t i = data->pol_idx[iFace] + iVert;
 
 	Geometry::TangentFrame &F = data->out[i];
@@ -323,7 +323,7 @@ static bool validation_error(int &error_count, const std::string &msg) {
 	}
 
 	return true;
-};
+}
 
 bool Validate(const Geometry &geo) {
 	const size_t binding_count = ComputeBindingCount(geo);
@@ -360,7 +360,7 @@ bool Validate(const Geometry &geo) {
 
 	for (size_t j = 0; j < geo.skin.size(); j++) {
 		const Geometry::Skin &s = geo.skin[j];
-		for (uint16_t i=0; i<4; i++)
+		for (uint16_t i = 0; i < 4; i++)
 			if (s.index[i] >= bone_count)
 				if (!validation_error(error_count, "Invalid reference to non-existing bone"))
 					return false;
@@ -374,7 +374,6 @@ template <typename T> bool ReadStdVector(const Reader &ir, const Handle &h, std:
 	v.resize(size);
 	return ir.read(h, v.data(), size * sizeof(T)) == size * sizeof(T);
 }
-
 
 // backward compat
 struct Skin_v1 { // 8B
@@ -420,7 +419,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 
 	ReadStdVector(ir, h, geo.tangent);
 
-	for (size_t i = 0;  i<geo.uv.size(); i++) {
+	for (size_t i = 0; i < geo.uv.size(); i++) {
 		ReadStdVector(ir, h, geo.uv[i]);
 	}
 	if (version > 0) {
@@ -472,7 +471,7 @@ bool SaveGeometry(const Writer &iw, const Handle &h, const Geometry &geo) {
 
 	WriteStdVector(iw, h, geo.tangent);
 
-	for (size_t i=0; i<geo.uv.size(); i++)
+	for (size_t i = 0; i < geo.uv.size(); i++)
 		WriteStdVector(iw, h, geo.uv[i]);
 
 	WriteStdVector(iw, h, geo.skin);
@@ -621,7 +620,7 @@ static void GeometryToModelBuilder(const Geometry &geo, ModelBuilder &builder) {
 							}
 						}
 
-						for (size_t j=0; j<bone_indices_to_add.size(); j++)
+						for (size_t j = 0; j < bone_indices_to_add.size(); j++)
 							builder.AddBoneIdx(bone_indices_to_add[i]);
 					}
 				}
@@ -656,13 +655,13 @@ Model GeometryToModel(const Geometry &geo, ModelOptimisationLevel optimisation_l
 	return model;
 }
 
-
-static void on_end_list(const VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<int8_t> &vtx, const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
-	const File& file = *reinterpret_cast<File *>(userdata);
+static void on_end_list(const VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<int8_t> &vtx,
+	const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
+	const File &file = *reinterpret_cast<File *>(userdata);
 
 	uint8_t idx_type_size = 2;
 
-	for (size_t i=0; i< idx32.size(); i++)
+	for (size_t i = 0; i < idx32.size(); i++)
 		if (idx32[i] > 65535) {
 			idx_type_size = 4;
 			break;
@@ -726,7 +725,7 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, Model
 	Write<uint8_t>(file, 0); // EOLists
 
 	Write(file, numeric_cast<uint32_t>(geo.bind_pose.size())); // version 1: add bind poses
-	for (size_t i=0; i<geo.bind_pose.size(); i++)
+	for (size_t i = 0; i < geo.bind_pose.size(); i++)
 		Write(file, geo.bind_pose[i]);
 
 	return true;
