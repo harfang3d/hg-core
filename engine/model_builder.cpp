@@ -201,8 +201,8 @@ static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const
 	Model &model = *reinterpret_cast<Model *>(userdata);
 
 	DisplayList list;
-			list.element_count = idx_data.size();
-			list.index_buffer = MakeIndexBuffer(idx_data.data(), idx_data.size() * sizeof(uint32_t));
+	list.element_count = idx_data.size();
+	list.index_buffer = MakeIndexBuffer(idx_data.data(), idx_data.size() * sizeof(uint32_t));
 	list.vertex_buffer = MakeVertexBuffer(vtx_data.data(), vtx_data.size());
 
 	model.bounds.push_back(minmax);

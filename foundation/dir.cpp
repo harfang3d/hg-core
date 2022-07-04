@@ -56,11 +56,11 @@ std::vector<DirEntry> ListDir(const std::string &path, int mask) {
 
 	FindClose(hFind);
 #else /* POSIX */
-	DIR* dir = opendir(path.c_str());
+	DIR *dir = opendir(path.c_str());
 	if (!dir)
 		return entries;
 
-	while (struct dirent* ent = readdir(dir)) {
+	while (struct dirent *ent = readdir(dir)) {
 		if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 			continue;
 
@@ -106,7 +106,7 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask) {
 				tmp[0] = name;
 				tmp[1] = i->name;
 				DirEntry e = {i->type, PathJoin(tmp), 0, 0};
-				
+
 				entries.push_back(e);
 			}
 		}
