@@ -1,5 +1,7 @@
 # Harfang Core for Industrial Projects
 
+![CI](https://github.com/ejulien/hg-core/actions/workflows/main.yml/badge.svg)
+
 ## Features
 
 - C++98 compliant
