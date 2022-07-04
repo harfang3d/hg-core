@@ -13,6 +13,7 @@ namespace hg {
 
 #if __cplusplus <= 201103L // upto C++11
 #define nullptr NULL
+#define constexpr
 #endif
 
 template <typename T> inline bool asbool(const T &v) { return v ? true : false; }
