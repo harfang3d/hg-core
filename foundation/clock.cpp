@@ -13,7 +13,7 @@ static int clock_scale = 1024;
 void reset_clock() { last = time_now(); }
 
 time_ns tick_clock() {
-	const hg::time_ns now = time_now();
+	const time_ns now = time_now();
 	dt = last ? ((now - last) * clock_scale) >> 10 : 1;
 	last = now;
 	clock += dt;

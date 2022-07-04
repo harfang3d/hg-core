@@ -165,12 +165,12 @@ STB_callbacks open_STB_file(const std::string &path) {
 }
 
 static bool load_STB_picture(Picture &pic, const std::string &path) {
-	hg::STB_callbacks cb = open_STB_file(path);
+	STB_callbacks cb = open_STB_file(path);
 	if (!cb.file)
 		return false;
 
 	int x, y, n;
-	stbi_uc* data = stbi_load_from_callbacks(&cb.clbk, &cb.file, &x, &y, &n, 4);
+	stbi_uc *data = stbi_load_from_callbacks(&cb.clbk, &cb.file, &x, &y, &n, 4);
 	if (!data)
 		return false;
 

@@ -143,16 +143,16 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask) {
 
 //
 size_t GetDirSize(const std::string &path) {
-	const std::vector<DirEntry> entries = hg::ListDirRecursive(path);
+	const std::vector<DirEntry> entries = ListDirRecursive(path);
 
 	size_t size = 0;
 	std::vector<std::string> tmp(2);
 	tmp[0] = path;
 	for (std::vector<DirEntry>::const_iterator e = entries.begin(); e != entries.end(); ++e) {
-		if (e->type == hg::DE_File) {
+		if (e->type == DE_File) {
 			tmp[1] = e->name;
-			const std::string fpath = hg::PathJoin(tmp);
-			const FileInfo finfo = hg::GetFileInfo(fpath.c_str());
+			const std::string fpath = PathJoin(tmp);
+			const FileInfo finfo = GetFileInfo(fpath.c_str());
 			size += finfo.size;
 		}
 	}

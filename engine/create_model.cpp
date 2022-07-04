@@ -67,8 +67,8 @@ Model CreateCubeModel(const VertexLayout &layout, float x, float y, float z) {
 Model CreateSphereModel(const VertexLayout &layout, float radius, int subdiv_x, int subdiv_y) {
 	ModelBuilder builder;
 
-	const hg::VtxIdxType i_top = AddVertex(builder, Vec3(0.f, radius, 0.f), Vec3(0.f, 1.f, 0.f));
-	const hg::VtxIdxType i_bottom = AddVertex(builder, Vec3(0.f, -radius, 0.f), Vec3(0.f, -1.f, 0.f));
+	const VtxIdxType i_top = AddVertex(builder, Vec3(0.f, radius, 0.f), Vec3(0.f, 1.f, 0.f));
+	const VtxIdxType i_bottom = AddVertex(builder, Vec3(0.f, -radius, 0.f), Vec3(0.f, -1.f, 0.f));
 
 	std::vector<uint16_t> ref(subdiv_y + 1), old_ref;
 

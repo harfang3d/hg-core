@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "foundation/cext.h"
 #include "foundation/assert.h"
+#include "foundation/cext.h"
 #include "foundation/vector_list.h"
 
 namespace hg {
@@ -30,6 +30,7 @@ public:
 		ref.gen = generations[ref.idx];
 		return ref;
 	}
+
 #if __cpluscplus >= 201103L
 	gen_ref add_ref(T &&v) {
 		auto idx = vector_list<T>::add(std::forward<T>(v));
@@ -61,12 +62,12 @@ public:
 	T &get_safe(gen_ref ref, T &dflt) { return is_valid(ref) ? (*this)[ref.idx] : dflt; }
 	const T &get_safe(gen_ref ref, const T &dflt) const { return is_valid(ref) ? (*this)[ref.idx] : dflt; }
 
-	gen_ref get_ref(uint32_t idx) const { 
+	gen_ref get_ref(uint32_t idx) const {
 		if (this->is_used(idx) && idx < generations.size()) {
 			gen_ref ref = {idx, generations[idx]};
 			return ref;
 		}
-		return invalid_gen_ref; 
+		return invalid_gen_ref;
 	}
 
 	bool is_valid(gen_ref ref) const { return this->is_used(ref.idx) && ref.idx < generations.size() && ref.gen == generations[ref.idx]; }
@@ -102,4 +103,5 @@ template <> struct hash<hg::gen_ref> {
 		return h;
 	}
 };
+
 } // namespace std

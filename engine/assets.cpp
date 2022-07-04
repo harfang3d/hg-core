@@ -136,7 +136,7 @@ std::string FindAssetPath(const std::string &name) {
 	std::lock_guard<std::mutex> lock(assets_mutex);
 
 	for (auto &p : assets_folders) {
-		const auto asset_path = hg::PathJoin({p, name});
+		const auto asset_path = PathJoin({p, name});
 		if (IsFile(asset_path.c_str()))
 			return asset_path;
 	}

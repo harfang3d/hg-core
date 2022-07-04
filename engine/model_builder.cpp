@@ -17,7 +17,7 @@ ModelBuilder::ModelBuilder() {
 size_t ModelBuilder::GetCurrentListIndexCount() const { return lists.back().idx.size(); }
 
 bool ModelBuilder::EndList(uint16_t material) {
-	hg::ModelBuilder::List &list = lists.back();
+	ModelBuilder::List &list = lists.back();
 
 	if (list.idx.empty()) {
 		list.vtx.clear();
@@ -58,7 +58,7 @@ static bool operator==(const Vertex &a, const Vertex &b) {
 }
 
 VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
-	hg::ModelBuilder::List &list = lists.back();
+	ModelBuilder::List &list = lists.back();
 
 	size_t idx = list.vtx.size();
 
@@ -69,14 +69,14 @@ VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
 		list.vtx_lookup[hash] = VtxIdxType(idx); // store hash
 		list.vtx.push_back(vtx); // commit candidate
 	} else {
-		const hg::VtxIdxType hashed_idx = i_vtx->second;
+		const VtxIdxType hashed_idx = i_vtx->second;
 
 		if (list.vtx[hashed_idx] == vtx) {
 			idx = hashed_idx;
 		} else {
 			++hash_collision;
 
-			std::vector<hg::Vertex>::iterator i = std::find(list.vtx.begin(), list.vtx.end(), vtx);
+			std::vector<Vertex>::iterator i = std::find(list.vtx.begin(), list.vtx.end(), vtx);
 			if (i != list.vtx.end())
 				idx = std::distance(list.vtx.begin(), i);
 			else
@@ -88,7 +88,7 @@ VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
 
 //
 void ModelBuilder::AddTriangle(VtxIdxType a, VtxIdxType b, VtxIdxType c) {
-	hg::ModelBuilder::List &list = lists.back();
+	ModelBuilder::List &list = lists.back();
 
 	list.idx.push_back(a);
 	list.idx.push_back(b);
@@ -111,7 +111,7 @@ void ModelBuilder::AddPolygon(const std::vector<VtxIdxType> &idxs) {
 }
 
 void ModelBuilder::AddBoneIdx(uint16_t idx) {
-	hg::ModelBuilder::List &list = lists.back();
+	ModelBuilder::List &list = lists.back();
 	list.bones_table.push_back(idx);
 	__ASSERT__(list.bones_table.size() <= max_skinned_model_matrix_count);
 }
@@ -135,7 +135,7 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 		int8_t *p_vtx = vtx_data.data();
 
 		for (size_t j = 0; j < list.vtx.size(); j++) {
-			const hg::Vertex &vtx = list.vtx[j];
+			const Vertex &vtx = list.vtx[j];
 			decl.PackVertex(VAS_Position, &vtx.pos.x, 3, p_vtx);
 
 			if (decl.Has(VAS_Normal))
@@ -221,7 +221,7 @@ Model ModelBuilder::MakeModel(const VertexLayout &layout, ModelOptimisationLevel
 
 //
 void ModelBuilder::NewList() {
-	lists.push_back(hg::ModelBuilder::List());
+	lists.push_back(ModelBuilder::List());
 	lists.back().idx.reserve(256);
 	lists.back().vtx.reserve(256);
 }

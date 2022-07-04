@@ -5,6 +5,7 @@
 #include "foundation/matrix44.h"
 #include "foundation/minmax.h"
 #include "foundation/vector4.h"
+
 #include <math.h>
 
 namespace hg {
@@ -15,7 +16,7 @@ static inline Plane NormalizePlane(const Plane &p) {
 }
 
 Frustum MakeFrustum(const Mat44 &projection) {
-	const hg::Vec4 X = GetRow(projection, 0), Y = GetRow(projection, 1), Z = GetRow(projection, 2), W = GetRow(projection, 3);
+	const Vec4 X = GetRow(projection, 0), Y = GetRow(projection, 1), Z = GetRow(projection, 2), W = GetRow(projection, 3);
 
 	Frustum out;
 	out[FP_Top] = Opposite(NormalizePlane(W + Y));
