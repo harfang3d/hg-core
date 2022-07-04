@@ -2,7 +2,10 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include "foundation/assert.h"
+
 #include <algorithm>
 #include <cstring>
 #include <limits>

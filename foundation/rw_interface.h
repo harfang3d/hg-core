@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include "foundation/assert.h"
 #include "foundation/seek_mode.h"
 
