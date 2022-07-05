@@ -34,8 +34,20 @@ bool EqualZero(float v, float e) { return !((v < -e) || (v > e)); }
 
 float Pow(float v, float e) { return pow(v, e); }
 
-float Ceil(float v) { return (v < 0) ? static_cast<float>(static_cast<int>(v)) : static_cast<float>(static_cast<int>(v + 1)); }
-float Floor(float v) { return (v < 0) ? static_cast<float>(static_cast<int>(v - 1)) : static_cast<float>(static_cast<int>(v)); }
+float Ceil(float v) { 
+#if __STDC_VERSION__ >= 199901L
+	return ceilf(v);
+#else
+	return float(ceil(double(v)));
+#endif
+}
+float Floor(float v) {
+#if __STDC_VERSION__ >= 199901L
+	return floorf(v);
+#else
+	return float(floor(double(v)));
+#endif
+}
 
 float Mod(float v) {
 	double integral;
