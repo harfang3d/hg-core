@@ -14,11 +14,12 @@ namespace hg {
 enum case_sensitivity { insensitive, sensitive };
 #else
 struct case_sensitivity {
-	enum value_t {insensitive, sensitive } value;
+	enum value_t { insensitive, sensitive } value;
 	case_sensitivity(const case_sensitivity::value_t &v) : value(v) {}
 };
-bool operator==(const case_sensitivity &a, const case_sensitivity &b) { return a.value == b.value; }
-bool operator!=(const case_sensitivity &a, const case_sensitivity &b) { return a.value != b.value; }
+
+inline bool operator==(const case_sensitivity &a, const case_sensitivity &b) { return a.value == b.value; }
+inline bool operator!=(const case_sensitivity &a, const case_sensitivity &b) { return a.value != b.value; }
 #endif
 
 inline char to_lower(char c) { return c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c; }
@@ -30,18 +31,16 @@ inline bool starts_with(const std::string &value, const std::string &prefix, cas
 	if (prefix.size() > value.size())
 		return false;
 
-	return sensitivity == case_sensitivity::sensitive
-			   ? equal(prefix.begin(), prefix.end(), value.begin(), case_sensitive_eq_func)
-			   : equal(prefix.begin(), prefix.end(), value.begin(), case_insensitive_eq_func);
+	return sensitivity == case_sensitivity::sensitive ? equal(prefix.begin(), prefix.end(), value.begin(), case_sensitive_eq_func)
+													  : equal(prefix.begin(), prefix.end(), value.begin(), case_insensitive_eq_func);
 }
 
 inline bool ends_with(const std::string &value, const std::string &suffix, case_sensitivity sensitivity = case_sensitivity::sensitive) {
 	if (suffix.size() > value.size())
 		return false;
 
-	return sensitivity == case_sensitivity::sensitive
-			   ? equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_sensitive_eq_func)
-			   : equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_insensitive_eq_func);
+	return sensitivity == case_sensitivity::sensitive ? equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_sensitive_eq_func)
+													  : equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_insensitive_eq_func);
 }
 
 /// In-place replace all occurrences of 'what' by 'by'. Returns the number of occurrence replaced.

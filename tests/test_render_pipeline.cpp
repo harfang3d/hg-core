@@ -88,7 +88,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 //
 
 //
-sg_pipeline MakePipeline(const VertexLayout &vtx_layout, sg_shader shader) {
+sg_pipeline MakePipeline(const VertexLayout &layout, sg_shader shader) {
 	sg_pipeline_desc pipeline_desc;
 
 	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
@@ -99,7 +99,7 @@ sg_pipeline MakePipeline(const VertexLayout &vtx_layout, sg_shader shader) {
 	pipeline_desc.depth.write_enabled = true;
 	pipeline_desc.cull_mode = SG_CULLMODE_BACK;
 
-	vtx_layout.FillLayoutDesc(pipeline_desc.layout);
+	layout.FillLayoutDesc(pipeline_desc.layout);
 
 	return sg_make_pipeline(&pipeline_desc);
 }
@@ -153,7 +153,12 @@ void test_init() {
 	layout.AddAttrib(VAS_Normal, SG_VERTEXFORMAT_FLOAT3);
 	layout.End();
 
-	Model cube_model = CreateSphereModel(layout, 1.f, 32, 16);
+
+	const Geometry geo = LoadGeometryFromFile("d:/LOD0.geo");
+
+
+//	Model cube_model = CreateSphereModel(layout, 1.f, 32, 16);
+	Model cube_model = GeometryToModel(geo, layout);
 
 	//
 	sg_pipeline pip = MakePipeline(layout, shd);

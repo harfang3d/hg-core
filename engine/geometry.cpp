@@ -419,23 +419,23 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 
 	ReadStdVector(ir, h, geo.tangent);
 
-	for (size_t i = 0; i < geo.uv.size(); i++) {
+	for (size_t i = 0; i < geo.uv.size(); i++)
 		ReadStdVector(ir, h, geo.uv[i]);
-	}
+
 	if (version > 0) {
 		if (version == 1) {
 			std::vector<Skin_v1> skin1;
 			ReadStdVector(ir, h, skin1);
 			geo.skin.resize(skin1.size());
-			for (size_t i = 0; i < skin1.size(); i++) {
-				for (size_t j = 0; j < 4; j++) {
+			for (size_t i = 0; i < skin1.size(); ++i)
+				for (size_t j = 0; j < 4; ++j) {
 					geo.skin[i].index[j] = skin1[i].index[j];
 					geo.skin[i].weight[j] = skin1[i].weight[j];
 				}
-			}
 		} else {
 			ReadStdVector(ir, h, geo.skin);
 		}
+
 		ReadStdVector(ir, h, geo.bind_pose);
 	}
 	return geo;
@@ -517,7 +517,7 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 	return vtx;
 }
 
-static VertexLayout GetGeometryVertexDeclaration(const Geometry &geo) {
+VertexLayout ComputeGeometryVertexLayout(const Geometry &geo) {
 	VertexLayout layout;
 
 	layout.AddAttrib(VAS_Position, SG_VERTEXFORMAT_FLOAT3);
@@ -541,6 +541,8 @@ static VertexLayout GetGeometryVertexDeclaration(const Geometry &geo) {
 	for (size_t i = 0; i < geo.uv.size() && i < 2; ++i)
 		if (!geo.uv[i].empty())
 			layout.AddAttrib(VertexAttributeSemantic(VAS_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
+
+	layout.End();
 
 	return layout;
 }
@@ -644,12 +646,11 @@ static void GeometryToModelBuilder(const Geometry &geo, ModelBuilder &builder) {
 }
 
 //
-Model GeometryToModel(const Geometry &geo, ModelOptimisationLevel optimisation_level) {
+Model GeometryToModel(const Geometry &geo, const VertexLayout &layout, ModelOptimisationLevel optimisation_level) {
 	ModelBuilder builder;
 	GeometryToModelBuilder(geo, builder);
 
-	const VertexLayout vs_decl = GetGeometryVertexDeclaration(geo);
-	Model model = builder.MakeModel(vs_decl, optimisation_level);
+	Model model = builder.MakeModel(layout, optimisation_level);
 
 	model.bind_pose = geo.bind_pose; // copy bind pose over to model
 	return model;
@@ -698,7 +699,7 @@ static void on_end_list(const VertexLayout &, const MinMax &minmax, const std::v
 	log(fmt::format("Index size: {}, vertex size: {}", idx_size, vtx_size));
 };
 
-bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, ModelOptimisationLevel optimisation_level) {
+bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, const VertexLayout &layout, ModelOptimisationLevel optimisation_level) {
 	ScopedFile file(OpenWrite(path));
 	if (!file)
 		return false;
@@ -713,14 +714,12 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, Model
 	*/
 	const uint8_t version = GetModelBinaryFormatVersion();
 	Write(file, version); // version
-
-	const VertexLayout decl = GetGeometryVertexDeclaration(geo);
-	Write(file, decl); // write vertex declaration
+	Write(file, layout); // vertex layout
 
 	ModelBuilder builder;
 	GeometryToModelBuilder(geo, builder);
 
-	builder.Make(decl, on_end_list, &file.f, optimisation_level);
+	builder.Make(layout, on_end_list, &file.f, optimisation_level);
 
 	Write<uint8_t>(file, 0); // EOLists
 

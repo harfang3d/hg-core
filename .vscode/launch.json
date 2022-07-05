@@ -8,7 +8,7 @@
 			"name": "(Windows) Test Render Pipeline",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/build/test_render_pipeline.exe",
+			"program": "${workspaceFolder}/build/tests/test_render_pipeline.exe",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
