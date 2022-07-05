@@ -6,7 +6,7 @@ if(UNIX OR MSYS AND NOT APPLE AND NOT EMSCRIPTEN)
 	find_package(OpenGL)
 
 	if(OPENGL_FOUND)
-		target_link_libraries(test_render_pipeline PUBLIC OpenGL::GL)
+		target_link_libraries(test_render_pipeline PUBLIC ${OPENGL_LIBRARIES})
 	else()
 		find_package(OpenGLES3)
 

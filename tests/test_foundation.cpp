@@ -1,6 +1,7 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
 #include <math.h>
+#include <utf8.h>
 
 #include "acutest.h"
 
@@ -373,38 +374,96 @@ void test_string() {
 	TEST_CHECK(split("bobcat  , catfish,hotdog , dogfish ", ",", " ") == list);
 	TEST_CHECK(split("*bobcat*||*catfish*||*hotdog*||*dogfish*", "||", "*") == list);
 	
+	TEST_CHECK(lstrip("Thopha saccata") == "Thopha saccata");
 	TEST_CHECK(lstrip("     Baorisa hieroglyphica") == "Baorisa hieroglyphica");
 	TEST_CHECK(lstrip("\t\t    \tStigmodera cancellata", " \t") == "Stigmodera cancellata");
 	TEST_CHECK(lstrip(" - Stigmodera cancellata", " ") != "Stigmodera cancellata");
 
+	TEST_CHECK(rstrip("Selenocosmia crassipes") == "Selenocosmia crassipes");
 	TEST_CHECK(rstrip("Agrias claudina    ") == "Agrias claudina");
 	TEST_CHECK(rstrip("Mormolyce phyllodes...;;-;..-_-", "_.-;") == "Mormolyce phyllodes");
 	TEST_CHECK(rstrip("Phymateus viridipes\n\n ", " \t") != "Stigmodera cancellata");
 
+	TEST_CHECK(strip("Ornithoptera euphorion") == "Ornithoptera euphorion");
 	TEST_CHECK(strip("    Phyllium bioculatum        ") == "Phyllium bioculatum");
 	TEST_CHECK(strip("\"0o. .o0\" Eupholus schoenherrii \"0o. .o0\"", "0.\"o ") == "Eupholus schoenherrii");
 	TEST_CHECK(strip("<:_Chrysis ruddii= />", "<:/>") != "Chrysis ruddii");
 
+	TEST_CHECK(lstrip_space("Myrmecia brevinoda") == "Myrmecia brevinoda");
 	TEST_CHECK(lstrip_space("\n\t\t  Rhachoepalpus metallicus\r\n") == "Rhachoepalpus metallicus\r\n");
 	TEST_CHECK(lstrip_space("\r\n\t* Julodis cirrosa") != "Julodis cirrosa");
-	
+
+	TEST_CHECK(rstrip_space("Endoxyla cinerea") == "Endoxyla cinerea");
 	TEST_CHECK(rstrip_space("Alaruasa violacea    \t \t  \r\n") == "Alaruasa violacea");
 	TEST_CHECK(rstrip_space("Dynastes hercule    \t .\t  \r\n") != "Dynastes hercule");
 
+	TEST_CHECK(strip_space("Phellus olgae") == "Phellus olgae");
 	TEST_CHECK(strip_space("\t\t\tProtaetia affinis   \t\t   \r\n ") == "Protaetia affinis");
 	TEST_CHECK(strip_space(" * Phobaeticus serratipes\r\n_ ") != "Phobaeticus serratipes");
 
-	// std::string trim(const std::string &str, const std::string &pattern = " ");
-	// std::string reduce(const std::string &str, const std::string &fill = " ", const std::string &pattern = " ");
-	// template <typename T> std::string join(T begin_it, T end_it, const std::string &separator)
-	// template <typename T> std::string join(T begin_it, T end_it, const std::string &separator, const std::string &last_separator)
-	// bool contains(const std::string &in, const std::string &what);
-	// std::string utf32_to_utf8(const std::u32string &str);
-	// std::u32string utf8_to_utf32(const std::string &str);
-	// std::string wchar_to_utf8(const std::wstring &str);
-	// std::wstring utf8_to_wchar(const std::string &str);
-	// std::wstring ansi_to_wchar(const std::string &str);
-	// std::string ansi_to_utf8(const std::string &str);
+	TEST_CHECK(trim("Forficula auricularia") == "Forficula auricularia");
+	TEST_CHECK(trim("    Lethocerus patruelis ") == "Lethocerus patruelis");
+	TEST_CHECK(trim("_=--=_Lygaeus creticus-=__=-", "_-=") == "Lygaeus creticus");
+	TEST_CHECK(trim("* #Kalotermes flavicollis#*", "*#") == " #Kalotermes flavicollis");
+
+	TEST_CHECK(reduce("   The Irish   damselfly or  crescent bluet (Coenagrion      lunulatum) is a damselfly found in  northern  Europe and Asia  to "
+					  "north-eastern  China      ") ==
+			   "The Irish damselfly or crescent bluet (Coenagrion lunulatum) is a damselfly found in northern Europe and Asia to north-eastern China");
+	TEST_CHECK(reduce("The Arctic bluet (Coenagrion johanssoni) is found in Northern Europe, and east through Asia as far as the Amur River") ==
+			   "The Arctic bluet (Coenagrion johanssoni) is found in Northern Europe, and east through Asia as far as the Amur River");
+	TEST_CHECK(reduce("\t  Pyrrhosoma nymphula can reach\ta body length\r\n   of 33-36 millimetres (1.3-1.4 in).\r\n\r\n\r\n", "-=-", " \r\n\t") ==
+			   "Pyrrhosoma-=-nymphula-=-can-=-reach-=-a-=-body-=-length-=-of-=-33-36-=-millimetres-=-(1.3-1.4-=-in).");
+
+	const char *club_tailed_dragonflies[] = {
+		"Yellow-legged",
+		"Club-tailed",
+		"Green club-tailed",
+		"Green-eyed hook-tailed",
+	};
+	std::string v = join(club_tailed_dragonflies, club_tailed_dragonflies + 4, " dragonfly, ", "dragonfly.");
+	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies + 4, " Dragonfly\n") ==
+			   "Yellow-legged Dragonfly\nClub-tailed Dragonfly\nGreen club-tailed Dragonfly\nGreen-eyed hook-tailed");
+	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies + 1, " // ") == "Yellow-legged");
+
+	const char *path[] = {
+		"e:",
+		"hg-core",
+		"foundation",
+		"string",
+		"h",
+	};
+	TEST_CHECK(join(path, path + 5, "/", ".") == "e:/hg-core/foundation/string.h");
+	TEST_CHECK(join(path, path + 1, "\\", ".") == "e:");
+
+	TEST_CHECK(contains("CTA TTA TTA ACA AGA AGT ATA GTA GAA AAC GGA GCT GGA ACA GGT TGA ACT GTT TAT CCT CCT CTT TCA TCT AAT ATT", "GGA"));
+	TEST_CHECK(contains("GCC CAT AGA GGA GCT TCT GTT GAT TTA GCT ATT TTT TCT CTT CAT TTA GCT GGA ATT TCT TCC ATC CTA GGA GCA GTA ", "ATA") == false);
+	TEST_CHECK(contains("", "ATT") == false);
+	TEST_CHECK(contains("AGT TTA GTT ACT CAA CGT", "") == true);
+
+	const wchar_t blueberry_jam_utf16_raw[] = {0x0042, 0x006c, 0x00e5, 0x0062, 0x00e6, 0x0072, 0x0073, 0x0079, 0x006c, 0x0074, 0x0065, 0x0074, 0x00f8, 0x0079, 0x0000};
+	const char32_t blueberry_jam_utf32_raw[] = {0x00000042, 0x0000006c, 0x000000e5, 0x00000062, 0x000000e6, 0x00000072u, 0x00000073, 0x00000079, 0x0000006c,
+		0x00000074, 0x00000065, 0x00000074, 0x000000f8, 0x00000079, 0x00000000};
+	const std::string bllueberry_ansi = "\x42\x6C\xE5\x62\xE6\x72\x73\x79\x6C\x74\x65\x74\xF8\x79";
+	const std::string blueberry_jam_utf8 = "\x42\x6C\xC3\xA5\x62\xC3\xA6\x72\x73\x79\x6C\x74\x65\x74\xC3\xB8\x79";
+	const std::wstring blueberry_jam_utf16(blueberry_jam_utf16_raw);
+	const std::u32string blueberry_jam_utf32(blueberry_jam_utf32_raw);
+	
+	TEST_CHECK(utf32_to_utf8(blueberry_jam_utf32) == blueberry_jam_utf8);
+	TEST_CHECK(utf8_to_utf32(blueberry_jam_utf8) == blueberry_jam_utf32);
+	TEST_CHECK(wchar_to_utf8(blueberry_jam_utf16) == blueberry_jam_utf8);
+	TEST_CHECK(utf8_to_wchar(blueberry_jam_utf8) == blueberry_jam_utf16);
+	TEST_CHECK(ansi_to_utf8(bllueberry_ansi) == blueberry_jam_utf8);
+	TEST_CHECK(ansi_to_wchar(bllueberry_ansi) == blueberry_jam_utf16);
+
+	const char32_t blueberry_jam_utf32_invalid_cp_raw[] = {0x00000042, 0x0000006c, 0x000000e5, 0x00000062, 0x000000e6, 0x00000072u, 0x00000073, 0x00000079,
+		0x0000006c, 0x00000074, 0x00000065, 0x00000074, 0x000000f8, 0x00000079, 0x0000ffff};
+	const std::string blueberry_jam_utf8_invalid = "\x42\x6C\xC3\xA5\x62\xC3\xa0\xa1\xA6\x72\x73\x79\xf0\x28\x8c\x28\x6C\x74\x65\x74\xC3\xB8\x79";
+	const std::u32string blueberry_jam_utf32_invalid_cp(blueberry_jam_utf32_invalid_cp_raw);
+		
+	TEST_EXCEPTION(utf32_to_utf8(blueberry_jam_utf32_invalid_cp), utf8::invalid_code_point);
+	TEST_EXCEPTION(utf8_to_utf32(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
+	TEST_EXCEPTION(utf8_to_wchar(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
+
 	// void tolower_inplace(std::string & inplace_str, size_t start = 0, size_t end = 0);
 	// std::string tolower(std::string str, size_t start = 0, size_t end = 0);
 	// void toupper_inplace(std::string & inplace_str, size_t start = 0, size_t end = 0);
@@ -417,8 +476,14 @@ void test_string() {
 	// std::string strip_suffix(const std::string &str, const std::string &suffix);
 	// std::string word_wrap(const std::string &str, int width = 80, int lead = 0, char lead_char = ' ');
 	// std::string name_to_path(std::string name);
-	// std::string pad_left(const std::string &str, int padded_width, char padding_char = ' ');
-	// std::string pad_right(const std::string &str, int padded_width, char padding_char = ' ');
+
+	TEST_CHECK(pad_left("Heoclisis fulva", 9, '.') == "Heoclisis fulva");
+	TEST_CHECK(pad_left("Megaloprepus caerulatus", 28, '#') == "#####Megaloprepus caerulatus");
+	TEST_CHECK(pad_left("Acanthacorydalis fruhstorferi", 33) == "    Acanthacorydalis fruhstorferi");
+	
+	TEST_CHECK(pad_left("Valanga irregularis", 11, '|') == "Valanga irregularis");
+	TEST_CHECK(pad_right("Goliathus regius", 23, ':') == "Goliathus regius:::::::");
+	TEST_CHECK(pad_right("Macrodontia cervicornis", 27) == "Macrodontia cervicornis    ");	
 }
 
 //
