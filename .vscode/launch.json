@@ -5,11 +5,11 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "(Windows) Test Render Pipeline",
+			"name": "(Windows) Samples: Geo viewer",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/build/tests/test_render_pipeline.exe",
-			"args": [],
+			"program": "${workspaceFolder}/build/samples/geo_viewer.exe",
+			"args": ["d:/LOD0.geo"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

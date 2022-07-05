@@ -145,7 +145,7 @@ int main(int narg, const char **args) {
 	mdl_layout.End();
 */
 
-	const Geometry geo = LoadGeometryFromFile("d:/LOD0.geo");
+	const Geometry geo = LoadGeometryFromFile(args[1]);
 
 	// Model mdl = CreateSphereModel(layout, 1.f, 32, 16);
 	const VertexLayout mdl_layout = ComputeGeometryVertexLayout(geo);
