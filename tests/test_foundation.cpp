@@ -373,12 +373,27 @@ void test_string() {
 	TEST_CHECK(split("bobcat  , catfish,hotdog , dogfish ", ",", " ") == list);
 	TEST_CHECK(split("*bobcat*||*catfish*||*hotdog*||*dogfish*", "||", "*") == list);
 	
-	// std::string lstrip(const std::string &str, const std::string &pattern = " ");
-	// std::string rstrip(const std::string &str, const std::string &pattern = " ");
-	// std::string strip(const std::string &str, const std::string &pattern = " ");
-	// std::string lstrip_space(const std::string &str);
-	// std::string rstrip_space(const std::string &str);
-	// std::string strip_space(const std::string &str);
+	TEST_CHECK(lstrip("     Baorisa hieroglyphica") == "Baorisa hieroglyphica");
+	TEST_CHECK(lstrip("\t\t    \tStigmodera cancellata", " \t") == "Stigmodera cancellata");
+	TEST_CHECK(lstrip(" - Stigmodera cancellata", " ") != "Stigmodera cancellata");
+
+	TEST_CHECK(rstrip("Agrias claudina    ") == "Agrias claudina");
+	TEST_CHECK(rstrip("Mormolyce phyllodes...;;-;..-_-", "_.-;") == "Mormolyce phyllodes");
+	TEST_CHECK(rstrip("Phymateus viridipes\n\n ", " \t") != "Stigmodera cancellata");
+
+	TEST_CHECK(strip("    Phyllium bioculatum        ") == "Phyllium bioculatum");
+	TEST_CHECK(strip("\"0o. .o0\" Eupholus schoenherrii \"0o. .o0\"", "0.\"o ") == "Eupholus schoenherrii");
+	TEST_CHECK(strip("<:_Chrysis ruddii= />", "<:/>") != "Chrysis ruddii");
+
+	TEST_CHECK(lstrip_space("\n\t\t  Rhachoepalpus metallicus\r\n") == "Rhachoepalpus metallicus\r\n");
+	TEST_CHECK(lstrip_space("\r\n\t* Julodis cirrosa") != "Julodis cirrosa");
+	
+	TEST_CHECK(rstrip_space("Alaruasa violacea    \t \t  \r\n") == "Alaruasa violacea");
+	TEST_CHECK(rstrip_space("Dynastes hercule    \t .\t  \r\n") != "Dynastes hercule");
+
+	TEST_CHECK(strip_space("\t\t\tProtaetia affinis   \t\t   \r\n ") == "Protaetia affinis");
+	TEST_CHECK(strip_space(" * Phobaeticus serratipes\r\n_ ") != "Phobaeticus serratipes");
+
 	// std::string trim(const std::string &str, const std::string &pattern = " ");
 	// std::string reduce(const std::string &str, const std::string &fill = " ", const std::string &pattern = " ");
 	// template <typename T> std::string join(T begin_it, T end_it, const std::string &separator)
