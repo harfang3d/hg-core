@@ -9,6 +9,10 @@ add_subdirectory(extern/glfw-3.3.7)
 # meshoptimizer
 add_subdirectory(extern/meshoptimizer)
 
+# miniz
+add_library(miniz STATIC extern/miniz/miniz.c extern/miniz/miniz.h)
+target_include_directories(miniz PUBLIC extern/miniz)
+
 # engine
 set(ENGINE_HDRS
 	assets.h
@@ -26,9 +30,8 @@ set(ENGINE_HDRS
 )
 
 set(ENGINE_SRCS
-
-	# assets.cpp
-	# assets_rw_interface.cpp
+	assets.cpp
+	assets_rw_interface.cpp
 	create_model.cpp
 	fps_controller.cpp
 	geometry.cpp
@@ -40,5 +43,5 @@ set(ENGINE_SRCS
 )
 
 add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
-target_link_libraries(engine PUBLIC foundation glfw meshoptimizer)
+target_link_libraries(engine PUBLIC foundation glfw meshoptimizer miniz)
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb extern/mikktspace)

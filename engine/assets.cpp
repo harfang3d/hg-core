@@ -1,6 +1,8 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
 #include "engine/assets.h"
+
+#include "foundation/cext.h"
 #include "foundation/dir.h"
 #include "foundation/file.h"
 #include "foundation/log.h"
@@ -10,13 +12,13 @@
 #include <cstdio>
 #include <cstring>
 #include <deque>
+#include <fmt/format.h>
 #include <functional>
 #include <memory>
-#include <mutex>
+#include <miniz.h>
 #include <set>
 #include <string>
-
-#include <miniz/miniz.h>
+#include <vector>
 
 namespace hg {
 
@@ -28,13 +30,10 @@ struct AssetsSource {
 };
 
 //
-static std::mutex assets_mutex;
-
 static std::deque<std::string> assets_folders;
 
 bool AddAssetsFolder(const std::string &path) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-	if (std::find(std::begin(assets_folders), std::end(assets_folders), path) == std::end(assets_folders)) {
+	if (std::find(assets_folders.begin(), assets_folders.end(), path) == assets_folders.end()) {
 		assets_folders.push_front(path);
 		return true;
 	}
@@ -42,9 +41,11 @@ bool AddAssetsFolder(const std::string &path) {
 }
 
 void RemoveAssetsFolder(const std::string &path) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-	assets_folders.erase(
-		std::remove_if(std::begin(assets_folders), std::end(assets_folders), [&](const std::string &i) { return i == path; }), std::end(assets_folders));
+	for (std::deque<std::string>::iterator i = assets_folders.begin(); i != assets_folders.end();)
+		if (*i == path)
+			i = assets_folders.erase(i);
+		else
+			++i;
 }
 
 //
@@ -59,31 +60,30 @@ struct ZipPackage {
 static std::deque<ZipPackage> assets_packages;
 
 bool AddAssetsPackage(const std::string &path) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-	auto it = std::find_if(std::begin(assets_packages), std::end(assets_packages), [path](const ZipPackage &h) { return h.filename == path; });
-	if (it != std::end(assets_packages)) {
-		return false;
-	}
+	for (std::deque<ZipPackage>::iterator i = assets_packages.begin(); i != assets_packages.end(); ++i)
+		if (i->filename == path)
+			return false;
 
-	assets_packages.emplace_front();
-	ZipPackage &pkg = assets_packages.front();
+	ZipPackage pkg;
 
 	pkg.filename = path;
-	if (mz_zip_reader_init_file(&pkg.archive, path, MZ_ZIP_FLAG_VALIDATE_HEADERS_ONLY) == MZ_FALSE) {
+	if (mz_zip_reader_init_file(&pkg.archive, path.c_str(), MZ_ZIP_FLAG_VALIDATE_HEADERS_ONLY) == MZ_FALSE)
 		return false;
-	}
 
+	assets_packages.push_front(pkg);
 	return true;
 }
 
 void RemoveAssetsPackage(const std::string &path) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-	assets_packages.erase(std::begin(assets_packages),
-		std::remove_if(std::begin(assets_packages), std::end(assets_packages), [path](const ZipPackage &h) { return h.filename == path; }));
+	for (std::deque<ZipPackage>::iterator i = assets_packages.begin(); i != assets_packages.end();)
+		if (i->filename == path)
+			i = assets_packages.erase(i);
+		else
+			++i;
 }
 
 struct PackageFile {
-	std::string data;
+	std::vector<uint8_t> data;
 	ptrdiff_t cursor;
 };
 
@@ -133,122 +133,136 @@ static bool Package_file_is_EOF(Asset_ &asset) { return asset.pkg_file.cursor >=
 static generational_vector_list<Asset_> assets;
 
 std::string FindAssetPath(const std::string &name) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-
-	for (auto &p : assets_folders) {
-		const auto asset_path = PathJoin({p, name});
-		if (IsFile(asset_path.c_str()))
+	for (std::deque<std::string>::iterator i = assets_folders.begin(); i != assets_folders.end(); ++i) {
+		const std::string asset_path = PathJoin(*i, name);
+		if (IsFile(asset_path))
 			return asset_path;
 	}
 	return "";
 }
 
 Asset OpenAsset(const std::string &name, bool silent) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
+	// look on filesystem
+	for (std::deque<std::string>::iterator i = assets_folders.begin(); i != assets_folders.end(); ++i) {
+		const std::string asset_path = PathJoin(*i, name);
 
-	for (auto &p : assets_folders) {
-		const auto asset_path = PathJoin({p, name});
+		const File file = Open(asset_path, true);
 
-		const auto file = Open(asset_path.c_str(), true);
-		if (IsValid(file))
-			return {assets.add_ref({file, {}, Asset_file_GetSize, Asset_file_Read, Asset_file_Seek, Asset_file_Tell, Asset_file_Close, Asset_file_is_EOF})};
+		if (IsValid(file)) {
+			Asset_ asset_;
+			asset_.file = file;
+			asset_.get_size = Asset_file_GetSize;
+			asset_.read = Asset_file_Read;
+			asset_.seek = Asset_file_Seek;
+			asset_.tell = Asset_file_Tell;
+			asset_.close = Asset_file_Close;
+			asset_.is_eof = Asset_file_is_EOF;
+
+			Asset asset;
+			asset.ref = assets.add_ref(asset_);
+
+			return asset;
+		}
 	}
 
 	// look in archive
-	for (auto &p : assets_packages) {
-		const int index = mz_zip_reader_locate_file(&p.archive, name, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
+	for (std::deque<ZipPackage>::iterator i = assets_packages.begin(); i != assets_packages.end(); ++i) {
+		const int index = mz_zip_reader_locate_file(&i->archive, name.c_str(), nullptr, MZ_ZIP_FLAG_CASE_SENSITIVE);
 		if (index == -1)
 			continue; // missing file
 
 		size_t size;
-		const std::string &buffer = (char *)mz_zip_reader_extract_to_heap(&p.archive, index, &size, 0);
-		if (buffer) {
-			std::string data(buffer, size);
-			return {assets.add_ref({{}, {std::move(data), 0}, Package_file_GetSize, Package_file_Read, Package_file_Seek, Package_file_Tell, Package_file_Close,
-				Package_file_is_EOF})};
-		} else {
-			const mz_zip_error err = mz_zip_get_last_error(&p.archive);
+		void *data = mz_zip_reader_extract_to_heap(&i->archive, index, &size, 0);
+
+		if (data == nullptr) {
+			const mz_zip_error err = mz_zip_get_last_error(&i->archive);
+
 			if (!silent)
-				warn(format("Failed to open asset '%1' from file '%2' (asset was found but failed to open) : %3")
-						  .arg(name)
-						  .arg(p.filename)
-						  .arg(mz_zip_get_error_string(err)));
+				warn(fmt::format(
+					"Failed to open asset '{}' from file '{}' (asset was found but failed to open): {}", name, i->filename, mz_zip_get_error_string(err)));
 			break;
 		}
+
+		Asset_ asset_;
+		asset_.pkg_file.data.resize(size);
+		memcpy(asset_.pkg_file.data.data(), data, size);
+		mz_free(data);
+		asset_.pkg_file.cursor = 0;
+		asset_.get_size = Package_file_GetSize;
+		asset_.read = Package_file_Read;
+		asset_.seek = Package_file_Seek;
+		asset_.tell = Package_file_Tell;
+		asset_.close = Package_file_Close;
+		asset_.is_eof = Package_file_is_EOF;
+
+		Asset asset;
+		asset.ref = assets.add_ref(asset_);
+
+		return asset;
 	}
 
 	if (!silent)
-		warn(format("Failed to open asset '%1' (file not found)").arg(name));
+		warn(fmt::format("Failed to open asset '{}' (file not found)", name));
 
-	return {};
+	return Asset();
 }
 
 void Close(Asset asset) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-
 	if (assets.is_valid(asset.ref)) {
-		auto &asset_ = assets[asset.ref.idx];
+		Asset_ &asset_ = assets[asset.ref.idx];
 		asset_.close(asset_);
 		assets.remove_ref(asset.ref);
 	}
 }
 
 bool IsAssetFile(const std::string &name) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
-
-	for (auto &p : assets_folders)
-		if (IsFile(PathJoin({p, name}).c_str()))
+	for (std::deque<std::string>::iterator i = assets_folders.begin(); i != assets_folders.end(); ++i)
+		if (IsFile(PathJoin(*i, name)))
 			return true;
 
 	// look in archive
-	for (auto &p : assets_packages) {
-		if (mz_zip_reader_locate_file(&p.archive, name, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE) != -1)
+	for (std::deque<ZipPackage>::iterator i = assets_packages.begin(); i != assets_packages.end(); ++i)
+		if (mz_zip_reader_locate_file(&i->archive, name.c_str(), nullptr, MZ_ZIP_FLAG_CASE_SENSITIVE) != -1)
 			return true;
-	}
 
 	return false;
 }
 
 size_t GetSize(Asset asset) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
 	if (assets.is_valid(asset.ref)) {
-		auto &asset_ = assets[asset.ref.idx];
+		Asset_ &asset_ = assets[asset.ref.idx];
 		return asset_.get_size(asset_);
 	}
 	return 0;
 }
 
 size_t Read(Asset asset, void *data, size_t size) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
 	if (assets.is_valid(asset.ref)) {
-		auto &asset_ = assets[asset.ref.idx];
+		Asset_ &asset_ = assets[asset.ref.idx];
 		return asset_.read(asset_, data, size);
 	}
 	return 0;
 }
 
 bool Seek(Asset asset, ptrdiff_t offset, SeekMode mode) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
 	if (assets.is_valid(asset.ref)) {
-		auto &asset_ = assets[asset.ref.idx];
+		Asset_ &asset_ = assets[asset.ref.idx];
 		return asset_.seek(asset_, offset, mode);
 	}
 	return false;
 }
 
 size_t Tell(Asset asset) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
 	if (assets.is_valid(asset.ref)) {
-		auto &asset_ = assets[asset.ref.idx];
+		Asset_ &asset_ = assets[asset.ref.idx];
 		return asset_.tell(asset_);
 	}
 	return 0;
 }
 
 bool IsEOF(Asset asset) {
-	std::lock_guard<std::mutex> lock(assets_mutex);
 	if (assets.is_valid(asset.ref)) {
-		auto &asset_ = assets[asset.ref.idx];
+		Asset_ &asset_ = assets[asset.ref.idx];
 		return asset_.is_eof(asset_);
 	}
 	return false;
@@ -256,10 +270,10 @@ bool IsEOF(Asset asset) {
 
 //
 std::string AssetToString(const std::string &name) {
-	const auto h = OpenAsset(name);
+	const Asset h = OpenAsset(name);
 	if (h.ref == invalid_gen_ref)
-		return {};
-	const auto size = GetSize(h);
+		return "";
+	const size_t size = GetSize(h);
 	std::string str;
 	str.resize(size + 1);
 	Read(h, &str[0], size);
