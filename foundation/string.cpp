@@ -61,13 +61,16 @@ std::vector<std::string> split(const std::string &value, const std::string &sepa
 		i = value.find(separator, i);
 
 		if (i == std::string::npos) {
-			std::string v = value.substr(s);
-			if (!v.empty())
+			std::string element = value.substr(s);
+			if (!element.empty()) {
+				if (trim_length)
+					replace_all(element, trim, "");
 #if __cplusplus >= 201103L
-				elements.push_back(std::move(v));
+				elements.push_back(std::move(element));
 #else
-				elements.push_back(v);
+				elements.push_back(element);
 #endif
+			}
 			break;
 		} else {
 			std::string element(value.substr(s, i - s));

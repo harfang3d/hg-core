@@ -6,6 +6,7 @@
 
 #include "foundation/math.h"
 #include "foundation/unit.h"
+#include "foundation/string.h"
 #include "foundation/time.h"
 #include "foundation/clock.h"
 #include "foundation/vector2.h"
@@ -322,6 +323,90 @@ void test_units() {
 }
 
 //
+void test_string() {
+	TEST_CHECK(to_lower('A') == 'a');
+	TEST_CHECK(to_lower('G') == 'g');
+	TEST_CHECK(to_lower('z') == 'z');
+	TEST_CHECK(to_lower('e') == 'e');
+	TEST_CHECK(to_lower('0') == '0');
+	TEST_CHECK(to_lower('!') == '!');
+
+	TEST_CHECK(case_sensitive_eq_func('I', 'I'));
+	TEST_CHECK(case_sensitive_eq_func('f', 'f'));
+	TEST_CHECK(case_sensitive_eq_func('F', 'f') == false);
+	TEST_CHECK(case_sensitive_eq_func('y', 'A') == false);
+	TEST_CHECK(case_sensitive_eq_func('A', 'a') == false);
+	TEST_CHECK(case_sensitive_eq_func('_', '_'));
+	TEST_CHECK(case_sensitive_eq_func('!', '=') == false);
+
+	TEST_CHECK(case_insensitive_eq_func('J', 'J'));
+	TEST_CHECK(case_insensitive_eq_func('o', 'o'));
+	TEST_CHECK(case_insensitive_eq_func('H', 'h'));
+	TEST_CHECK(case_insensitive_eq_func('b', 'B'));
+	TEST_CHECK(case_insensitive_eq_func('w', 'L') == false);
+	TEST_CHECK(case_insensitive_eq_func('U', 'e') == false);
+	TEST_CHECK(case_insensitive_eq_func('*', '*'));
+	TEST_CHECK(case_insensitive_eq_func('$', '~') == false);
+
+	TEST_CHECK(starts_with("starts_with", "start"));
+	TEST_CHECK(starts_with("StArTs_WiTh", "start") == false);
+	TEST_CHECK(starts_with("cAsE_SeNsItIviTy::insensitive", "CaSe_sEnSiTiViTy:", case_sensitivity::insensitive));
+	TEST_CHECK(starts_with("Lorem ipsum dolor sit amet", "ipsum", case_sensitivity::insensitive) == false);
+
+	TEST_CHECK(ends_with("starts_with", "_with"));
+	TEST_CHECK(ends_with("StArTs_WiTh", "_WIth") == false);
+	TEST_CHECK(ends_with("cAsE_SeNsItIviTy::iNsEnSiTiVe", ":InSEnsITiVE", case_sensitivity::insensitive));
+	TEST_CHECK(ends_with("Lorem ipsum dolor sit amet", " sit amet", case_sensitivity::insensitive));
+	TEST_CHECK(ends_with("Lorem ipsum dolor sit amet", " amet sit", case_sensitivity::insensitive) == false);
+
+	std::string str = "bobcat dogfights a catfish over a hotdog";
+	TEST_CHECK(replace_all(str, "dog", "cat") == 2);
+	TEST_CHECK(str == "bobcat catfights a catfish over a hotcat");
+	TEST_CHECK(replace_all(str, "cat", "DOG") == 4);
+	TEST_CHECK(str == "bobDOG DOGfights a DOGfish over a hotDOG");
+
+	std::vector<std::string> list(4);
+	list[0] = "bobcat";
+	list[1] = "catfish";
+	list[2] = "hotdog";
+	list[3] = "dogfish";
+	TEST_CHECK(split("bobcat  , catfish,hotdog , dogfish ", ",", " ") == list);
+	TEST_CHECK(split("*bobcat*||*catfish*||*hotdog*||*dogfish*", "||", "*") == list);
+	
+	// std::string lstrip(const std::string &str, const std::string &pattern = " ");
+	// std::string rstrip(const std::string &str, const std::string &pattern = " ");
+	// std::string strip(const std::string &str, const std::string &pattern = " ");
+	// std::string lstrip_space(const std::string &str);
+	// std::string rstrip_space(const std::string &str);
+	// std::string strip_space(const std::string &str);
+	// std::string trim(const std::string &str, const std::string &pattern = " ");
+	// std::string reduce(const std::string &str, const std::string &fill = " ", const std::string &pattern = " ");
+	// template <typename T> std::string join(T begin_it, T end_it, const std::string &separator)
+	// template <typename T> std::string join(T begin_it, T end_it, const std::string &separator, const std::string &last_separator)
+	// bool contains(const std::string &in, const std::string &what);
+	// std::string utf32_to_utf8(const std::u32string &str);
+	// std::u32string utf8_to_utf32(const std::string &str);
+	// std::string wchar_to_utf8(const std::wstring &str);
+	// std::wstring utf8_to_wchar(const std::string &str);
+	// std::wstring ansi_to_wchar(const std::string &str);
+	// std::string ansi_to_utf8(const std::string &str);
+	// void tolower_inplace(std::string & inplace_str, size_t start = 0, size_t end = 0);
+	// std::string tolower(std::string str, size_t start = 0, size_t end = 0);
+	// void toupper_inplace(std::string & inplace_str, size_t start = 0, size_t end = 0);
+	// std::string toupper(std::string str, size_t start = 0, size_t end = 0);
+	// std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count = 0);
+	// std::string left(const std::string &str, size_t count);
+	// std::string right(const std::string &str, size_t count);
+	// void normalize_eol(std::string & inplace_normalize, EOLConvention = EOLUnix);
+	// std::string strip_prefix(const std::string &str, const std::string &prefix);
+	// std::string strip_suffix(const std::string &str, const std::string &suffix);
+	// std::string word_wrap(const std::string &str, int width = 80, int lead = 0, char lead_char = ' ');
+	// std::string name_to_path(std::string name);
+	// std::string pad_left(const std::string &str, int padded_width, char padding_char = ' ');
+	// std::string pad_right(const std::string &str, int padded_width, char padding_char = ' ');
+}
+
+//
 void test_clock_update() {
 	reset_clock();
 
@@ -380,6 +465,7 @@ void test_log() {
 TEST_LIST = {
 	{"Math", test_math},
 	{"Units", test_units},
+	{"String", test_string},
 
 	{"Clock.Update", test_clock_update},
 
