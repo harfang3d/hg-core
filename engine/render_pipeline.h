@@ -161,62 +161,47 @@ std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromFile(const st
 std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromAssets(const std::string &name, bool &success, bool silent = false);
 
 //
-enum VertexAttributeSemantic { VAS_Position, VAS_Normal, VAS_Tangent, VAS_Bitangent, VAS_Color, VAS_BoneIndices, VAS_BoneWeights, VAS_UV0, VAS_UV1, VAS_Count };
+enum VertexAttribute { VA_Position, VA_Normal, VA_Tangent, VA_Bitangent, VA_Color, VA_BoneIndices, VA_BoneWeights, VA_UV0, VA_UV1, VA_Count };
 
-/*
-	layout.AddAttrib(0, SG_VERTEXFORMAT_FLOAT3); // 0: position as float3
+struct ShaderLayout {
+	ShaderLayout() { std::fill(attrib, attrib + SG_MAX_VERTEX_ATTRIBUTES, VA_Count); }
 
-	if (!geo.normal.empty())
-		layout.AddAttrib(1, SG_VERTEXFORMAT_UBYTE4N); // 1: normal as UByte4N
-
-	if (!geo.tangent.empty()) {
-		layout.AddAttrib(2, SG_VERTEXFORMAT_UBYTE4N); // 2: tangent as UByte4N
-		layout.AddAttrib(3, SG_VERTEXFORMAT_UBYTE4N); // 3: bitangent as UByte4N
-	}
-
-	if (!geo.color.empty())
-		layout.AddAttrib(4, SG_VERTEXFORMAT_UBYTE4N); // 4: color as UByte4N
-
-	if (!geo.skin.empty()) {
-		layout.AddAttrib(5, SG_VERTEXFORMAT_UBYTE4N); // 5: bone indices as UByte4N
-		layout.AddAttrib(6, SG_VERTEXFORMAT_UBYTE4N); // 6: bone weights as UByte4N
-	}
-
-	for (auto i = 0; i < geo.uv.size(); ++i)
-		if (!geo.uv[i].empty())
-			layout.AddAttrib(7 + i, SG_VERTEXFORMAT_FLOAT2);
-*/
+	VertexAttribute attrib[SG_MAX_VERTEX_ATTRIBUTES];
+};
 
 struct VertexLayout {
 	VertexLayout() : attrib_count(0), stride(0) {}
 
-	struct Attrib {
-		Attrib() : format(SG_VERTEXFORMAT_INVALID), semantic(VAS_Count), offset(0) {}
+	struct Attribute {
+		Attribute() : semantic(VA_Count), format(SG_VERTEXFORMAT_INVALID), offset(0) {}
 
+		VertexAttribute semantic;
 		sg_vertex_format format;
-		VertexAttributeSemantic semantic;
-
 		size_t offset;
 	};
 
-	void AddAttrib(VertexAttributeSemantic semantic, sg_vertex_format format);
+	void Add(VertexAttribute semantic, sg_vertex_format format);
 	void End();
 
-	void FillLayoutDesc(sg_layout_desc &desc) const;
+	bool Has(VertexAttribute semantic) const { return semantic_to_attrib[semantic] != -1; }
+
+	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
+	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
+
 	size_t GetStride() const { return stride; }
 
-	bool Has(VertexAttributeSemantic semantic) const { return semantic_to_attrib[semantic] != -1; }
-
-	void PackVertex(VertexAttributeSemantic semantic, const float *in, size_t in_count, int8_t *out) const;
-	void PackVertex(VertexAttributeSemantic semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
+	size_t GetAttributeCount() const { return attrib_count; }
+	const Attribute *GetAttribute(size_t idx) const { return idx < SG_MAX_VERTEX_ATTRIBUTES ? &attrib[idx] : nullptr; }
 
 private:
-	Attrib attrib[SG_MAX_VERTEX_ATTRIBUTES];
+	Attribute attrib[SG_MAX_VERTEX_ATTRIBUTES];
 	size_t attrib_count;
 
-	int8_t semantic_to_attrib[VAS_Count];
 	size_t stride;
+	int8_t semantic_to_attrib[VA_Count];
 };
+
+void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
 
 struct DisplayList {
 	size_t element_count;

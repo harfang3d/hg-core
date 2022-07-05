@@ -136,27 +136,27 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 
 		for (size_t j = 0; j < list.vtx.size(); j++) {
 			const Vertex &vtx = list.vtx[j];
-			decl.PackVertex(VAS_Position, &vtx.pos.x, 3, p_vtx);
+			decl.PackVertex(VA_Position, &vtx.pos.x, 3, p_vtx);
 
-			if (decl.Has(VAS_Normal))
-				decl.PackVertex(VAS_Normal, &vtx.normal.x, 3, p_vtx);
-			if (decl.Has(VAS_Tangent))
-				decl.PackVertex(VAS_Tangent, &vtx.tangent.x, 3, p_vtx);
-			if (decl.Has(VAS_Bitangent))
-				decl.PackVertex(VAS_Bitangent, &vtx.binormal.x, 3, p_vtx);
+			if (decl.Has(VA_Normal))
+				decl.PackVertex(VA_Normal, &vtx.normal.x, 3, p_vtx);
+			if (decl.Has(VA_Tangent))
+				decl.PackVertex(VA_Tangent, &vtx.tangent.x, 3, p_vtx);
+			if (decl.Has(VA_Bitangent))
+				decl.PackVertex(VA_Bitangent, &vtx.binormal.x, 3, p_vtx);
 
-			if (decl.Has(VAS_Color))
-				decl.PackVertex(VAS_Color, &vtx.color0.r, 4, p_vtx);
+			if (decl.Has(VA_Color))
+				decl.PackVertex(VA_Color, &vtx.color0.r, 4, p_vtx);
 
-			if (decl.Has(VAS_UV0))
-				decl.PackVertex(VAS_UV0, &vtx.uv0.x, 2, p_vtx);
-			if (decl.Has(VAS_UV1))
-				decl.PackVertex(VAS_UV1, &vtx.uv1.x, 2, p_vtx);
+			if (decl.Has(VA_UV0))
+				decl.PackVertex(VA_UV0, &vtx.uv0.x, 2, p_vtx);
+			if (decl.Has(VA_UV1))
+				decl.PackVertex(VA_UV1, &vtx.uv1.x, 2, p_vtx);
 
-			if (decl.Has(VAS_BoneIndices))
-				decl.PackVertex(VAS_BoneIndices, vtx.index, 4, p_vtx);
-			if (decl.Has(VAS_BoneWeights))
-				decl.PackVertex(VAS_BoneWeights, vtx.weight, 4, p_vtx);
+			if (decl.Has(VA_BoneIndices))
+				decl.PackVertex(VA_BoneIndices, vtx.index, 4, p_vtx);
+			if (decl.Has(VA_BoneWeights))
+				decl.PackVertex(VA_BoneWeights, vtx.weight, 4, p_vtx);
 
 			minmax.mn = Min(minmax.mn, vtx.pos); // update list minmax
 			minmax.mx = Max(minmax.mx, vtx.pos);

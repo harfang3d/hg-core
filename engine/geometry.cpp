@@ -520,27 +520,27 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 VertexLayout ComputeGeometryVertexLayout(const Geometry &geo) {
 	VertexLayout layout;
 
-	layout.AddAttrib(VAS_Position, SG_VERTEXFORMAT_FLOAT3);
+	layout.Add(VA_Position, SG_VERTEXFORMAT_FLOAT3);
 
 	if (!geo.normal.empty())
-		layout.AddAttrib(VAS_Normal, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Add(VA_Normal, SG_VERTEXFORMAT_UBYTE4N);
 
 	if (!geo.tangent.empty()) {
-		layout.AddAttrib(VAS_Tangent, SG_VERTEXFORMAT_UBYTE4N);
-		layout.AddAttrib(VAS_Bitangent, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Add(VA_Tangent, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Add(VA_Bitangent, SG_VERTEXFORMAT_UBYTE4N);
 	}
 
 	if (!geo.color.empty())
-		layout.AddAttrib(VAS_Color, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Add(VA_Color, SG_VERTEXFORMAT_UBYTE4N);
 
 	if (!geo.skin.empty()) {
-		layout.AddAttrib(VAS_BoneIndices, SG_VERTEXFORMAT_UBYTE4N);
-		layout.AddAttrib(VAS_BoneWeights, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Add(VA_BoneIndices, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Add(VA_BoneWeights, SG_VERTEXFORMAT_UBYTE4N);
 	}
 
 	for (size_t i = 0; i < geo.uv.size() && i < 2; ++i)
 		if (!geo.uv[i].empty())
-			layout.AddAttrib(VertexAttributeSemantic(VAS_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
+			layout.Add(VertexAttribute(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
 
 	layout.End();
 

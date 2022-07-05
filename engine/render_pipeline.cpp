@@ -76,9 +76,9 @@ uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &mo
 */
 
 //
-void VertexLayout::AddAttrib(VertexAttributeSemantic semantic, sg_vertex_format format) {
+void VertexLayout::Add(VertexAttribute semantic, sg_vertex_format format) {
 	assert(attrib_count < SG_MAX_VERTEX_ATTRIBUTES);
-	Attrib &attr = attrib[attrib_count];
+	Attribute &attr = attrib[attrib_count];
 	attr.semantic = semantic;
 	attr.format = format;
 	++attrib_count;
@@ -87,13 +87,13 @@ void VertexLayout::AddAttrib(VertexAttributeSemantic semantic, sg_vertex_format 
 static size_t vertex_format_size[_SG_VERTEXFORMAT_NUM] = {0, 4, 8, 12, 16, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 4};
 
 void VertexLayout::End() {
-	for (size_t i = 0; i < VAS_Count; ++i)
+	for (size_t i = 0; i < VA_Count; ++i)
 		semantic_to_attrib[i] = -1;
 
 	stride = 0;
 
 	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		Attrib &attr = attrib[i];
+		Attribute &attr = attrib[i];
 
 		if (attr.format == SG_VERTEXFORMAT_INVALID)
 			continue;
@@ -105,27 +105,47 @@ void VertexLayout::End() {
 	}
 }
 
-void VertexLayout::FillLayoutDesc(sg_layout_desc &layout) const {
+void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index) {
+	const size_t stride = vertex_layout.GetStride();
 	assert(stride != 0);
 
-	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		const Attrib &attr = attrib[i];
-		sg_vertex_attr_desc &layout_attr = layout.attrs[i];
+	layout.buffers[buffer_index].stride = stride;
 
-		layout_attr.buffer_index = 0;
-		layout_attr.format = attr.format;
-		layout_attr.offset = attr.offset;
+	int va_location[VA_Count]; // VertexAttribute -> shader location LUT
+	std::fill(va_location, va_location + VA_Count, -1);
+
+	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+		const VertexAttribute va = shader_layout.attrib[i];
+
+		if (va != VA_Count)
+			va_location[va] = i;
+	}
+
+	const size_t attribute_count = vertex_layout.GetAttributeCount();
+
+	for (size_t i = 0; i < attribute_count; ++i) {
+		const VertexLayout::Attribute *attr = vertex_layout.GetAttribute(i);
+		if (attr == nullptr)
+			continue;
+
+		const int location = va_location[attr->semantic];
+		if (location == -1)
+			continue; // shader not consuming this vertex stream
+
+		sg_vertex_attr_desc &layout_attr = layout.attrs[location];
+
+		layout_attr.buffer_index = buffer_index;
+		layout_attr.format = attr->format;
+		layout_attr.offset = attr->offset;
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const float *in, size_t in_count, int8_t *out) const {
+void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const {
 	assert(semantic_to_attrib[semantic] != -1);
 
-	const Attrib &attr = attrib[semantic_to_attrib[semantic]];
+	const Attribute &attr = attrib[semantic_to_attrib[semantic]];
 
-	if (attr.format == SG_VERTEXFORMAT_FLOAT ||
-		attr.format == SG_VERTEXFORMAT_FLOAT2 ||
-		attr.format == SG_VERTEXFORMAT_FLOAT3 ||
+	if (attr.format == SG_VERTEXFORMAT_FLOAT || attr.format == SG_VERTEXFORMAT_FLOAT2 || attr.format == SG_VERTEXFORMAT_FLOAT3 ||
 		attr.format == SG_VERTEXFORMAT_FLOAT4) {
 
 		size_t out_count;
@@ -144,14 +164,14 @@ void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const float *in,
 		float *f_out = reinterpret_cast<float *>(out + attr.offset);
 
 		size_t i = 0;
-		for ( ; i < in_count; ++i)
+		for (; i < in_count; ++i)
 			f_out[i] = in[i];
-		for ( ; i < out_count; ++i) // zero pad missing input
+		for (; i < out_count; ++i) // zero pad missing input
 			f_out[i] = 0.f;
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttributeSemantic semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
+void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
 
 //
 sg_buffer MakeIndexBuffer(const void *data, size_t size) {
@@ -162,7 +182,7 @@ sg_buffer MakeIndexBuffer(const void *data, size_t size) {
 	buffer_desc.data.ptr = data;
 	buffer_desc.data.size = size;
 
-    return sg_make_buffer(&buffer_desc);
+	return sg_make_buffer(&buffer_desc);
 }
 
 sg_buffer MakeVertexBuffer(const void *data, size_t size) {
@@ -174,7 +194,6 @@ sg_buffer MakeVertexBuffer(const void *data, size_t size) {
 
 	return sg_make_buffer(&buffer_desc);
 }
-
 
 #if 0
 

@@ -8,10 +8,10 @@
 #include "foundation/time.h"
 #include "foundation/vector3.h"
 
-#include "engine/fps_controller.h"
-#include "engine/render_pipeline.h"
 #include "engine/create_model.h"
+#include "engine/fps_controller.h"
 #include "engine/geometry.h"
+#include "engine/render_pipeline.h"
 
 #define SOKOL_GFX_IMPL
 #define SOKOL_GLCORE33
@@ -88,7 +88,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 //
 
 //
-sg_pipeline MakePipeline(const VertexLayout &layout, sg_shader shader) {
+sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, const ShaderLayout &shader_layout) {
 	sg_pipeline_desc pipeline_desc;
 
 	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
@@ -99,7 +99,7 @@ sg_pipeline MakePipeline(const VertexLayout &layout, sg_shader shader) {
 	pipeline_desc.depth.write_enabled = true;
 	pipeline_desc.cull_mode = SG_CULLMODE_BACK;
 
-	layout.FillLayoutDesc(pipeline_desc.layout);
+	FillPipelineLayout(vertex_layout, shader_layout, pipeline_desc.layout);
 
 	return sg_make_pipeline(&pipeline_desc);
 }
@@ -125,12 +125,12 @@ void test_init() {
 
 	shader_desc.vs.source = "#version 330\n"
 							"uniform mat4 mvp;\n"
-							"layout(location = 0) in vec4 position;\n"
-							"layout(location = 1) in vec3 normal;\n"
-							"out vec3 _normal;\n"
+							"layout (location=0) in vec4 a_position;\n"
+							"layout (location=1) in vec3 a_normal;\n"
+							"out vec3 i_normal;\n"
 							"void main() {\n"
-							"	gl_Position = mvp * position;\n"
-							"	_normal = normal;\n"
+							"	gl_Position = mvp * a_position;\n"
+							"	i_normal = a_normal;\n"
 							"}\n";
 
 	shader_desc.vs.uniform_blocks[0].size = sizeof(shader_vs_params);
@@ -138,41 +138,45 @@ void test_init() {
 	shader_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
 
 	shader_desc.fs.source = "#version 330\n"
-							"in vec3 _normal;\n"
-							"out vec4 color;\n"
+							"in vec3 i_normal;\n"
+							"out vec4 o_color;\n"
 							"void main() {\n"
-							"	float k = normalize(_normal).z;\n"
-							"	color = vec4(k, k, k, 1);\n"
+							"	float k = normalize(i_normal).z;\n"
+							"	o_color = vec4(k, k, k, 1);\n"
 							"}\n";
 
 	sg_shader shd = sg_make_shader(&shader_desc);
 
-	// a pipeline state object (default render states are fine for triangle)
-	VertexLayout layout;
-	layout.AddAttrib(VAS_Position, SG_VERTEXFORMAT_FLOAT3);
-	layout.AddAttrib(VAS_Normal, SG_VERTEXFORMAT_FLOAT3);
-	layout.End();
+	ShaderLayout shd_layout;
+	shd_layout.attrib[0] = VA_Position;
+	shd_layout.attrib[1] = VA_Normal;
 
+	// a pipeline state object (default render states are fine for triangle)
+/*
+	VertexLayout mdl_layout;
+	mdl_layout.Add(VA_Normal, SG_VERTEXFORMAT_FLOAT3);
+	mdl_layout.Add(VA_Position, SG_VERTEXFORMAT_FLOAT3);
+	mdl_layout.End();
+*/
 
 	const Geometry geo = LoadGeometryFromFile("d:/LOD0.geo");
 
-
-//	Model cube_model = CreateSphereModel(layout, 1.f, 32, 16);
-	Model cube_model = GeometryToModel(geo, layout);
+	// Model mdl = CreateSphereModel(layout, 1.f, 32, 16);
+	const VertexLayout mdl_layout = ComputeGeometryVertexLayout(geo);
+	Model mdl = GeometryToModel(geo, mdl_layout);
 
 	//
-	sg_pipeline pip = MakePipeline(layout, shd);
-
+	sg_pipeline pip = MakePipeline(mdl_layout, shd, shd_layout);
 
 	// resource bindings
 	sg_bindings bind;
 	memset(&bind, 0, sizeof(sg_bindings));
 
-	const DisplayList &list = cube_model.lists[0];
+	const DisplayList &list = mdl.lists[0];
 	bind.index_buffer = list.index_buffer;
 	bind.vertex_buffers[0] = list.vertex_buffer;
 
-	//bind.vertex_buffers[0] = vbuf;
+	// bind.vertex_buffers[0] = vbuf;
 
 	// default pass action (clear to grey)
 	sg_pass_action pass_action = {0};
@@ -182,12 +186,12 @@ void test_init() {
 
 	//
 	double old_xpos = 0, old_ypos = 0;
-	Vec3 pos(0, 0, 1), rot(0, 0, 0);
+	Vec3 pos(0, 1.5, -4), rot(0, 0, 0);
 
 	while (!glfwWindowShouldClose(win)) {
 		double xpos, ypos;
 		glfwGetCursorPos(win, &xpos, &ypos);
-		const double xdelta = xpos - old_xpos, ydelta = ypos - old_ypos;
+		const double xdelta = 0 /*xpos - old_xpos*/, ydelta = 0 /*ypos - old_ypos*/;
 		old_xpos = xpos;
 		old_ypos = ypos;
 
@@ -196,7 +200,7 @@ void test_init() {
 		//
 		FpsController(key_up, key_down, key_left, key_right, true, float(xdelta), float(ydelta), pos, rot, 2.f, time_from_ms(16));
 
-		const Mat44 proj = ScaleMat4(Vec3(1, -1, 1)) * ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
+		const Mat44 proj = /* ScaleMat4(Vec3(1, -1, 1)) **/ ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
 		const Mat4 view = InverseFast(TransformationMat4(pos, rot));
 
 		vs_params.mvp = Transpose(proj * view);
