@@ -1,11 +1,3 @@
-# GLFW
-set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
-set(GLFW_INSTALL OFF CACHE INTERNAL "" FORCE)
-
-add_subdirectory(extern/glfw-3.3.7)
-
 # meshoptimizer
 add_subdirectory(extern/meshoptimizer)
 
@@ -43,5 +35,5 @@ set(ENGINE_SRCS
 )
 
 add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
-target_link_libraries(engine PUBLIC foundation glfw meshoptimizer miniz)
+target_link_libraries(engine PUBLIC foundation meshoptimizer miniz)
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb extern/mikktspace)

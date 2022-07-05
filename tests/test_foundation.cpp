@@ -9,6 +9,8 @@
 #include "foundation/vector4.h"
 #include "foundation/log.h"
 
+#include <fmt/format.h>
+
 using namespace hg;
 
 //

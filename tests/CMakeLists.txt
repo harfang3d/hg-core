@@ -2,10 +2,6 @@ add_executable(test_foundation test_foundation.cpp)
 target_link_libraries(test_foundation PUBLIC foundation)
 target_include_directories(test_foundation PUBLIC extern/acutest)
 
-add_executable(test_render_pipeline test_render_pipeline.cpp)
-target_link_libraries(test_render_pipeline PUBLIC engine)
-target_include_directories(test_render_pipeline PUBLIC extern/acutest)
-
 if(UNIX OR MSYS AND NOT APPLE AND NOT EMSCRIPTEN)
 	find_package(OpenGL)
 

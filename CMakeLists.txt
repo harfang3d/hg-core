@@ -21,3 +21,6 @@ endif()
 add_subdirectory(foundation)
 add_subdirectory(engine)
 add_subdirectory(tests)
+
+add_subdirectory(app_glfw)
+add_subdirectory(samples)
