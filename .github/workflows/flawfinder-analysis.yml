@@ -27,7 +27,7 @@ jobs:
        - name: prepare
          run: pip install flawfinder
        - name: analyse
-         run: python -m flawfinder --minlevel=0 --error-level=4 --html -- foundation > results.html
+         run: python -m flawfinder --minlevel=0 --error-level=4 --html -- $(find foundation -not \( -path foundation/extern -prune \) -type f -regex '.*\.\(cpp\|h\)$' -print) > results.html
        - name: upload results
          uses: actions/upload-artifact@v3
          with:
