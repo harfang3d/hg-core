@@ -1,5 +1,7 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
+#include <math.h>
+
 #include "acutest.h"
 
 #include "foundation/math.h"
@@ -123,16 +125,35 @@ void test_math() {
 	TEST_CHECK(TestEqual(Quantize(6.f, 9.f), 0.f));
 	TEST_CHECK(TestEqual(Quantize(32.561f, 3.f), 30.f));
 
-// [todo] template <class T> T inline Wrap(T v, T range_start, T range_end)
-// 
+	TEST_CHECK(TestEqual(Wrap(2.5f, 0.f, 1.f), 0.5f));
+	TEST_CHECK(TestEqual(Wrap(4.5, 2.5, 5.25), 4.5f));
+	TEST_CHECK(TestEqual(Wrap(1.7, 0.5, 0.725), 0.575f));
+	TEST_CHECK(TestEqual(Wrap(HalfPi, -Pi, Pi), HalfPi));
+	TEST_CHECK(TestEqual(Wrap(Pi, -Pi, Pi), Pi));
+	TEST_CHECK(TestEqual(Wrap(1.0, 0.0, 1.0), 1.0));
+	TEST_CHECK(TestEqual(Wrap(2.f, 0.f, 1.f), 1.f));
+	TEST_CHECK(TestEqual(Wrap(-7, -6, -3), -4));
+	TEST_CHECK(TestEqual(Wrap(28,  6,  3), 4));
+	
+	TEST_CHECK(IsFinite(32755.f) == true);
+	TEST_CHECK(IsFinite(-9999.999f) == true);
+	TEST_CHECK(IsFinite(log(0.0)) == false);
+	
+	TEST_CHECK(getPOT(256) == 256);
+	TEST_CHECK(getPOT(220) == 256);
+	TEST_CHECK(getPOT(1960) == 2048);
+	TEST_CHECK(getPOT(-140) == 1);
+
+	TEST_CHECK(isPOT(512));
+	TEST_CHECK(isPOT(1080) == false);
+	TEST_CHECK(isPOT(-256) == false);
+	
 // [todo] float Sin(float);
 // [todo] float ASin(float);
 // [todo] float Cos(float);
 // [todo] float ACos(float);
 // [todo] float Tan(float);
 // [todo] float ATan(float);
-
-// [todo] bool IsFinite(float);
 
 // [todo] template <typename T> constexpr T LinearInterpolate(T y0, T y1, float t)
 // [todo] template <typename T> T CosineInterpolate(T y0, T y1, float t)
@@ -142,10 +163,6 @@ void test_math() {
 // [todo] template <typename T> T HermiteInterpolate(T y0, T y1, T y2, T y3, float t, float tension, float bias)
 
 // [todo] template <class T> T LinearInterpolateArray(uint32_t count, const T *values, float t)
-
-// [todo] template <typename T> inline T getPOT(T v)
-
-// [todo] template <typename T> inline bool isPOT(T v)
 }
 
 // 
