@@ -147,22 +147,95 @@ void test_math() {
 	TEST_CHECK(isPOT(512));
 	TEST_CHECK(isPOT(1080) == false);
 	TEST_CHECK(isPOT(-256) == false);
+
+	TEST_CHECK(TestEqual(Sin(0.f), 0.f));
+	TEST_CHECK(TestEqual(Sin(Pi / 6.f), 1.f / 2.f));
+	TEST_CHECK(TestEqual(Sin(Pi / 4.f), float(sqrt(2.0) / 2.0)));
+	TEST_CHECK(TestEqual(Sin(Pi / 3.f), float(sqrt(3.0) / 2.0)));
+	TEST_CHECK(TestEqual(Sin(HalfPi), 1.f));
+	TEST_CHECK(TestEqual(Sin(Pi), 0.f));
+	TEST_CHECK(TestEqual(Sin(TwoPi), 0.f));
+	TEST_CHECK(TestEqual(Sin(3.f * Pi / 2.f), -1.f));
+	TEST_CHECK(TestEqual(Sin(-HalfPi), -1.f));
+	TEST_CHECK(TestEqual(Sin(-1.5f), -Sin(1.5f)));
+	TEST_CHECK(TestEqual(Sin(1.5f - Pi), -Sin(1.5f)));
+	TEST_CHECK(TestEqual(Sin(0.4f + Pi), -Sin(0.4f)));
+
+	TEST_CHECK(TestEqual(ASin(0.f), 0.f));
+	TEST_CHECK(TestEqual(ASin(0.5f), Pi / 6.f));
+	TEST_CHECK(TestEqual(ASin(float(sqrt(2.0) / 2.0)), Pi / 4.f));
+	TEST_CHECK(TestEqual(ASin(float(sqrt(3.0) / 2.0)), Pi / 3.f));
+	TEST_CHECK(TestEqual(ASin(1.f), HalfPi));
+	TEST_CHECK(TestEqual(ASin(-1.f), -HalfPi));
+	TEST_CHECK(TestEqual(ASin(-0.7f), -ASin(0.7f)));
+
+	TEST_CHECK(TestEqual(Cos(0.f), 1.f));
+	TEST_CHECK(TestEqual(Cos(Pi / 6.f), float(sqrt(3.0) / 2.f)));
+	TEST_CHECK(TestEqual(Cos(Pi / 4.f), float(sqrt(2.0) / 2.0)));
+	TEST_CHECK(TestEqual(Cos(Pi / 3.f), 1.0 / 2.0));
+	TEST_CHECK(TestEqual(Cos(HalfPi), 0.f));
+	TEST_CHECK(TestEqual(Cos(Pi),-1.f));
+	TEST_CHECK(TestEqual(Cos(TwoPi), 1.f));
+	TEST_CHECK(TestEqual(Cos(3.f * Pi / 2.f), 0.f));
+	TEST_CHECK(TestEqual(Cos(-1.5f), Cos(1.5f)));
+	TEST_CHECK(TestEqual(Cos(1.5f - Pi), -Cos(1.5f)));
+	TEST_CHECK(TestEqual(Cos(2.6f - Pi), -Cos(2.6f)));
+
+	TEST_CHECK(TestEqual(Cos(0.7f + HalfPi),-Sin(0.7f)));
+	TEST_CHECK(TestEqual(Cos(2.5f - HalfPi), Sin(2.5f)));
+	TEST_CHECK(TestEqual(Sin(0.3f + HalfPi), Cos(0.3f)));
+	TEST_CHECK(TestEqual(Sin(1.8f - HalfPi),-Cos(1.8f)));
+
+	TEST_CHECK(TestEqual(ACos(1.f), 0.f));
+	TEST_CHECK(TestEqual(ACos(float(sqrt(3.0) / 2.f)), Pi / 6.f));
+	TEST_CHECK(TestEqual(ACos(float(sqrt(2.0) / 2.0)), Pi / 4.f));
+	TEST_CHECK(TestEqual(ACos(1.0 / 2.0), Pi / 3.f));
+	TEST_CHECK(TestEqual(ACos(0.f), HalfPi));
+	TEST_CHECK(TestEqual(ACos(-1.f), Pi));
+
+	TEST_CHECK(TestEqual(ACos(-0.7f), HalfPi + ASin(0.7f)));
+
+	TEST_CHECK(TestEqual(Tan(0.f), 0.f));
+	TEST_CHECK(TestEqual(Tan(Pi / 6.f), float(sqrt(3.0) / 3.0)));
+	TEST_CHECK(TestEqual(Tan(Pi / 4.f), 1.f));
+	TEST_CHECK(TestEqual(Tan(Pi / 3.f), float(sqrt(3.0))));
+	TEST_CHECK(TestEqual(Tan(-1.4f), -Tan(1.4f)));
+	TEST_CHECK(TestEqual(Tan(0.6f + Pi), Tan(0.6f)));
+
+	TEST_CHECK(TestEqual(ATan(0.f), 0.f));
+	TEST_CHECK(TestEqual(ATan(float(sqrt(3.0) / 3.0)), Pi / 6.f));
+	TEST_CHECK(TestEqual(ATan(1.f), Pi / 4.f));
+	TEST_CHECK(TestEqual(ATan(float(sqrt(3.0))), Pi / 3.f));
+	TEST_CHECK(TestEqual(ATan(-1.4f), -ATan(1.4f)));
+	TEST_CHECK(TestEqual(ATan(1.f/0.4f) + ATan(0.4f), HalfPi));
+
+	TEST_CHECK(TestEqual(LinearInterpolate(-1.f, 1.f, 0.5f), 0.f));
+	TEST_CHECK(TestEqual(LinearInterpolate(102, 204, 0), 102));
+	TEST_CHECK(TestEqual(LinearInterpolate(102, 204, 1), 204));
+	TEST_CHECK(TestEqual(LinearInterpolate(16, 32, 0.5), 24));
+	TEST_CHECK(TestEqual(LinearInterpolate(-5.f, 5.f, 0.1f), -4.f));
+	TEST_CHECK(TestEqual(LinearInterpolate(-5.f, 5.f, 0.9f), 4.f));
+	TEST_CHECK(TestEqual(LinearInterpolate( 8.f, 9.f, 1.1f), 9.1f));
+	TEST_CHECK(TestEqual(LinearInterpolate( 6.f, 8.f,-0.1f), 5.8f));
+
+	TEST_CHECK(TestEqual(CosineInterpolate(-1.f, 1.f, 0.0f),-1.f));
+	TEST_CHECK(TestEqual(CosineInterpolate(-1.f, 1.f, 1.0f), 1.f));
+	TEST_CHECK(TestEqual(CosineInterpolate( 1.f, 3.f, 0.5f), 2.f));
+	TEST_CHECK(TestEqual(CosineInterpolate( 2.f, 4.f, 2.0f), 2.f));
+	TEST_CHECK(TestEqual(CosineInterpolate( 2.f, 4.f, 3.0f), 4.f));
+	TEST_CHECK(TestEqual(CosineInterpolate(-2.f, 2.f, 2.5f), 0.f));
+	TEST_CHECK(TestEqual(CosineInterpolate(-2.f, 2.f, 1.f / 3.f), -1.f));
+	TEST_CHECK(TestEqual(CosineInterpolate(-2.f, 2.f, 7.f / 3.f), -1.f));
+	TEST_CHECK(TestEqual(CosineInterpolate(-2.f, 2.f, 4.f / 3.f), 1.f));
 	
-// [todo] float Sin(float);
-// [todo] float ASin(float);
-// [todo] float Cos(float);
-// [todo] float ACos(float);
-// [todo] float Tan(float);
-// [todo] float ATan(float);
-
-// [todo] template <typename T> constexpr T LinearInterpolate(T y0, T y1, float t)
-// [todo] template <typename T> T CosineInterpolate(T y0, T y1, float t)
-
-// [todo] template <typename T> T CubicInterpolate(T y0, T y1, T y2, T y3, float t)
-
-// [todo] template <typename T> T HermiteInterpolate(T y0, T y1, T y2, T y3, float t, float tension, float bias)
-
-// [todo] template <class T> T LinearInterpolateArray(uint32_t count, const T *values, float t)
+	const float tab[5] = {-2.f,-1.f,0.f,1.f,2.f};
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.0f),-2.0f));
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 1.0f), 2.0f));
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.5f), 0.0f));
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.25f),-1.0f));
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.75f), 1.0f));
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.125f),-1.5f));
+	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.875f), 1.5f));
 }
 
 // 
