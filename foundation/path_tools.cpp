@@ -150,7 +150,12 @@ std::string GetFileExtension(const std::string &path) {
 bool HasFileExtension(const std::string &path) { return !GetFileExtension(path).empty(); }
 
 //
-std::string SwapFileExtension(const std::string &path, const std::string &ext) { return CutFileExtension(path) + "." + ext; }
+std::string SwapFileExtension(const std::string &path, const std::string &ext) { 
+	if (ext.empty()) {
+		return path;
+	}
+	return CutFileExtension(path) + "." + ext;
+}
 
 //
 std::string FactorizePath(const std::string &path) {

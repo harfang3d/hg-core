@@ -652,17 +652,38 @@ void test_path_tools() {
 	TEST_CHECK(GetFileExtension("git_commit.msg") == "msg");
 	TEST_CHECK(GetFileExtension("") == "");
 
+	TEST_CHECK(PathStartsWith("/usr/local/bin/dummy", "/usr/"));
+	TEST_CHECK(PathStartsWith("/tmp/abc/def/ghi/../../012/../012/../../345/core", "/usr/bin/../../tmp/345"));
+	TEST_CHECK(PathStartsWith("/home/user000/.config/../../user001/Documents/../.config", "/home/user001/Documents/../Download/../../user000/") == false);
+	TEST_CHECK(PathStartsWith("/usr/bin", ""));
+	TEST_CHECK(PathStartsWith("", "./"));
+
+	TEST_CHECK(PathStripPrefix("/usr/local/bin/dummy", "/usr") == "local/bin/dummy");
+	TEST_CHECK(PathStripPrefix("/etc/X11/screen", "/usr") == "etc/X11/screen");
+	TEST_CHECK(PathStripPrefix("./.config/app.json", "") == ".config/app.json");
+
+	TEST_CHECK(PathStripSuffix("/usr/local/bin/dummy", "bin/dummy/") == "/usr/local");
+	TEST_CHECK(PathStripSuffix("/etc/X11/screen", "display") == "/etc/X11/screen");
+	TEST_CHECK(PathStripSuffix("/home/user000/.config/app.json", "") == "/home/user000/.config/app.json");
+
+#if WIN32
+	TEST_CHECK(PathJoin("/usr/local/bin/dummy", "../../../bin/bash") == "usr/bin/bash");
+#else
+	TEST_CHECK(PathJoin("/usr/local/bin/dummy", "../../../bin/bash") == "/usr/bin/bash");
+#endif
+	std::vector<std::string> elements(6);
+	elements[0] = "001";
+	elements[1] = "002";
+	elements[2] = "003";
+	elements[3] = "004";
+	elements[4] = "005";
+	elements[5] = "006";
+	TEST_CHECK(PathJoin(elements) == "001/002/003/004/005/006");
 	
-	// bool PathStartsWith(const std::string &path, const std::string &with);
-	// std::string PathStripPrefix(const std::string &path, const std::string &prefix);
-	// std::string PathStripSuffix(const std::string &path, const std::string &suffix);
-	// std::string PathJoin(const std::vector<std::string> &elements);
-	// std::string PathJoin(const std::string &a, const std::string &b);
-	// std::string PathJoin(const std::string &a, const std::string &b, const std::string &c);
-	// std::string SwapFileExtension(const std::string &path, const std::string &ext);
-	// std::string GetCurrentWorkingDirectory();
-	// bool SetCurrentWorkingDirectory(const std::string &path);
-	// std::string GetUserFolder();
+	TEST_CHECK(SwapFileExtension("image.png", "pcx") == "image.pcx");
+	TEST_CHECK(SwapFileExtension("config", "json") == "config.json");
+	TEST_CHECK(SwapFileExtension("~/.config", "xml") == "~/.xml");
+	TEST_CHECK(SwapFileExtension("/usr/bin/top", "") == "/usr/bin/top");
 }
 
 //
