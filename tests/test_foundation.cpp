@@ -708,11 +708,112 @@ void test_clock_update() {
 }
 
 //
-void test_vec2_mul() {
-	Vec2 a(2.f, 4.f);
-	Vec2 b(1.f, 2.f);
-	TEST_CHECK(b * 2.f == a);
-	TEST_CHECK(2.f * b == a);
+void test_vec2() {
+	{
+		Vec3 v3(0.f, 1.f, -1.f);
+		Vec2 vf(v3);
+		TEST_CHECK(TestEqual(vf.x, 0.f));
+		TEST_CHECK(TestEqual(vf.y, 1.f));
+		iVec2 vi(v3);
+		TEST_CHECK(vi.x == 0);
+		TEST_CHECK(vi.y == 1);
+	}
+	{
+		Vec4 v4(1.f, 2.f, 3.f, 4.f);
+		Vec2 vf(v4);
+		TEST_CHECK(TestEqual(vf.x, 1.f));
+		TEST_CHECK(TestEqual(vf.y, 2.f));
+		iVec2 vi(v4);
+		TEST_CHECK(vi.x == 1);
+		TEST_CHECK(vi.y == 2);
+	}
+	{
+		Vec2 u(0.5f,-0.5f);
+		Vec2 v(1.f, -1.f);
+		Vec2 w = u + v;
+		TEST_CHECK(TestEqual(w.x, 1.5f));
+		TEST_CHECK(TestEqual(w.y,-1.5f));
+	}
+	{
+		iVec2 u(1,-1);
+		iVec2 v(2, 6);
+		iVec2 w = u + v;
+		TEST_CHECK(w.x == 3);
+		TEST_CHECK(w.y == 5);
+	}
+	{
+		Vec2 u(0.5f,-0.5f);
+		Vec2 v = u + 0.25f;
+		TEST_CHECK(TestEqual(v.x, 0.75f));
+		TEST_CHECK(TestEqual(v.y,-0.25f));
+	}
+	{
+		iVec2 u(-2,-1);
+		iVec2 v = u + 2;
+		TEST_CHECK(v.x == 0);
+		TEST_CHECK(v.y == 1);
+	}
+	{
+		Vec2 u(0.5f,-0.5f);
+		Vec2 v(1.f, -1.f);
+		Vec2 w = u - v;
+		TEST_CHECK(TestEqual(w.x,-0.5f));
+		TEST_CHECK(TestEqual(w.y, 0.5f));
+	}
+	{
+		iVec2 u(3, 6);
+		iVec2 v(4, 8);
+		iVec2 w = u - v;
+		TEST_CHECK(w.x == -1);
+		TEST_CHECK(w.y == -2);
+	}
+	{
+		Vec2 u(0.5f,-0.5f);
+		Vec2 v = u - 0.25f;
+		TEST_CHECK(TestEqual(v.x, 0.25f));
+		TEST_CHECK(TestEqual(v.y,-0.75f));
+	}
+	{
+		iVec2 u(-2,-1);
+		iVec2 v = u - 2;
+		TEST_CHECK(v.x == -4);
+		TEST_CHECK(v.y == -3);
+	}
+
+// inline tVec2<T> &operator+=(const tVec2<T> &b) {
+// inline tVec2<T> &operator+=(const T v) {
+// inline tVec2<T> &operator-=(const tVec2<T> &b) {
+// inline tVec2<T> &operator-=(const T v) {
+// inline tVec2<T> &operator*=(const tVec2<T> &b) {
+// inline tVec2<T> &operator*=(const T v) {
+// inline tVec2<T> &operator/=(const tVec2<T> &b) {
+// inline tVec2<T> &operator/=(const T v) {
+// inline float operator[](size_t n) const { return (&x)[n]; }
+// inline float &operator[](size_t n) { return (&x)[n]; }
+// typedef tVec2<float> Vec2;
+// typedef tVec2<int> iVec2;
+// template <typename T> tVec2<T> tVec2<T>::Zero = tVec2<T>(0, 0);
+// template <typename T> tVec2<T> tVec2<T>::One = tVec2<T>(1, 1);
+// template <typename T> bool operator==(const tVec2<T> &a, const tVec2<T> &b) { return a.x == b.x && a.y == b.y; }
+// template <typename T> bool operator!=(const tVec2<T> &a, const tVec2<T> &b) { return a.x != b.x || a.y != b.y; }
+// template <typename T> bool AlmostEqual(const tVec2<T> &a, const tVec2<T> &b, float e) { return Abs(a.x - b.x) <= e && Abs(a.y - b.y) <= e; }
+
+
+// template <typename T> tVec2<T> operator*(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x * b.x, a.y * b.y); }
+// template <typename T> tVec2<T> operator*(const tVec2<T> &v, const T k) { return tVec2<T>(v.x * k, v.y * k); }
+// template <typename T> tVec2<T> operator*(const T k, const tVec2<T> &v) { return v * k; }
+// template <typename T> tVec2<T> operator/(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x / b.x, a.y / b.y); }
+// template <typename T> tVec2<T> operator/(const tVec2<T> &v, const T k) { return tVec2<T>(v.x / k, v.y / k); }
+// template <typename T> tVec2<T> operator*(const tVec2<T> &v, const Mat3 &m);
+// template <typename T> tVec2<T> Min(const tVec2<T> &v, const tVec2<T> &m) { return tVec2<T>(v.x < m.x ? v.x : m.x, v.y < m.y ? v.y : m.y); }
+// template <typename T> tVec2<T> Max(const tVec2<T> &v, const tVec2<T> &m) { return tVec2<T>(v.x > m.x ? v.x : m.x, v.y > m.y ? v.y : m.y); }
+// template <typename T> T Len2(const tVec2<T> &v) { return v.x * v.x + v.y * v.y; }
+// template <typename T> T Len(const tVec2<T> &v);
+// template <typename T> T Dot(const tVec2<T> &a, const tVec2<T> &b) { return a.x * b.x + a.y * b.y; }
+// template <typename T> tVec2<T> Normalize(const tVec2<T> &v) {
+// template <typename T> tVec2<T> Reverse(const tVec2<T> &v) { return tVec2<T>(-v.x, -v.y); }
+// template <typename T> T Dist2(const tVec2<T> &a, const tVec2<T> &b) { return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y); }
+// template <typename T> T Dist(const tVec2<T> &a, const tVec2<T> &b);
 }
 
 //
@@ -749,10 +850,10 @@ TEST_LIST = {
 	{"Units", test_units},
 	{"String", test_string},
 	{"Path_tools", test_path_tools},
+	{"Vec2", test_vec2},
+
 
 	{"Clock.Update", test_clock_update},
-
-	{"Vec2.Mul", test_vec2_mul},
 
 	{"Vec3.Zero", test_vec3_zero},
 	{"Vec3.Mul", test_vec3_mul},
