@@ -92,20 +92,9 @@ std::vector<std::string> split(const std::string &value, const std::string &sepa
 	return elements;
 }
 
-std::string trim(const std::string &str, const std::string &pattern) {
-	const size_t str_begin = str.find_first_not_of(pattern);
-	if (str_begin == std::string::npos)
-		return ""; // no content
-
-	const size_t str_end = str.find_last_not_of(pattern);
-	const size_t str_range = str_end - str_begin + 1;
-
-	return str.substr(str_begin, str_range);
-}
-
 std::string reduce(const std::string &str, const std::string &fill, const std::string &pattern) {
 	// trim first
-	std::string result = trim(str, pattern);
+	std::string result = strip(str, pattern);
 
 	// replace sub ranges
 	size_t begin_space = result.find_first_of(pattern);

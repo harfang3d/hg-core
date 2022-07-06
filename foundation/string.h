@@ -57,7 +57,6 @@ std::string lstrip_space(const std::string &str);
 std::string rstrip_space(const std::string &str);
 std::string strip_space(const std::string &str);
 
-std::string trim(const std::string &str, const std::string &pattern = " ");
 std::string reduce(const std::string &str, const std::string &fill = " ", const std::string &pattern = " ");
 
 /// Join several std::strings with a separator std::string.

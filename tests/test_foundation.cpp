@@ -387,7 +387,7 @@ void test_string() {
 	TEST_CHECK(strip("Ornithoptera euphorion") == "Ornithoptera euphorion");
 	TEST_CHECK(strip("    Phyllium bioculatum        ") == "Phyllium bioculatum");
 	TEST_CHECK(strip("\"0o. .o0\" Eupholus schoenherrii \"0o. .o0\"", "0.\"o ") == "Eupholus schoenherrii");
-	TEST_CHECK(strip("<:_Chrysis ruddii= />", "<:/>") != "Chrysis ruddii");
+	TEST_CHECK(strip("<:_Chrysis ruddii= />", "<:/>") == "_Chrysis ruddii= ");
 
 	TEST_CHECK(lstrip_space("Myrmecia brevinoda") == "Myrmecia brevinoda");
 	TEST_CHECK(lstrip_space("\n\t\t  Rhachoepalpus metallicus\r\n") == "Rhachoepalpus metallicus\r\n");
@@ -400,11 +400,6 @@ void test_string() {
 	TEST_CHECK(strip_space("Phellus olgae") == "Phellus olgae");
 	TEST_CHECK(strip_space("\t\t\tProtaetia affinis   \t\t   \r\n ") == "Protaetia affinis");
 	TEST_CHECK(strip_space(" * Phobaeticus serratipes\r\n_ ") != "Phobaeticus serratipes");
-
-	TEST_CHECK(trim("Forficula auricularia") == "Forficula auricularia");
-	TEST_CHECK(trim("    Lethocerus patruelis ") == "Lethocerus patruelis");
-	TEST_CHECK(trim("_=--=_Lygaeus creticus-=__=-", "_-=") == "Lygaeus creticus");
-	TEST_CHECK(trim("* #Kalotermes flavicollis#*", "*#") == " #Kalotermes flavicollis");
 
 	TEST_CHECK(reduce("   The Irish   damselfly or  crescent bluet (Coenagrion      lunulatum) is a damselfly found in  northern  Europe and Asia  to "
 					  "north-eastern  China      ") ==
