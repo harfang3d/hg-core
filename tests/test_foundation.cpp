@@ -8,6 +8,8 @@
 #include "foundation/math.h"
 #include "foundation/unit.h"
 #include "foundation/string.h"
+#include "foundation/path_tools.h"
+
 #include "foundation/time.h"
 #include "foundation/clock.h"
 #include "foundation/vector2.h"
@@ -515,11 +517,58 @@ void test_string() {
 	TEST_CHECK(right(in, -25) == "et iusto odio dignissimos");
 	TEST_CHECK(right(in, 64) == in);
 
-	// void normalize_eol(std::string & inplace_normalize, EOLConvention = EOLUnix);
-	// std::string strip_prefix(const std::string &str, const std::string &prefix);
-	// std::string strip_suffix(const std::string &str, const std::string &suffix);
-	// std::string word_wrap(const std::string &str, int width = 80, int lead = 0, char lead_char = ' ');
-	// std::string name_to_path(std::string name);
+	const std::string eol_linux = "Ingredients\n"
+								  "  * 2 cups granulated sugar\n"
+								  "  * 1 1/2 cups fresh lemon juice (about 6 to 8 lemons)\n"
+								  "  * 5 cups water\n";
+	const std::string eol_windows = "Ingredients\r\n"
+									"  * 2 cups granulated sugar\r\n"
+									"  * 1 1/2 cups fresh lemon juice (about 6 to 8 lemons)\r\n"
+									"  * 5 cups water\r\n";
+
+	const std::string eol_src = "Ingredients\r\n"
+								"  * 2 cups granulated sugar\n"
+								"  * 1 1/2 cups fresh lemon juice (about 6 to 8 lemons)\r\n"
+								"  * 5 cups water\n";
+	s = eol_src;
+	normalize_eol(s);
+	TEST_CHECK(s == eol_linux);
+	normalize_eol(s, EOLWindows);
+	TEST_CHECK(s == eol_windows);
+
+	s = "coffee please!";
+	normalize_eol(s);
+	TEST_CHECK(s == "coffee please!");
+	s = "ice cold tea";
+	normalize_eol(s, EOLWindows);
+	TEST_CHECK(s == "ice cold tea");
+
+	TEST_CHECK(strip_prefix("epipaleolithic", "epi") == "paleolithic");
+	TEST_CHECK(strip_prefix("paleopaleozoic", "paleo") == "paleozoic");
+	TEST_CHECK(strip_prefix("neolithic", "meso") == "neolithic");
+	TEST_CHECK(strip_prefix("chalcolithic", "") == "chalcolithic");
+	TEST_CHECK(strip_prefix("", "paleo") == "");
+
+	TEST_CHECK(strip_suffix("walliserops trifurcatus", "trifurcatus") == "walliserops ");
+	TEST_CHECK(strip_suffix("dimetrodon.jpg.jpg", ".jpg") == "dimetrodon.jpg");
+	TEST_CHECK(strip_suffix("conolichas angustus", "triconicus") == "conolichas angustus");
+	TEST_CHECK(strip_suffix("buenellus higginsi", "") == "buenellus higginsi");
+	TEST_CHECK(strip_suffix("", "plicatus") == "");
+
+	const std::string word_wrap_in = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc sagittis orci porta massa iaculis efficitur.";
+	const std::string word_wrap_30 = "Lorem ipsum dolor sit amet, consectetur\n"
+									 "adipiscing elit. Nunc sagittis\n"
+									 "orci porta massa iaculis efficitur.";
+	const std::string word_wrap_26_sp4 = "Lorem ipsum dolor sit amet,\n"
+										 "    consectetur adipiscing elit.\n"
+										 "    Nunc sagittis orci porta massa\n"
+										 "    iaculis efficitur.";
+	TEST_CHECK(word_wrap(word_wrap_in, 30) == word_wrap_30);
+	TEST_CHECK(word_wrap(word_wrap_in, 26, 4, ' ') == word_wrap_26_sp4);
+	TEST_CHECK(word_wrap(word_wrap_in, word_wrap_in.size()) == word_wrap_in);
+
+	TEST_CHECK(name_to_path("user@home/readme first!") == "user-home-readme-first-");
+	TEST_CHECK(name_to_path("random_filename_00") == "random_filename_00");
 
 	TEST_CHECK(pad_left("Heoclisis fulva", 9, '.') == "Heoclisis fulva");
 	TEST_CHECK(pad_left("Megaloprepus caerulatus", 28, '#') == "#####Megaloprepus caerulatus");
@@ -528,6 +577,92 @@ void test_string() {
 	TEST_CHECK(pad_left("Valanga irregularis", 11, '|') == "Valanga irregularis");
 	TEST_CHECK(pad_right("Goliathus regius", 23, ':') == "Goliathus regius:::::::");
 	TEST_CHECK(pad_right("Macrodontia cervicornis", 27) == "Macrodontia cervicornis    ");	
+}
+
+//
+void test_path_tools() {
+	TEST_CHECK(IsPathAbsolute("") == false);
+#if WIN32
+	TEST_CHECK(IsPathAbsolute("C:\\Windows\\System32\\svchost.exe"));
+	TEST_CHECK(IsPathAbsolute(".git/refs/heads/main") == false);
+#else
+	TEST_CHECK(IsPathAbsolute("/usr/bin/bash"));
+	TEST_CHECK(IsPathAbsolute("~/.ssh/known_hosts") == false);
+#endif
+
+	TEST_CHECK(PathToDisplay("The_Hidden_Fortress") == "The Hidden Fortress");
+	TEST_CHECK(PathToDisplay("When the Last Sword Is Drawn") == "When the Last Sword Is Drawn");
+	TEST_CHECK(PathToDisplay("") == "");
+
+	TEST_CHECK(NormalizePath("The_Hidden_Fortress") == "The_Hidden_Fortress");
+	TEST_CHECK(NormalizePath("When the Last Sword Is Drawn") == "When_the_Last_Sword_Is_Drawn");
+	TEST_CHECK(NormalizePath("") == "");
+
+	TEST_CHECK(FactorizePath("./here/../here/there/../../here") == "./here");
+	TEST_CHECK(FactorizePath("a/b/c/../d/e/../../f/../../..") == "");
+	TEST_CHECK(FactorizePath("/p/a/t/h") == "/p/a/t/h");
+
+#if WIN32
+	TEST_CHECK(CleanPath("C:/User/Default/My Documents/My Videos\\..\\..\\AppData\\Roaming\\hg_app\\./.config") == "c:/User/Default/AppData/Roaming/hg_app/.config");
+	TEST_CHECK(CleanPath("\\\\printers\\laserjet\\jobs") == "\\\\printers/laserjet/jobs");
+#endif
+	TEST_CHECK(CleanPath("/home/user0001/../../home/../home/user0000/.config/app/hg.cfg") == "/home/user0000/.config/app/hg.cfg");
+	TEST_CHECK(CleanPath("") == "");
+	TEST_CHECK(CleanPath("Lorem ipsum dolor sit amet, consectetur") == "Lorem ipsum dolor sit amet, consectetur");
+
+	TEST_CHECK(CleanFileName("<movie>\"1080p\"cyber city render\\final?\\.mp4") == "_movie__1080p_cyber city render_final__.mp4");
+	TEST_CHECK(CleanFileName("render_pass_0000-pbr-no-shadows.png") == "render_pass_0000-pbr-no-shadows.png");
+	TEST_CHECK(CleanFileName("") == "");
+
+	TEST_CHECK(CutFilePath("/usr/local/bin/deltree.exe") == "deltree.exe");
+	TEST_CHECK(CutFilePath("/proc/sys/Device/00000032") == "00000032");
+	TEST_CHECK(CutFilePath("c:\\Users\\6502\\Documents\\") == "");
+	TEST_CHECK(CutFilePath("Readme.md") == "Readme.md");
+	TEST_CHECK(CutFilePath("") == "");
+
+	TEST_CHECK(GetFilePath("/usr/local/bin/deltree.exe") == "/usr/local/bin/");
+	TEST_CHECK(GetFilePath("/proc/sys/Device/00000032") == "/proc/sys/Device/");
+	TEST_CHECK(GetFilePath("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
+	TEST_CHECK(GetFilePath("image.jpg") == "./");
+	TEST_CHECK(GetFilePath("") == "./");
+	
+	TEST_CHECK(CutFileName("/usr/local/bin/deltree.exe") == "/usr/local/bin/");
+	TEST_CHECK(CutFileName("/proc/sys/Device/00000032") == "/proc/sys/Device/");
+	TEST_CHECK(CutFileName("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
+	TEST_CHECK(CutFileName("Readme.md") == "");
+	TEST_CHECK(CutFileName("") == "");
+	
+	TEST_CHECK(GetFileName("/usr/local/bin/deltree.exe") == "deltree");
+	TEST_CHECK(GetFileName(".app-config.json") == ".app-config");
+	TEST_CHECK(GetFileName("/proc/sys/Device/00000032") == "00000032");
+	TEST_CHECK(GetFileName("c:\\Users\\6502\\Documents\\") == "");
+	TEST_CHECK(GetFileName("") == "");
+
+	TEST_CHECK(CutFileExtension("/usr/local/bin/deltree.exe") == "/usr/local/bin/deltree");
+	TEST_CHECK(CutFileExtension("c:\\Users\\6502\\Documents\\masm") == "c:\\Users\\6502\\Documents\\masm");
+	TEST_CHECK(CutFileExtension("/usr/local/bin/") == "/usr/local/bin/");
+
+	TEST_CHECK(HasFileExtension("c:\\Windows\\System32\\bootcfg.exe"));
+	TEST_CHECK(HasFileExtension("/usr/bin/grep") == false);
+	TEST_CHECK(HasFileExtension("git_commit.msg"));
+	TEST_CHECK(HasFileExtension("") == false);
+
+	TEST_CHECK(GetFileExtension("c:\\Windows\\System32\\bootcfg.exe") == "exe");
+	TEST_CHECK(GetFileExtension("/usr/bin/grep") == "");
+	TEST_CHECK(GetFileExtension("git_commit.msg") == "msg");
+	TEST_CHECK(GetFileExtension("") == "");
+
+	
+	// bool PathStartsWith(const std::string &path, const std::string &with);
+	// std::string PathStripPrefix(const std::string &path, const std::string &prefix);
+	// std::string PathStripSuffix(const std::string &path, const std::string &suffix);
+	// std::string PathJoin(const std::vector<std::string> &elements);
+	// std::string PathJoin(const std::string &a, const std::string &b);
+	// std::string PathJoin(const std::string &a, const std::string &b, const std::string &c);
+	// std::string SwapFileExtension(const std::string &path, const std::string &ext);
+	// std::string GetCurrentWorkingDirectory();
+	// bool SetCurrentWorkingDirectory(const std::string &path);
+	// std::string GetUserFolder();
 }
 
 //
@@ -590,6 +725,7 @@ TEST_LIST = {
 	{"Math", test_math},
 	{"Units", test_units},
 	{"String", test_string},
+	{"Path_tools", test_path_tools},
 
 	{"Clock.Update", test_clock_update},
 

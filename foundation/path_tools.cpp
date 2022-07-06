@@ -129,12 +129,12 @@ std::string CutFileExtension(const std::string &path) {
 }
 
 std::string CutFileName(const std::string &path) {
-	if (path.empty())
-		return std::string();
-	for (size_t n = path.length() - 1; n > 0; --n)
-		if (path[n] == '\\' || path[n] == '/' || path[n] == ':')
-			return slice(path, 0, n + 1);
-	return path;
+	if (!path.empty()) {
+		for (size_t n = path.length() - 1; n > 0; --n)
+			if (path[n] == '\\' || path[n] == '/' || path[n] == ':')
+				return slice(path, 0, n + 1);
+	}
+	return std::string();
 }
 
 //

@@ -12,9 +12,6 @@ bool IsPathAbsolute(const std::string &path);
 std::string PathToDisplay(const std::string &path);
 std::string NormalizePath(const std::string &path);
 
-std::string PathToDisplay(const std::string &path);
-std::string NormalizePath(const std::string &path);
-
 /// Return the input path with all redundant navigation entries stripped (folder separator, `..` and `.` entries).
 std::string FactorizePath(const std::string &path);
 
