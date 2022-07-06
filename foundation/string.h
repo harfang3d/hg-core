@@ -123,8 +123,8 @@ std::string toupper(std::string str, size_t start = 0, size_t end = 0);
 */
 std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count = 0);
 
-std::string left(const std::string &str, size_t count);
-std::string right(const std::string &str, size_t count);
+std::string left(const std::string &str, ptrdiff_t count);
+std::string right(const std::string &str, ptrdiff_t count);
 
 enum EOLConvention { EOLUnix, EOLWindows };
 

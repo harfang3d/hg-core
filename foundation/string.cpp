@@ -31,8 +31,8 @@ std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count) {
 	return count > 0 ? str.substr(from, count) : "";
 }
 
-std::string left(const std::string &str, size_t count) { return slice(str, 0, count); }
-std::string right(const std::string &str, size_t count) { return slice(str, -(ptrdiff_t)count, 0); }
+std::string left(const std::string &str, ptrdiff_t count) { return slice(str, 0, count); }
+std::string right(const std::string &str, ptrdiff_t count) { return slice(str, -count, 0); }
 
 size_t replace_all(std::string &value, const std::string &what, const std::string &by) {
 	size_t what_len = what.length(), by_len = by.length();

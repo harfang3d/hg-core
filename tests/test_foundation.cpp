@@ -506,8 +506,15 @@ void test_string() {
 	TEST_CHECK(slice(in, -16, -6) == "odio digni");
 	TEST_CHECK(slice(in, 0, -128) == "");
 
-	// std::string left(const std::string &str, size_t count);
-	// std::string right(const std::string &str, size_t count);
+	TEST_CHECK(left(in, 12) == "At vero eos ");
+	TEST_CHECK(left(in, -23) == "At vero eos et accusamus et");
+	TEST_CHECK(left(in, -99) == "");
+	TEST_CHECK(left(in, 111) == in);
+
+	TEST_CHECK(right(in, 22) == "iusto odio dignissimos");
+	TEST_CHECK(right(in, -25) == "et iusto odio dignissimos");
+	TEST_CHECK(right(in, 64) == in);
+
 	// void normalize_eol(std::string & inplace_normalize, EOLConvention = EOLUnix);
 	// std::string strip_prefix(const std::string &str, const std::string &prefix);
 	// std::string strip_suffix(const std::string &str, const std::string &suffix);
