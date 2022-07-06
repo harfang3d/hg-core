@@ -1,5 +1,4 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
-
 #include <math.h>
 #include <utf8.h>
 
@@ -431,16 +430,18 @@ void test_string() {
 	};
 	TEST_CHECK(join(path, path + 5, "/", ".") == "e:/hg-core/foundation/string.h");
 	TEST_CHECK(join(path, path + 1, "\\", ".") == "e:");
-
+	
 	TEST_CHECK(contains("CTA TTA TTA ACA AGA AGT ATA GTA GAA AAC GGA GCT GGA ACA GGT TGA ACT GTT TAT CCT CCT CTT TCA TCT AAT ATT", "GGA"));
 	TEST_CHECK(contains("GCC CAT AGA GGA GCT TCT GTT GAT TTA GCT ATT TTT TCT CTT CAT TTA GCT GGA ATT TCT TCC ATC CTA GGA GCA GTA ", "ATA") == false);
 	TEST_CHECK(contains("", "ATT") == false);
 	TEST_CHECK(contains("AGT TTA GTT ACT CAA CGT", "") == true);
 
+	const char blueberry_jam_ansi_raw[] = { 0x42, 0x6C, 0xE5, 0x62, 0xE6, 0x72, 0x73, 0x79, 0x6C, 0x74, 0x65, 0x74, 0xF8, 0x79, 0x00 };
 	const wchar_t blueberry_jam_utf16_raw[] = {0x0042, 0x006c, 0x00e5, 0x0062, 0x00e6, 0x0072, 0x0073, 0x0079, 0x006c, 0x0074, 0x0065, 0x0074, 0x00f8, 0x0079, 0x0000};
 	const char32_t blueberry_jam_utf32_raw[] = {0x00000042, 0x0000006c, 0x000000e5, 0x00000062, 0x000000e6, 0x00000072u, 0x00000073, 0x00000079, 0x0000006c,
 		0x00000074, 0x00000065, 0x00000074, 0x000000f8, 0x00000079, 0x00000000};
-	const std::string bllueberry_ansi = "\x42\x6C\xE5\x62\xE6\x72\x73\x79\x6C\x74\x65\x74\xF8\x79";
+	
+	const std::string blueberry_jam_ansi(blueberry_jam_ansi_raw);
 	const std::string blueberry_jam_utf8 = "\x42\x6C\xC3\xA5\x62\xC3\xA6\x72\x73\x79\x6C\x74\x65\x74\xC3\xB8\x79";
 	const std::wstring blueberry_jam_utf16(blueberry_jam_utf16_raw);
 	const std::u32string blueberry_jam_utf32(blueberry_jam_utf32_raw);
@@ -449,8 +450,9 @@ void test_string() {
 	TEST_CHECK(utf8_to_utf32(blueberry_jam_utf8) == blueberry_jam_utf32);
 	TEST_CHECK(wchar_to_utf8(blueberry_jam_utf16) == blueberry_jam_utf8);
 	TEST_CHECK(utf8_to_wchar(blueberry_jam_utf8) == blueberry_jam_utf16);
-	TEST_CHECK(ansi_to_utf8(bllueberry_ansi) == blueberry_jam_utf8);
-	TEST_CHECK(ansi_to_wchar(bllueberry_ansi) == blueberry_jam_utf16);
+
+	TEST_CHECK(ansi_to_utf8(blueberry_jam_ansi) == blueberry_jam_utf8);
+	TEST_CHECK(ansi_to_wchar(blueberry_jam_ansi) == blueberry_jam_utf16);
 
 	const char32_t blueberry_jam_utf32_invalid_cp_raw[] = {0x00000042, 0x0000006c, 0x000000e5, 0x00000062, 0x000000e6, 0x00000072u, 0x00000073, 0x00000079,
 		0x0000006c, 0x00000074, 0x00000065, 0x00000074, 0x000000f8, 0x00000079, 0x0000ffff};
