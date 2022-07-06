@@ -459,11 +459,53 @@ void test_string() {
 	TEST_EXCEPTION(utf8_to_utf32(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
 	TEST_EXCEPTION(utf8_to_wchar(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
 
-	// void tolower_inplace(std::string & inplace_str, size_t start = 0, size_t end = 0);
-	// std::string tolower(std::string str, size_t start = 0, size_t end = 0);
-	// void toupper_inplace(std::string & inplace_str, size_t start = 0, size_t end = 0);
-	// std::string toupper(std::string str, size_t start = 0, size_t end = 0);
-	// std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count = 0);
+	const std::string s_low = "lorem ipsum dolor sit amet, consectetur adipiscing elit";
+	std::string s;
+	s = "Lorem Ipsum doloR sit AMET, consECtETur adipISCINg eliT";
+	TEST_CHECK(tolower(s) == s_low);
+	tolower_inplace(s);
+	TEST_CHECK(s == s_low);
+
+	s = s_low;
+	TEST_CHECK(tolower(s) == s_low);
+	tolower_inplace(s);
+	TEST_CHECK(s == s_low);
+
+	const std::string s_lo_20_36 = "Lorem Ipsum doloR sit amet, consecteTur adipISCINg eliT";
+	s = "Lorem Ipsum doloR sit AMET, CONsecTETur adipISCINg eliT";
+	TEST_CHECK(tolower(s, 20, 36) == s_lo_20_36);
+	tolower_inplace(s, 20, 36);
+	TEST_CHECK(s == s_lo_20_36);
+
+	const std::string s_up = "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT";
+	s = "Lorem Ipsum doloR sit AMET, consECtETur adipISCINg eliT";
+	TEST_CHECK(toupper(s) == s_up);
+	toupper_inplace(s);
+	TEST_CHECK(s == s_up);
+
+	s = s_up;
+	TEST_CHECK(toupper(s) == s_up);
+	toupper_inplace(s);
+	TEST_CHECK(s == s_up);
+
+	const std::string s_up_20_36 = "Lorem Ipsum doloR siT AMET, CONSECTETur adipISCINg eliT";
+	s = "Lorem Ipsum doloR sit Amet, CONsecTETur adipISCINg eliT";
+	TEST_CHECK(toupper(s, 20, 36) == s_up_20_36);
+	toupper_inplace(s, 20, 36);
+	TEST_CHECK(s == s_up_20_36);
+
+	const std::string in = "At vero eos et accusamus et iusto odio dignissimos";
+	TEST_CHECK(slice(in, 15) == "accusamus et iusto odio dignissimos");
+	TEST_CHECK(slice(in, 3, 8) == "vero eos");
+	TEST_CHECK(slice(in, 8, 120) == "eos et accusamus et iusto odio dignissimos");
+	TEST_CHECK(slice(in, -16) == "odio dignissimos");
+	TEST_CHECK(slice(in, -35, 9) == "accusamus");
+	TEST_CHECK(slice(in, -200) == in);
+	TEST_CHECK(slice(in, -200, 7) == "At vero");
+	TEST_CHECK(slice(in, 25, -17) == "et iusto");
+	TEST_CHECK(slice(in, -16, -6) == "odio digni");
+	TEST_CHECK(slice(in, 0, -128) == "");
+
 	// std::string left(const std::string &str, size_t count);
 	// std::string right(const std::string &str, size_t count);
 	// void normalize_eol(std::string & inplace_normalize, EOLConvention = EOLUnix);
