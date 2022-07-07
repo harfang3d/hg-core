@@ -21,6 +21,10 @@ extern void test_string();
 extern void test_path_tools();
 extern void test_vec2();
 extern void test_vec3();
+extern void test_vec4();
+extern void test_mat3();
+extern void test_mat4();
+extern void test_mat44();
 
 //
 void test_clock_update() {
@@ -56,6 +60,10 @@ TEST_LIST = {
 	{"Path_tools", test_path_tools},
 	{"Vec2", test_vec2},
 	{"Vec3", test_vec3},
+	{"Vec4", test_vec4},
+	{"Mat3", test_mat3},
+	{"Mat4", test_mat4},
+	{"Mat44", test_mat44},
 
 	{"Clock.Update", test_clock_update},
 

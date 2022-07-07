@@ -313,8 +313,8 @@ void test_vec2() {
 		TEST_CHECK(Dot(iVec2(2, -3), iVec2(4, 5)) == -7);
 	}
 	{
-		TEST_CHECK(Normalize(Vec2(0.3, -0.4f)) == Vec2(0.6, -0.8));
-		TEST_CHECK(Len(Normalize(Vec2(0.3, -0.4f))) == 1.f);
+		TEST_CHECK(Normalize(Vec2(0.3f, -0.4f)) == Vec2(0.6, -0.8));
+		TEST_CHECK(TestEqual(Len(Normalize(Vec2(0.3f, -0.4f))), 1.f));
 		TEST_CHECK(Normalize(iVec2(-1, 1)) == iVec2(-1, 1));
 		TEST_CHECK(Len(Normalize(iVec2(-1, 1))) == 1);
 	}
@@ -329,5 +329,15 @@ void test_vec2() {
 	{
 		TEST_CHECK(TestEqual(Dist(Vec2(1.4f, 2.3f), Vec2(-0.2f, -0.1f)), sqrt(8.32f)));
 		TEST_CHECK(TestEqual(Dist(iVec2(-2, -2), iVec2(1, 2)), 5));
+	}
+	{
+		Vec2 u = -Vec2(0.03f, 27.6f);
+		TEST_CHECK(TestEqual(u.x, -0.03f));
+		TEST_CHECK(TestEqual(u.y, -27.6f));
+	}
+	{
+		iVec2 u = -iVec2(121, -909);
+		TEST_CHECK(u.x == -121);
+		TEST_CHECK(u.y == 909);
 	}
 }

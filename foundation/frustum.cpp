@@ -19,12 +19,12 @@ Frustum MakeFrustum(const Mat44 &projection) {
 	const Vec4 X = GetRow(projection, 0), Y = GetRow(projection, 1), Z = GetRow(projection, 2), W = GetRow(projection, 3);
 
 	Frustum out;
-	out[FP_Top] = Opposite(NormalizePlane(W + Y));
-	out[FP_Bottom] = Opposite(NormalizePlane(W - Y));
-	out[FP_Left] = Opposite(NormalizePlane(W + X));
-	out[FP_Right] = Opposite(NormalizePlane(W - X));
-	out[FP_Near] = Opposite(NormalizePlane(W + Z));
-	out[FP_Far] = Opposite(NormalizePlane(W - Z));
+	out[FP_Top] = Reverse(NormalizePlane(W + Y));
+	out[FP_Bottom] = Reverse(NormalizePlane(W - Y));
+	out[FP_Left] = Reverse(NormalizePlane(W + X));
+	out[FP_Right] = Reverse(NormalizePlane(W - X));
+	out[FP_Near] = Reverse(NormalizePlane(W + Z));
+	out[FP_Far] = Reverse(NormalizePlane(W - Z));
 	return out;
 }
 

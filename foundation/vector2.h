@@ -67,6 +67,8 @@ template <class T> struct tVec2 {
 		return *this;
 	}
 
+	inline tVec2<T> operator-() const { return tVec2<T>(-x, -y); }
+
 	inline T operator[](size_t n) const { return (&x)[n]; }
 	inline T &operator[](size_t n) { return (&x)[n]; }
 

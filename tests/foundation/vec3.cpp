@@ -18,6 +18,8 @@ void test_vec3() {
 		TEST_CHECK(TestEqual(vf.x, 0.111f));
 		TEST_CHECK(TestEqual(vf.y, 2.222f));
 		TEST_CHECK(TestEqual(vf.z, 0.f));
+	}
+	{
 		iVec2 v2i(-2, 55);
 		Vec3 vi(v2i);
 		TEST_CHECK(TestEqual(vi.x, -2.f));
@@ -38,8 +40,14 @@ void test_vec3() {
 		TEST_CHECK(TestEqual(v.z, 3.f));
 	}
 	{
+		Vec3 v = -Vec3(1.f, 2.f, 3.f);
+		TEST_CHECK(TestEqual(v.x, -1.f));
+		TEST_CHECK(TestEqual(v.y, -2.f));
+		TEST_CHECK(TestEqual(v.z, -3.f));
+	}
+	{
 		Vec3 u(0.22f, 1.4f, -2.75f);
-		u += Vec3(0.042f, -0.2f, 5.25);
+		u += Vec3(0.042f, -0.2f, 5.25f);
 		TEST_CHECK(TestEqual(u.x, 0.262f));
 		TEST_CHECK(TestEqual(u.y, 1.2f));
 		TEST_CHECK(TestEqual(u.z, 2.5f));
@@ -65,41 +73,210 @@ void test_vec3() {
 		TEST_CHECK(TestEqual(u.y, 2.3195f));
 		TEST_CHECK(TestEqual(u.z, 7.80794f));
 	}
+	{
+		Vec3 u(7.011f, 4.0f, -11.f);
+		u *= Vec3(0.33f, 0.5f, 0.4f);
+		TEST_CHECK(TestEqual(u.x, 2.31363f));
+		TEST_CHECK(TestEqual(u.y, 2.f));
+		TEST_CHECK(TestEqual(u.z, -4.4f));
+	}
+	{
+		Vec3 u(-2.022f, 11.11f, 0.075f);
+		u *= 0.3f;
+		TEST_CHECK(TestEqual(u.x, -0.6066f));
+		TEST_CHECK(TestEqual(u.y, 3.333f));
+		TEST_CHECK(TestEqual(u.z, 0.0225f));
+	}
+	{
+		Vec3 u(0.4f, 4.8f, -26.f);
+		u /= Vec3(-0.25f, 0.3f, -0.104f);
+		TEST_CHECK(TestEqual(u.x, -1.6f));
+		TEST_CHECK(TestEqual(u.y, 16.f));
+		TEST_CHECK(TestEqual(u.z, 250.f));
+	}
+	{
+		Vec3 u(-2.015f, 0.03f, 27.6f);
+		u /= 0.75f;
+		TEST_CHECK(TestEqual(u.x,-2.686666666f));
+		TEST_CHECK(TestEqual(u.y, 0.04f));
+		TEST_CHECK(TestEqual(u.z, 36.8f, 0.00001f));
+	}
+	{
+		Vec3 u(1.207f, -44.01f, 0.34034f);
+		TEST_CHECK(TestEqual(u[0], u.x));
+		TEST_CHECK(TestEqual(u[1], u.y));
+		TEST_CHECK(TestEqual(u[2], u.z));
+	}
+	{
+		Vec3 u(75.757575f, 1.207f, -44.01f);
+		Vec3 v(75.757575f, 1.207f, -44.01f);
+		Vec3 w(70.0101f, 4.4444f, 1.0001f);
+		TEST_CHECK(u == v);
+		TEST_CHECK((u == w) == false);
+	}
+	{
+		Vec3 u(75.757575f, 1.207f, -44.01f);
+		Vec3 v(75.757575f, 1.207f, -44.01f);
+		Vec3 w(70.0101f, 4.4444f, 1.0001f);
+		TEST_CHECK(u != w);
+		TEST_CHECK((u != v) == false);
+	}
+	{
+		Vec3 u(2.020f, 0.5f, -0.5f);
+		Vec3 v(1.010f, 1.f, -1.f);
+		Vec3 w = u + v;
+		TEST_CHECK(TestEqual(w.x, 3.030f));
+		TEST_CHECK(TestEqual(w.y, 1.5f));
+		TEST_CHECK(TestEqual(w.z, -1.5f));
+	}
+	{
+		Vec3 u(47.3473f, 0.5f, -0.5f);
+		Vec3 v = u + 0.25f;
+		TEST_CHECK(TestEqual(v.x, 47.5973f));
+		TEST_CHECK(TestEqual(v.y, 0.75f));
+		TEST_CHECK(TestEqual(v.z, -0.25f));
+	}
+	{
+		Vec3 u(0.5f, -0.5f, 1.25909f);
+		Vec3 v(1.f, -1.f, 1.70707f);
+		Vec3 w = u - v;
+		TEST_CHECK(TestEqual(w.x, -0.5f));
+		TEST_CHECK(TestEqual(w.y, 0.5f));
+		TEST_CHECK(TestEqual(w.z, -0.44798f));
+	}
+	{
+		Vec3 u(0.5f, -0.5f, 3.333f);
+		Vec3 v = u - 0.25f;
+		TEST_CHECK(TestEqual(v.x, 0.25f));
+		TEST_CHECK(TestEqual(v.y, -0.75f));
+		TEST_CHECK(TestEqual(v.z, 3.083f));
+	}
+	{
+		Vec3 u(0.15f, -2.5f, 1.505f);
+		Vec3 v(1.1f, 0.3f, 0.76f);
+		Vec3 w = u * v;
+		TEST_CHECK(TestEqual(w.x, 0.165f));
+		TEST_CHECK(TestEqual(w.y, -0.75f));
+		TEST_CHECK(TestEqual(w.z, 1.1438f));
+	}
+	{
+		Vec3 u(-5.06f, 0.75f, 2.72645f);
+		Vec3 v = u * 4.25f;
+		Vec3 w = 4.25f * u;
+		TEST_CHECK(TestEqual(v.x, -21.505f));
+		TEST_CHECK(TestEqual(v.y, 3.1875f));
+		TEST_CHECK(TestEqual(v.z, 11.5874125f));
+		TEST_CHECK(TestEqual(w.x, v.x));
+		TEST_CHECK(TestEqual(w.y, v.y));
+		TEST_CHECK(TestEqual(w.z, v.z));
+	}
+	{
+		Vec3 u(0.48f, -2.79f, -1.3334f);
+		Vec3 v(1.5f, 0.03f, -0.401401f);
+		Vec3 w = u / v;
+		TEST_CHECK(TestEqual(w.x, 0.32));
+		TEST_CHECK(TestEqual(w.y, -93.f));
+		TEST_CHECK(TestEqual(w.z, 3.321865167f));
+	}
+	{
+		Vec3 u(9.008f, 0.75f,-57.1002f);
+		Vec3 v = u / 0.1f;
+		TEST_CHECK(TestEqual(v.x, 90.08f));
+		TEST_CHECK(TestEqual(v.y, 7.5f));
+		TEST_CHECK(TestEqual(v.z, -571.002f));
+	}
+	{
+		Vec3 u = RandomVec3();
+		TEST_CHECK(Abs(u.x) <= 1.f);
+		TEST_CHECK(Abs(u.y) <= 1.f);
+		TEST_CHECK(Abs(u.z) <= 1.f);
+		Vec3 v = RandomVec3();
+		TEST_CHECK(TestEqual(u.x, v.x) == false);
+		TEST_CHECK(TestEqual(u.y, v.y) == false);
+		TEST_CHECK(TestEqual(u.z, v.z) == false);
+		Vec3 w = RandomVec3(0.f, 10.f);
+		TEST_CHECK((w.x >= 0.f) && (w.x <= 10.f));
+		TEST_CHECK((w.y >= 0.f) && (w.y <= 10.f));
+		TEST_CHECK((w.z >= 0.f) && (w.z <= 10.f));
+	}
+	{
+		Vec3 u = RandomVec3(Vec3(-1.f, 0.f,-0.5f), Vec3(0.f, 1.f, 0.5f));
+		TEST_CHECK((u.x >=-1.f) && (u.x <= 0.f));
+		TEST_CHECK((u.y >= 0.f) && (u.y <= 1.f));
+		TEST_CHECK((u.z >=-0.5f) && (u.z <= 0.5f));
+		
+		Vec3 v = RandomVec3(-Vec3::One, Vec3::One);
+		Vec3 w = RandomVec3(-Vec3::One, Vec3::One);
+		TEST_CHECK(TestEqual(v.x, w.x) == false);
+		TEST_CHECK(TestEqual(v.y, w.y) == false);
+		TEST_CHECK(TestEqual(v.z, w.z) == false);
+	}
+	{
+		Vec3 u(-3.0444f, 102.001f, -0.0001f);
+		Vec3 v(-3.0443f, 102.00105f,-0.00005f);
+		Vec3 w(-3.04f, 102.0015f, 0.003f);
+		TEST_CHECK(AlmostEqual(u, v, 0.0001f));
+		TEST_CHECK(AlmostEqual(u, w, 0.0001f) == false);
+		TEST_CHECK(AlmostEqual(u, w, 0.005f));
+	}
+	TEST_CHECK(TestEqual(Dist2(Vec3(0.3f, -1.2f, 0.45f), Vec3(1.2f, 3.1f, 0.6f)), 19.3225f));
+	TEST_CHECK(TestEqual(Dist(Vec3(1.4f, 2.3f, -5.43f), Vec3(-0.2f, -0.1f, -3.77f)), sqrt(11.0756f)));
+	TEST_CHECK(TestEqual(Len2(Vec3(1.f, -1.f, 0.3f)), 2.09f));
+	TEST_CHECK(TestEqual(Len(Vec3(3.f, -4.f, 12.f)), 13.f));
+	TEST_CHECK(Min(Vec3(0.336f, 5.5555f, -0.0101f), Vec3(1.01f, 2.2222f, -0.0102f)) == Vec3(0.336f, 2.2222f, -0.0102f));
+	TEST_CHECK(Max(Vec3(0.336f, 5.5555f, -0.0101f), Vec3(1.01f, 2.2222f, -0.0102f)) == Vec3(1.01f, 5.5555f, -0.0101f));
+	{
+		TEST_CHECK(TestEqual(Dot(Vec3(1.f, -1.f, 1.f), Vec3(-1.f, 0.f, 1.f)), 0.f));
+		TEST_CHECK(TestEqual(Dot(Vec3(2.f, 3.f, 4.f), Vec3(5.f, 6.f, 7.f)), 56.f));
+	}
+	{
+		Vec3 u = Cross(Vec3(-1.f, 1.f, 1.f), Vec3(1.f, -1.f, 1.f));
+		TEST_CHECK(TestEqual(u.x, 2.0f));
+		TEST_CHECK(TestEqual(u.y, 2.0f));
+		TEST_CHECK(TestEqual(u.z, 0.0f));
+		Vec3 v = Cross(Vec3(-1.f, 1.f, 1.f), Vec3(1.f, -1.f, -1.f));
+		TEST_CHECK(TestEqual(v.x, 0.0f));
+		TEST_CHECK(TestEqual(v.y, 0.0f));
+		TEST_CHECK(TestEqual(v.z, 0.0f));
+		const Vec3 w0(2.02f, -1.5151f, 0.997f);
+		const Vec3 w1(2.4042f,-0.67f,0.789f);
+		Vec3 w = Cross(w0, w1);
+		TEST_CHECK(TestEqual(w.x, -0.527424f));
+		TEST_CHECK(TestEqual(w.y, 0.803207f));
+		TEST_CHECK(TestEqual(w.z, 2.2892f, 0.00001f));
+		TEST_CHECK(TestEqual(Dot(w, w0), 0.0f));
+		TEST_CHECK(TestEqual(Dot(w, w1), 0.0f));
+	}
+	{
+		Vec3 v = Reverse(Vec3(1.f, 2.f, 3.f));
+		TEST_CHECK(TestEqual(v.x, -1.f));
+		TEST_CHECK(TestEqual(v.y, -2.f));
+		TEST_CHECK(TestEqual(v.z, -3.f));
+	}
+	{
+		Vec3 v = Inverse(Vec3(2.f, -4.f, 0.1f));
+		TEST_CHECK(TestEqual(v.x, 0.5f));
+		TEST_CHECK(TestEqual(v.y, -0.25f));
+		TEST_CHECK(TestEqual(v.z, 10.f));
+	}
+	{
+		float inv_sqrt3 = 1.f / sqrtf(3.f);
+		TEST_CHECK(Normalize(Vec3(4.701f, -4.701f, 4.701f)) == Vec3(inv_sqrt3, -inv_sqrt3, inv_sqrt3));
+		TEST_CHECK(TestEqual(Len(Normalize(Vec3(0.3f, -0.4f, 0.5f))), 1.f));
+	}
+	{
+		Vec3 v = Deg3(60.f, 120.f, 315.f);
+		TEST_CHECK(TestEqual(v.x, Pi / 3.f));
+		TEST_CHECK(TestEqual(v.y, TwoPi / 3.f));
+		TEST_CHECK(TestEqual(v.z, 7.f * Pi / 4.f));
+	}
+	{
+		Vec3 v = Rad3(Pi / 3.f, TwoPi / 3.f, Pi);
+		TEST_CHECK(TestEqual(v.x, Pi / 3.f));
+		TEST_CHECK(TestEqual(v.y, TwoPi / 3.f));
+		TEST_CHECK(TestEqual(v.z, Pi));
+	}
 
-// inline Vec3 &operator*=(const Vec3 &b) {
-// inline Vec3 &operator*=(const float k) {
-// inline Vec3 &operator/=(const Vec3 &b) {
-// inline Vec3 &operator/=(const float k) {
-// inline float operator[](size_t n) const { return (&x)[n]; }
-// 	inline float &operator[](size_t n) { return (&x)[n]; }
-// inline bool operator==(const Vec3 &a, const Vec3 &b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
-// inline bool operator!=(const Vec3 &a, const Vec3 &b) { return a.x != b.x || a.y != b.y || a.z != b.z; }
-// inline Vec3 operator+(const Vec3 &a, const Vec3 &b) { return Vec3(a.x + b.x, a.y + b.y, a.z + b.z); }
-// inline Vec3 operator+(const Vec3 &a, const float v) { return Vec3(a.x + v, a.y + v, a.z + v); }
-// inline Vec3 operator-(const Vec3 &a, const Vec3 &b) { return Vec3(a.x - b.x, a.y - b.y, a.z - b.z); }
-// inline Vec3 operator-(const Vec3 &a, const float v) { return Vec3(a.x - v, a.y - v, a.z - v); }
-// inline Vec3 operator*(const Vec3 &a, const Vec3 &b) { return Vec3(a.x * b.x, a.y * b.y, a.z * b.z); }
-// inline Vec3 operator*(const Vec3 &a, const float v) { return Vec3(a.x * v, a.y * v, a.z * v); }
-// inline Vec3 operator*(const float v, const Vec3 &a) { return a * v; }
-// inline Vec3 operator/(const Vec3 &a, const Vec3 &b) { return Vec3(a.x / b.x, a.y / b.y, a.z / b.z); }
-// inline Vec3 operator/(const Vec3 &a, const float v) { return Vec3(a.x / v, a.y / v, a.z / v); }
-// Vec3 RandomVec3(float min = -1.f, float max = 1.f);
-// Vec3 RandomVec3(const Vec3 &min, const Vec3 &max);
-// bool AlmostEqual(const Vec3 &a, const Vec3 &b, float epsilon);
-// Vec3 BaseToEuler(const Vec3 &u);
-// Vec3 BaseToEuler(const Vec3 &u, const Vec3 &v);
-// int Hash(const Vec3 &v);
-// float Dist2(const Vec3 &a, const Vec3 &b);
-// float Dist(const Vec3 &a, const Vec3 &b);
-// float Len2(const Vec3 &v);
-// float Len(const Vec3 &v);
-// Vec3 Min(const Vec3 &a, const Vec3 &b);
-// Vec3 Max(const Vec3 &a, const Vec3 &b);
-// inline float Dot(const Vec3 &a, const Vec3 &b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-// inline Vec3 Cross(const Vec3 &a, const Vec3 &b) { return Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
-// inline Vec3 Reverse(const Vec3 &v) { return Vec3(-v.x, -v.y, -v.z); }
-// inline Vec3 Inverse(const Vec3 &v) { return Vec3(1.f / v.x, 1.f / v.y, 1.f / v.z); }
-// Vec3 Normalize(const Vec3 &v);
 // Vec3 Clamp(const Vec3 &v, float min, float max);
 // Vec3 Clamp(const Vec3 &v, const Vec3 &min, const Vec3 &max);
 // Vec3 ClampLen(const Vec3 &v, float min, float max);
@@ -113,263 +290,6 @@ void test_vec3() {
 // Vec3 MakeVec3(const Vec4 &v);
 // Vec3 Quantize(const Vec3 &v, float qx, float qy, float qz);
 // Vec3 Quantize(const Vec3 &v, float q);
-// Vec3 Deg3(float x, float y, float z);
-// Vec3 Rad3(float x, float y, float z);
-// inline Vec3 Vec3I(int x, int y, int z) { return Vec3(float(x) / 255.f, float(y) / 255.f, float(z) / 255.f); }
-
-#if 0
-	{
-		Vec2 u(0.5f,-0.5f);
-		Vec2 v(1.f, -1.f);
-		Vec2 w = u + v;
-		TEST_CHECK(TestEqual(w.x, 1.5f));
-		TEST_CHECK(TestEqual(w.y,-1.5f));
-	}
-	{
-		iVec2 u(1,-1);
-		iVec2 v(2, 6);
-		iVec2 w = u + v;
-		TEST_CHECK(w.x == 3);
-		TEST_CHECK(w.y == 5);
-	}
-	{
-		Vec2 u(0.5f,-0.5f);
-		Vec2 v = u + 0.25f;
-		TEST_CHECK(TestEqual(v.x, 0.75f));
-		TEST_CHECK(TestEqual(v.y,-0.25f));
-	}
-	{
-		iVec2 u(-2,-1);
-		iVec2 v = u + 2;
-		TEST_CHECK(v.x == 0);
-		TEST_CHECK(v.y == 1);
-	}
-	{
-		Vec2 u(0.5f,-0.5f);
-		Vec2 v(1.f, -1.f);
-		Vec2 w = u - v;
-		TEST_CHECK(TestEqual(w.x,-0.5f));
-		TEST_CHECK(TestEqual(w.y, 0.5f));
-	}
-	{
-		iVec2 u(3, 6);
-		iVec2 v(4, 8);
-		iVec2 w = u - v;
-		TEST_CHECK(w.x == -1);
-		TEST_CHECK(w.y == -2);
-	}
-	{
-		Vec2 u(0.5f,-0.5f);
-		Vec2 v = u - 0.25f;
-		TEST_CHECK(TestEqual(v.x, 0.25f));
-		TEST_CHECK(TestEqual(v.y,-0.75f));
-	}
-	{
-		iVec2 u(-2,-1);
-		iVec2 v = u - 2;
-		TEST_CHECK(v.x == -4);
-		TEST_CHECK(v.y == -3);
-	}
-	{
-		Vec2 u(0.15f, -2.5f);
-		Vec2 v(1.1f, 0.3f);
-		Vec2 w = u * v;
-		TEST_CHECK(TestEqual(w.x, 0.165f));
-		TEST_CHECK(TestEqual(w.y,-0.75f));
-	}
-	{
-		iVec2 u(5, 9);
-		iVec2 v(3,-7);
-		iVec2 w = u * v;
-		TEST_CHECK(w.x == 15);
-		TEST_CHECK(w.y ==-63);
-	}
-	{
-		Vec2 u(-5.06f, 0.75f);
-		Vec2 v = u * 4.25f;
-		Vec2 w = 4.25f * u;
-		TEST_CHECK(TestEqual(v.x, -21.505f));
-		TEST_CHECK(TestEqual(v.y, 3.1875f));
-		TEST_CHECK(TestEqual(w.x, v.x));
-		TEST_CHECK(TestEqual(w.y, v.y));
-	}
-	{
-		iVec2 u(-77, 109);
-		iVec2 v = u * 3;
-		iVec2 w = 3 * u;
-		TEST_CHECK(v.x == -231);
-		TEST_CHECK(v.y == 327);
-		TEST_CHECK(w.x == v.x);
-		TEST_CHECK(w.y == v.y);
-	}
-	{
-		Vec2 u(0.48f, -2.79f);
-		Vec2 v(1.5f, 0.03f);
-		Vec2 w = u / v;
-		TEST_CHECK(TestEqual(w.x, 0.32));
-		TEST_CHECK(TestEqual(w.y, -93.f));
-	}
-	{
-		iVec2 u(104, 54);
-		iVec2 v(3, -3);
-		iVec2 w = u / v;
-		TEST_CHECK(w.x == 34);
-		TEST_CHECK(w.y == -18);
-	}
-	{
-		Vec2 u(9.008f, 0.75f);
-		Vec2 v = u / 0.1f;
-		TEST_CHECK(TestEqual(v.x, 90.08f));
-		TEST_CHECK(TestEqual(v.y, 7.5f));
-	}
-	{
-		iVec2 u(200, 18);
-		iVec2 v = u / 4;
-		TEST_CHECK(v.x == 50);
-		TEST_CHECK(v.y == 4);
-	}
-
-	{
-		Vec2 u(4.0f, -11.f);
-		u *= Vec2(0.5f, 0.4f);
-		TEST_CHECK(TestEqual(u.x, 2.f));
-		TEST_CHECK(TestEqual(u.y, -4.4f));
-	}
-	{
-		iVec2 u(4, 7);
-		u *= iVec2(4, -10);
-		TEST_CHECK(u.x == 16);
-		TEST_CHECK(u.y == -70);
-	}
-	{
-		Vec2 u(11.11f, 0.075f);
-		u *= 0.3f;
-		TEST_CHECK(TestEqual(u.x, 3.333f));
-		TEST_CHECK(TestEqual(u.y, 0.0225f));
-	}
-	{
-		iVec2 u(5, 101);
-		u *= 3;
-		TEST_CHECK(u.x == 15);
-		TEST_CHECK(u.y == 303);
-	}
-	{
-		Vec2 u(4.8f, -26.f);
-		u /= Vec2(0.3f, -0.104f);
-		TEST_CHECK(TestEqual(u.x, 16.f));
-		TEST_CHECK(TestEqual(u.y, 250.f));
-	}
-	{
-		iVec2 u(8, 365);
-		u /= iVec2(2, 97);
-		TEST_CHECK(u.x == 4);
-		TEST_CHECK(u.y == 3);
-	}
-	{
-		Vec2 u(0.03f, 27.6f);
-		u /= 0.75f;
-		TEST_CHECK(TestEqual(u.x, 0.04f));
-		TEST_CHECK(TestEqual(u.y, 36.8f));
-	}
-	{
-		iVec2 u(121, -909);
-		u /= 11;
-		TEST_CHECK(u.x == 11);
-		TEST_CHECK(u.y == -82);
-	} 
-	{
-		Vec2 u(1.207f,-44.01f);
-		TEST_CHECK(TestEqual(u[0], u.x));
-		TEST_CHECK(TestEqual(u[1], u.y));
-	}
-	{
-		iVec2 u(121, -909);
-		TEST_CHECK(u[0] == u.x);
-		TEST_CHECK(u[1] == u.y);
-	}
-	{
-		Vec2 u(1.207f, -44.01f);
-		Vec2 v(1.207f, -44.01f);
-		Vec2 w(4.4444f, 1.0001f);
-		TEST_CHECK(u == v);
-		TEST_CHECK((u == w) == false);
-	}
-	{
-		iVec2 u(121, -909);
-		iVec2 v(121, -909);
-		iVec2 w(4, -908);
-		TEST_CHECK(u == v);
-		TEST_CHECK((u == w) == false);
-	}
-	{
-		Vec2 u(1.207f, -44.01f);
-		Vec2 v(1.207f, -44.01f);
-		Vec2 w(4.4444f, 1.0001f);
-		TEST_CHECK(u != w);
-		TEST_CHECK((u != v) == false);
-	}
-	{
-		iVec2 u(121, -909);
-		iVec2 v(121, -909);
-		iVec2 w(4, -908);
-		TEST_CHECK(u != w);
-		TEST_CHECK((u != v) == false);
-	}
-	{
-		Vec2 u(-3.0444f, 102.001f);
-		Vec2 v(-3.0443f, 102.00105f);
-		Vec2 w(-3.04f, 102.0015f);
-		TEST_CHECK(AlmostEqual(u, v, 0.0001f));
-		TEST_CHECK(AlmostEqual(u, w, 0.0001f) == false);
-		TEST_CHECK(AlmostEqual(u, w, 0.005f));
-	}
-	{
-		iVec2 u(10001, 10003);
-		iVec2 v(10000, 10004);
-		iVec2 w(10011, 9999);
-		TEST_CHECK(AlmostEqual(u, v, 1));
-		TEST_CHECK(AlmostEqual(u, w, 1) == false);
-		TEST_CHECK(AlmostEqual(u, w, 10));
-	}
-	{
-		TEST_CHECK(Min(Vec2(0.336f, 5.5555f), Vec2(1.01f, 2.2222f)) == Vec2(0.336f, 2.2222f));
-		TEST_CHECK(Min(iVec2(7, -4), iVec2(5, -2)) == iVec2(5, -4));
-	}
-	{
-		TEST_CHECK(Max(Vec2(0.336f, 5.5555f), Vec2(1.01f, 2.2222f)) == Vec2(1.01f, 5.5555f));
-		TEST_CHECK(Max(iVec2(7, -4), iVec2(5, -2)) == iVec2(7, -2));
-	}
-	{ 
-		TEST_CHECK(TestEqual(Len2(Vec2(1.f, -1.f)), 2.f));
-		TEST_CHECK(Len2(iVec2(-1, -1)) == 2);
-	}
-	{
-		TEST_CHECK(TestEqual(Len(Vec2(3.f, -4.f)), 5.f));
-		TEST_CHECK(Len(iVec2(-4, -3)) == 5);
-	}
-	{
-		TEST_CHECK(TestEqual(Dot(Vec2(1.f, -1.f), Vec2(-1.f,-1.f)), 0.f));
-		TEST_CHECK(TestEqual(Dot(Vec2(2.f, 3.f), Vec2(4.f, 5.f)), 23.f));
-		TEST_CHECK(Dot(iVec2(1, 1), iVec2(-1, -1)) == -2);
-		TEST_CHECK(Dot(iVec2(2, -3), iVec2(4, 5)) == -7);
-	}
-	{
-		TEST_CHECK(Normalize(Vec2(0.3, -0.4f)) == Vec2(0.6, -0.8));
-		TEST_CHECK(Len(Normalize(Vec2(0.3, -0.4f))) == 1.f);
-		TEST_CHECK(Normalize(iVec2(-1, 1)) == iVec2(-1, 1));
-		TEST_CHECK(Len(Normalize(iVec2(-1, 1))) == 1);
-	}
-	{
-		TEST_CHECK(Reverse(Vec2(-1.1f, 0.5f)) == Vec2(1.1,-0.5f));
-		TEST_CHECK(Reverse(iVec2(78, -99)) == iVec2(-78, 99));
-	}
-	{
-		TEST_CHECK(TestEqual(Dist2(Vec2(0.3f, -1.2f), Vec2(1.2f, 3.1f)), 19.3f, 0.00001f));
-		TEST_CHECK(TestEqual(Dist2(iVec2(4, 12), iVec2(7, 8)), 25));
-	}
-	{
-		TEST_CHECK(TestEqual(Dist(Vec2(1.4f, 2.3f), Vec2(-0.2f, -0.1f)), sqrt(8.32f)));
-		TEST_CHECK(TestEqual(Dist(iVec2(-2, -2), iVec2(1, 2)), 5));
-	}
-#endif
+// Vec3 BaseToEuler(const Vec3 &u);
+// Vec3 BaseToEuler(const Vec3 &u, const Vec3 &v);
 }

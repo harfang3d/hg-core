@@ -73,7 +73,7 @@ struct Vec3 {
 		z *= k_;
 		return *this;
 	}
-
+	inline Vec3 operator-() const { return Vec3(-x, -y, -z); }
 	inline float operator[](size_t n) const { return (&x)[n]; }
 	inline float &operator[](size_t n) { return (&x)[n]; }
 

@@ -92,6 +92,8 @@ struct Vec4 {
 
 	void operator*=(const Mat4 &);
 
+	inline Vec4 operator-() const { return Vec4(-x, -y, -z, -w); }
+
 	inline float operator[](size_t n) const { return (&x)[n]; }
 	inline float &operator[](size_t n) { return (&x)[n]; }
 
@@ -115,7 +117,7 @@ Vec4 Abs(const Vec4 &v);
 
 Vec4 Normalize(const Vec4 &v);
 
-inline Vec4 Opposite(const Vec4 &v) { return Vec4(-v.x, -v.y, -v.z, -v.w); }
+inline Vec4 Reverse(const Vec4 &v) { return Vec4(-v.x, -v.y, -v.z, -v.w); }
 
 /// Return a vector from integer value in the [0;255] range.
 inline Vec4 Vec4I(int x, int y, int z, int w = 255) { return Vec4(float(x) / 255.f, float(y) / 255.f, float(z) / 255.f, float(w) / 255.f); }
