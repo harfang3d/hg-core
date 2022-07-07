@@ -67,8 +67,8 @@ template <class T> struct tVec2 {
 		return *this;
 	}
 
-	inline float operator[](size_t n) const { return (&x)[n]; }
-	inline float &operator[](size_t n) { return (&x)[n]; }
+	inline T operator[](size_t n) const { return (&x)[n]; }
+	inline T &operator[](size_t n) { return (&x)[n]; }
 
 	T x, y;
 };
@@ -94,8 +94,6 @@ template <typename T> tVec2<T> operator*(const T k, const tVec2<T> &v) { return 
 template <typename T> tVec2<T> operator/(const tVec2<T> &a, const tVec2<T> &b) { return tVec2<T>(a.x / b.x, a.y / b.y); }
 template <typename T> tVec2<T> operator/(const tVec2<T> &v, const T k) { return tVec2<T>(v.x / k, v.y / k); }
 
-template <typename T> tVec2<T> operator*(const tVec2<T> &v, const Mat3 &m);
-
 template <typename T> tVec2<T> Min(const tVec2<T> &v, const tVec2<T> &m) { return tVec2<T>(v.x < m.x ? v.x : m.x, v.y < m.y ? v.y : m.y); }
 template <typename T> tVec2<T> Max(const tVec2<T> &v, const tVec2<T> &m) { return tVec2<T>(v.x > m.x ? v.x : m.x, v.y > m.y ? v.y : m.y); }
 
@@ -109,8 +107,8 @@ template <typename T> T Dot(const tVec2<T> &a, const tVec2<T> &b) { return a.x *
 
 /// Normalize vector.
 template <typename T> tVec2<T> Normalize(const tVec2<T> &v) {
-	const float l = Len(v);
-	return l > 0.f ? v / l : v;
+	const T l = Len(v);
+	return l > 0.f ? v * (T(1) / l) : v;
 }
 
 /// Reversed vector.
