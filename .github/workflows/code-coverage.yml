@@ -32,6 +32,13 @@ jobs:
       - name: build
         run: cmake --build . --target foundation_coverage
         working-directory: build
+      - name: results
+        shell: bash
+        run: |
+          echo "::group::Report code coverage"
+          lcov --list foundation_coverage.info
+          echo "::endgroup::"
+        working-directory: build
       - name: upload results
         uses: actions/upload-artifact@v3
         with:
