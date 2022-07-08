@@ -46,6 +46,21 @@ void test_mat3() {
 		TEST_CHECK(TestEqual(m.m[2][2], 9.f));
 	}
 	{
+		const Mat4 m4(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
+		Mat3 m(m4);
+		TEST_CHECK(TestEqual(m.m[0][0], 1.f));
+		TEST_CHECK(TestEqual(m.m[1][0], 2.f));
+		TEST_CHECK(TestEqual(m.m[2][0], 3.f));
+
+		TEST_CHECK(TestEqual(m.m[0][1], 4.f));
+		TEST_CHECK(TestEqual(m.m[1][1], 5.f));
+		TEST_CHECK(TestEqual(m.m[2][1], 6.f));
+
+		TEST_CHECK(TestEqual(m.m[0][2], 7.f));
+		TEST_CHECK(TestEqual(m.m[1][2], 8.f));
+		TEST_CHECK(TestEqual(m.m[2][2], 9.f));
+	}
+	{
 		const Vec3 u(1.f, 2.f, 3.f);
 		const Vec3 v(4.f, 5.f, 6.f);
 		const Vec3 w(7.f, 8.f, 9.f);
@@ -204,6 +219,12 @@ void test_mat3() {
 		TEST_CHECK(TestEqual(m.m[0][2], 5.0f));
 		TEST_CHECK(TestEqual(m.m[1][2], 12.2f));
 		TEST_CHECK(TestEqual(m.m[2][2], 19.4f));
+	}
+	{
+		Vec2 v = Mat3(0.1f, -0.4f, 0.7f, -0.2f, 0.5f, -0.8f, 0.3f, -0.6f, 0.9f) * Vec2(2.0f, 3.0f);
+
+		TEST_CHECK(TestEqual(v.x, -0.1f));
+		TEST_CHECK(TestEqual(v.y, 0.1f));
 	}
 	{
 		Vec3 v = Mat3(0.1f, -0.4f, 0.7f, -0.2f, 0.5f, -0.8f, 0.3f, -0.6f, 0.9f) * Vec3(2.0f, 3.0f, 5.0f);
@@ -389,18 +410,31 @@ void test_mat3() {
 	}
 	TEST_CHECK(AlmostEqual(RotationMat2D(Pi / 2.f, Vec2(-1.f, -2.f)) * Vec3(1.f, 2.f, 1.f), Vec3(-5.f, 0.f, 1.f), 0.000001f));
 	{ 
-		const Vec3 p = Vec3(1.5f, 2.3f, 10.f);
-		Mat3 m = Mat3LookAt(p);
-		Vec3 i = GetX(m), j = GetY(m), k = GetZ(m);
-		TEST_CHECK(AlmostEqual(Normalize(p), k, 0.000001f));
-		TEST_CHECK(TestEqual(Dot(i, j), 0.f));
-		TEST_CHECK(TestEqual(Dot(j, k), 0.f));
-		TEST_CHECK(TestEqual(Dot(k, i), 0.f));
+		{
+			const Vec3 p = Vec3(1.5f, 2.3f, 10.f);
+			Mat3 m = Mat3LookAt(p);
+			Vec3 i = GetX(m), j = GetY(m), k = GetZ(m);
+			TEST_CHECK(AlmostEqual(Normalize(p), k, 0.000001f));
+			TEST_CHECK(TestEqual(Dot(i, j), 0.f));
+			TEST_CHECK(TestEqual(Dot(j, k), 0.f));
+			TEST_CHECK(TestEqual(Dot(k, i), 0.f));
+		}
+		{ 
+			Mat3 m = Mat3LookAt(Vec3(0.f, -12.f, 0.f));
+			Vec3 i = GetX(m), j = GetY(m), k = GetZ(m);
+			TEST_CHECK(AlmostEqual(i, Vec3(-1.f, 0.f, 0.f), 0.000001f));
+			TEST_CHECK(TestEqual(Dot(i, j), 0.f));
+			TEST_CHECK(TestEqual(Dot(j, k), 0.f));
+			TEST_CHECK(TestEqual(Dot(k, i), 0.f));
+		}
+		TEST_CHECK(Mat3LookAt(Vec3::Zero) == Mat3::Identity);
 	}
 	{
 		TEST_CHECK(Mat3LookAt(Vec3(0.f, 0.f, 1.f), Vec3(0.f, 1.f, 0.f)) == Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f));
 		TEST_CHECK(Mat3LookAt(Vec3(0.f, 0.f, 1.f), Vec3(1.f, 0.f, 0.f)) == Mat3(0.f,-1.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f));
 		TEST_CHECK(Mat3LookAt(Vec3(1.f, 0.f, 0.f), Vec3(0.f, 0.f, 1.f)) == Mat3(0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f));
+
+		TEST_CHECK(Mat3LookAt(Vec3(0.f, 0.f, 0.f), Vec3(0.f, 1.f, 0.f)) == Mat3::Identity);
 	}
 	{
 		Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
