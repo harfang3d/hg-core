@@ -16,8 +16,8 @@ target_link_libraries(test_foundation PUBLIC foundation)
 target_include_directories(test_foundation PUBLIC extern/acutest)
 
 if(HG_ENABLE_COVERAGE)
-    setup_target_for_coverage_lcov(
-        NAME foundation_coverage
-        EXECUTABLE test_foundation
-        EXCLUDE "foundation/extern/*" "engine/*" "app_glfw/*" "samples/*" "tests/*" "/usr/*")
+	setup_target_for_coverage_lcov(
+		NAME foundation_coverage
+		EXECUTABLE test_foundation
+		EXCLUDE "foundation/extern/*" "engine/*" "app_glfw/*" "samples/*" "tests/*" "/usr/*")
 endif()
