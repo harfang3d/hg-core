@@ -126,4 +126,7 @@ inline Vec4 Vec4I(int x, int y, int z, int w = 255) { return Vec4(float(x) / 255
 Vec4 RandomVec4(float min = -1.f, float max = 1.f);
 Vec4 RandomVec4(const Vec4 &min, const Vec4 &max);
 
+
+bool AlmostEqual(const Vec4 &a, const Vec4 &b, float epsilon);
+
 } // namespace hg

@@ -31,6 +31,10 @@ Vec4 Normalize(const Vec4 &v) {
 Vec4 RandomVec4(float min, float max) { return Vec4(FRRand(min, max), FRRand(min, max), FRRand(min, max), FRRand(min, max)); }
 Vec4 RandomVec4(const Vec4 &min, const Vec4 &max) { return Vec4(FRRand(min.x, max.x), FRRand(min.y, max.y), FRRand(min.z, max.z), FRRand(min.w, max.w)); }
 
+bool AlmostEqual(const Vec4 &a, const Vec4 &b, float epsilon) {
+	return Abs(a.x - b.x) < epsilon && Abs(a.y - b.y) < epsilon && Abs(a.z - b.z) < epsilon && Abs(a.w - b.w) < epsilon;
+}
+
 Vec4::Vec4() : x(0.f), y(0.f), z(0.f), w(0.f) {}
 
 Vec4::Vec4(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}

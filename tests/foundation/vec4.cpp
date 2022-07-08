@@ -244,6 +244,14 @@ void test_vec4() {
 		TEST_CHECK(TestEqual(v.w, w.w) == false);
 	}
 	{
+		Vec4 u(-3.0444f, 102.001f, -0.0001f, 2.2012f);
+		Vec4 v(-3.0443f, 102.00105f, -0.00005f, 2.20115f);
+		Vec4 w(-3.04f, 102.0015f, 0.003f,2.2014f);
+		TEST_CHECK(AlmostEqual(u, v, 0.0001f));
+		TEST_CHECK(AlmostEqual(u, w, 0.0001f) == false);
+		TEST_CHECK(AlmostEqual(u, w, 0.005f));
+	}
+	{
 		Vec4 v = Abs(Vec4(-1.f, 1.f, -0.5f,-0.5f));
 		TEST_CHECK(TestEqual(v.x, 1.f));
 		TEST_CHECK(TestEqual(v.y, 1.f));
