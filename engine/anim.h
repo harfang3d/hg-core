@@ -274,8 +274,8 @@ template <typename AnimTrack, typename T> size_t SimplifyAnimTrackT(AnimTrack &t
 			track.keys.push_back(track_ref.keys[i]);
 			last_copied = i;
 		} else {
-			const auto &prev = track_ref.keys[last_copied];
-			const auto &next = track_ref.keys[i + 1];
+			const typename std::deque<typename AnimTrack::Key> &prev = track_ref.keys[last_copied];
+			const typename std::deque<typename AnimTrack::Key> &next = track_ref.keys[i + 1];
 			for (int j = last_copied + 1; j <= i; j++) {
 				const typename AnimTrack::Key &src_key = track_ref.keys[j];
 				T interpolated;
