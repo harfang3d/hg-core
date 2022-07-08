@@ -81,6 +81,29 @@ void test_mat44() {
 		TEST_CHECK(m.m[3][2] == n.m[3][2]);
 		TEST_CHECK(m.m[3][3] == n.m[3][3]);
 	}
+	{
+		Mat4 n(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
+		Mat44 m(n);
+		TEST_CHECK(m.m[0][0] == 1.f);
+		TEST_CHECK(m.m[1][0] == 2.f);
+		TEST_CHECK(m.m[2][0] == 3.f);
+		TEST_CHECK(m.m[3][0] == 0.f);
+
+		TEST_CHECK(m.m[0][1] == 4.f);
+		TEST_CHECK(m.m[1][1] == 5.f);
+		TEST_CHECK(m.m[2][1] == 6.f);
+		TEST_CHECK(m.m[3][1] == 0.f);
+
+		TEST_CHECK(m.m[0][2] == 7.f);
+		TEST_CHECK(m.m[1][2] == 8.f);
+		TEST_CHECK(m.m[2][2] == 9.f);
+		TEST_CHECK(m.m[3][2] == 0.f);
+
+		TEST_CHECK(m.m[0][3] == 10.f);
+		TEST_CHECK(m.m[1][3] == 11.f);
+		TEST_CHECK(m.m[2][3] == 12.f);
+		TEST_CHECK(m.m[3][3] == 1.f);
+	}
 	{ 
 		Mat44 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f); 
 		Mat44 n(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f); 
@@ -184,6 +207,15 @@ void test_mat44() {
 		Mat44 n = Inverse(m, res);
 		TEST_CHECK(res == false);
 		TEST_CHECK(n == Mat44::Identity);
+	}
+	{
+		const Mat44 m(-1.f, 2.f, 3.f, -4.f, 5.f, -6.f, -7.f, 8.f, -9.f, 10.f, -11.f, 12.f, 13.f, -14.f, 15.f, -16.f);
+		Mat44 n = Inverse(m);
+		TEST_CHECK(AlmostEqual(GetColumn(n, 0), Vec4(6.f, 2.f, 14.f, 10.f) / 8.f, 0.000001f));
+		TEST_CHECK(AlmostEqual(GetColumn(n, 1), Vec4(5.f, 1.f, 13.f, 9.f) / 8.f, 0.000001f));
+		TEST_CHECK(AlmostEqual(GetColumn(n, 2), Vec4(-8.f, -4.f, 16.f, 12.f) / 8.f, 0.000001f));
+		TEST_CHECK(AlmostEqual(GetColumn(n, 3), Vec4(-7.f, -3.f, 15.f, 11.f) / 8.f, 0.000001f));
+		TEST_CHECK((m * n) == Mat44::Identity);
 	}
 	{
 		const Mat44 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f);
