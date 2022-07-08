@@ -2,9 +2,9 @@
 set(FMT_USE_CPP11 OFF CACHE BOOL "")
 add_subdirectory(extern/fmt)
 
-# simpleson
-add_library(simpleson STATIC extern/simpleson/json.cpp extern/simpleson/json.h)
-target_include_directories(simpleson PUBLIC extern/simpleson)
+# xxhash
+add_library(xxhash STATIC extern/xxhash/xxhash.c extern/xxhash/xxhash.h)
+target_include_directories(xxhash PUBLIC extern/xxhash)
 
 # foundation
 set(FOUNDATION_HDRS
@@ -16,6 +16,7 @@ set(FOUNDATION_HDRS
 	data.h
 	data_rw_interface.h
 	dir.h
+	easing.h
 	file.h
 	file_rw_interface.h
 	frustum.h
@@ -32,6 +33,7 @@ set(FOUNDATION_HDRS
 	pack_float.h
 	path_tools.h
 	plane.h
+	profiler.h
 	projection.h
 	quaternion.h
 	rand.h
@@ -54,6 +56,7 @@ set(FOUNDATION_SRCS
 	data.cpp
 	data_rw_interface.cpp
 	dir.cpp
+	easing.cpp
 	file.cpp
 	file_rw_interface.cpp
 	frustum.cpp
@@ -67,6 +70,7 @@ set(FOUNDATION_SRCS
 	os.cpp
 	path_tools.cpp
 	plane.cpp
+	profiler.cpp
 	projection.cpp
 	quaternion.cpp
 	rand.cpp
@@ -80,5 +84,6 @@ set(FOUNDATION_SRCS
 )
 
 add_library(foundation STATIC ${FOUNDATION_SRCS} ${FOUNDATION_HDRS})
-target_include_directories(foundation PUBLIC ${CMAKE_SOURCE_DIR} extern/utf8-cpp)
-target_link_libraries(foundation PUBLIC fmt simpleson)
+target_include_directories(foundation PUBLIC ${CMAKE_SOURCE_DIR} extern/utf8-cpp extern/rapidjson extern/srombauts-shared_ptr)
+target_compile_definitions(foundation PUBLIC RAPIDJSON_HAS_STDSTRING=1)
+target_link_libraries(foundation PUBLIC fmt xxhash)

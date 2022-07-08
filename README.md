@@ -14,3 +14,8 @@
 
 ## Geometry vertex attributes layout
 
+
+
+## Configuration flags
+
+HG_ENABLE_SCENE_SCRIPTS

@@ -12,6 +12,19 @@
 
 #include <fmt/format.h>
 
+#if 1
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+
+
+#endif
+
+#include <map>
+
+
+
+
+
 using namespace hg;
 
 //
@@ -28,6 +41,20 @@ extern void test_mat44();
 
 //
 void test_clock_update() {
+#if 1
+	rapidjson::Document jd(rapidjson::kObjectType);
+	jd["float"].SetFloat(8);
+
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	jd.Accept(writer);
+
+	fmt::print("{}\n", buffer.GetString());
+#endif
+
+
+
 	reset_clock();
 
 	TEST_CHECK(get_clock() == 0);

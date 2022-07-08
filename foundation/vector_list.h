@@ -159,6 +159,7 @@ public:
 		++size_;
 		return i;
 	}
+
 #if __cpluplus >= 201103L
 	uint32_t add(T &&v) {
 		__ASSERT__(size_ < 0x00ffffff);
@@ -179,6 +180,7 @@ public:
 		return i;
 	}
 #endif
+
 	uint32_t remove(uint32_t i) {
 		const uint32_t n = next(i); // next entry in use
 
