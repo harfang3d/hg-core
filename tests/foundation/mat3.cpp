@@ -109,9 +109,39 @@ void test_mat3() {
 		TEST_CHECK(TestEqual(m.m[1][2], 0.8f));
 		TEST_CHECK(TestEqual(m.m[2][2], 0.9f));
 	}
-// Mat3 &operator*=(const Mat3 &b) {
-// bool operator==(const Mat3 &a, const Mat3 &b);
-// bool operator!=(const Mat3 &a, const Mat3 &b);
+	{
+		Mat3 m(-0.1f, 0.4f, -0.7f, 0.2f, -0.5f, 0.8f, -0.3f, 0.6f, -0.9f);
+		m *= Mat3(-1.0f, 2.0f, 3.0f, 4.0f, -5.0f, 6.0f, 7.0f, 8.0f, -9.0f);
+		
+		TEST_CHECK(TestEqual(m.m[0][0],-0.4f));
+		TEST_CHECK(TestEqual(m.m[1][0], 0.4f));
+		TEST_CHECK(TestEqual(m.m[2][0],-0.4f));
+
+		TEST_CHECK(TestEqual(m.m[0][1],-3.2f));
+		TEST_CHECK(TestEqual(m.m[1][1], 7.7f));
+		TEST_CHECK(TestEqual(m.m[2][1],-12.2f));
+
+		TEST_CHECK(TestEqual(m.m[0][2], 3.6f));
+		TEST_CHECK(TestEqual(m.m[1][2],-6.6f));
+		TEST_CHECK(TestEqual(m.m[2][2], 9.6f));
+	}
+	{
+		const Mat3 m0 = Mat3(0.1f, 0.4f, 0.7f, 0.2f, 0.5f, 0.8f, 0.3f, 0.6f, 0.9f);
+		const Mat3 m1 = m0 * Mat3::Identity;
+		const Mat3 m2 = Mat3(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f);
+	
+		TEST_CHECK(m0 == m1);
+		TEST_CHECK((m0 == m2) == false);
+		TEST_CHECK((m1 == m2) == false);
+	}
+	{
+		const Mat3 m0 = Mat3(0.1f, 0.4f, 0.7f, 0.2f, 0.5f, 0.8f, 0.3f, 0.6f, 0.9f);
+		const Mat3 m1 = Mat3(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f);
+		const Mat3 m2 = m0 * Mat3::Identity;
+		
+		TEST_CHECK(m0 != m1);
+		TEST_CHECK((m0 != m2) == false);
+	}
 	{
 		Mat3 m = Mat3(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f) + Mat3(0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f);
 
@@ -157,9 +187,39 @@ void test_mat3() {
 		TEST_CHECK(TestEqual(m.m[1][2], 0.8f));
 		TEST_CHECK(TestEqual(m.m[2][2], 0.9f));
 	}
-// Vec3 operator*(const Mat3 &m, const Vec3 &v);
-// Vec4 operator*(const Mat3 &m, const Vec4 &v);
-// Mat3 operator*(const Mat3 &m, const Mat3 &b);
+	{
+		const Mat3 m0 = Mat3(0.1f, 0.4f, 0.7f, 0.2f, 0.5f, 0.8f, 0.3f, 0.6f, 0.9f);
+		const Mat3 m1 = Mat3(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f);
+		Mat3 m = m0 * m1;
+
+		TEST_CHECK(TestEqual(m.m[0][0], 1.4f));
+		TEST_CHECK(TestEqual(m.m[1][0], 3.2f));
+		TEST_CHECK(TestEqual(m.m[2][0], 5.0f));
+
+		TEST_CHECK(TestEqual(m.m[0][1], 3.2f));
+		TEST_CHECK(TestEqual(m.m[1][1], 7.7f));
+		TEST_CHECK(TestEqual(m.m[2][1], 12.2f));
+
+		TEST_CHECK(TestEqual(m.m[0][2], 5.0f));
+		TEST_CHECK(TestEqual(m.m[1][2], 12.2f));
+		TEST_CHECK(TestEqual(m.m[2][2], 19.4f));
+	}
+	{
+		Vec3 v = Mat3(0.1f, -0.4f, 0.7f, -0.2f, 0.5f, -0.8f, 0.3f, -0.6f, 0.9f) * Vec3(2.0f, 3.0f, 5.0f);
+		
+		TEST_CHECK(TestEqual(v.x, 1.1f));
+		TEST_CHECK(TestEqual(v.y, -2.3f));
+		TEST_CHECK(TestEqual(v.z, 3.5f));
+	}
+	{
+		Vec4 v = Mat3(-0.1f, 0.4f, -0.7f, 0.2f, -0.5f, 0.8f, -0.3f, 0.6f, -0.9f) * Vec4(1.0f, -1.0f, 2.0f, 6.f);
+
+		TEST_CHECK(TestEqual(v.x, -0.9f));
+		TEST_CHECK(TestEqual(v.y, 2.1f));
+		TEST_CHECK(TestEqual(v.z, -3.3f));
+		TEST_CHECK(TestEqual(v.w, 6.0f));
+	}
+
 // void TransformVec2(const Mat3 &__restrict m, tVec2<float> *__restrict out, const tVec2<float> *__restrict in, int count = 1);
 // void TransformVec3(const Mat3 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, int count = 1);
 // void TransformVec4(const Mat3 &__restrict m, Vec4 *__restrict out, const Vec4 *__restrict in, int count = 1);

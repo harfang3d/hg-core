@@ -71,11 +71,21 @@ Vec3 ClampLen(const Vec3 &v, float min, float max) {
 
 //
 Vec3 Abs(const Vec3 &v) { return Vec3(Abs(v.x), Abs(v.y), Abs(v.z));}
-Vec3 Sign(const Vec3 &v) { return Vec3(v.x < 0.f ? -1.f : 1.f, v.y < 0.f ? -1.f : 1.f, v.z < 0.f ? -1.f : 1.f); }
+#if __cplusplus >= 201103L
+Vec3 Sign(const Vec3 &v) { return Vec3(copysign(1.0f, v.x), copysign(1.0f, v.y), copysign(1.0f, v.z)); }
+#else
+Vec3 Sign(const Vec3 &v) { 
+	union {
+		float f;
+		unsigned int u;
+	} x, y, z, one;
+	x.f = v.x, y.f = v.y, z.f = v.z, one.f = 1.0f;
+	return Vec3((x.u & 0x80000000) ? -1.f : 1.f, (y.u & 0x80000000) ? -1.f : 1.f, (z.u & 0x80000000) ? -1.f : 1.f);
+}
+#endif
 
 Vec3 Reflect(const Vec3 &v, const Vec3 &n) {
-	const Vec3 rv = Reverse(v);
-	return n * (2.f * Dot(rv, n)) - rv;
+	return v - n * (2.f * Dot(v, n) / Len2(n));
 }
 
 Vec3 Refract(const Vec3 &v, const Vec3 &n, float k_in, float k_out) {

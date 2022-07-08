@@ -434,6 +434,21 @@ Mat3 operator*(const Mat3 &a, const Mat3 &b) {
 	return Mat3(__M33M33(0, 0), __M33M33(1, 0), __M33M33(2, 0), __M33M33(0, 1), __M33M33(1, 1), __M33M33(2, 1), __M33M33(0, 2), __M33M33(1, 2), __M33M33(2, 2));
 }
 
+Mat3 &Mat3::operator*=(const Mat3 &a) {
+	for (int i = 0; i < 3; i++) {
+		float u, v, w;
+
+		u = m[i][0] * a.m[0][0] + m[i][1] * a.m[1][0] + m[i][2] * a.m[2][0];
+		v = m[i][0] * a.m[0][1] + m[i][1] * a.m[1][1] + m[i][2] * a.m[2][1];
+		w = m[i][0] * a.m[0][2] + m[i][1] * a.m[1][2] + m[i][2] * a.m[2][2];
+
+		m[i][0] = u;
+		m[i][1] = v;
+		m[i][2] = w;
+	}
+	return *this;
+}
+
 //
 Mat3::Mat3() {
 	m[0][0] = 1.f;

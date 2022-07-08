@@ -46,12 +46,7 @@ struct Mat3 {
 		return *this;
 	}
 
-	Mat3 &operator*=(const Mat3 &b) {
-		for (int j = 0; j < 3; ++j)
-			for (int i = 0; i < 3; ++i)
-				m[i][j] *= b.m[i][j];
-		return *this;
-	}
+	Mat3 &operator*=(const Mat3 &b);
 
 	float m[3][3];
 };
