@@ -57,7 +57,6 @@ std::string lstrip_space(const std::string &str);
 std::string rstrip_space(const std::string &str);
 std::string strip_space(const std::string &str);
 
-std::string trim(const std::string &str, const std::string &pattern = " ");
 std::string reduce(const std::string &str, const std::string &fill = " ", const std::string &pattern = " ");
 
 /// Join several std::strings with a separator std::string.
@@ -124,8 +123,8 @@ std::string toupper(std::string str, size_t start = 0, size_t end = 0);
 */
 std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count = 0);
 
-std::string left(const std::string &str, size_t count);
-std::string right(const std::string &str, size_t count);
+std::string left(const std::string &str, ptrdiff_t count);
+std::string right(const std::string &str, ptrdiff_t count);
 
 enum EOLConvention { EOLUnix, EOLWindows };
 

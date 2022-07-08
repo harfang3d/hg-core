@@ -45,8 +45,7 @@ bool Inverse(const Mat3 &m, Mat3 &i) {
 
 //
 Mat3 VectorMat3(const Vec3 &v) { return Mat3(v.x, 0, 0, v.y, 0, 0, v.z, 0, 0); }
-Mat3 CrossProductMat3(const Vec3 &v) { return Mat3(0, -v.z, v.y, v.z, 0, -v.x, -v.y, v.x, 0); }
-
+Mat3 CrossProductMat3(const Vec3 &v) { return Mat3(0, v.z, -v.y, -v.z, 0, v.x, v.y, -v.x, 0); }
 //
 Mat3 Normalize(const Mat3 &m) { return Mat3(Normalize(GetColumn(m, 0)), Normalize(GetColumn(m, 1)), Normalize(GetColumn(m, 2))); }
 
@@ -414,6 +413,14 @@ Mat3 operator*(const Mat3 &m, const float v) {
 	return r;
 }
 
+Mat3 operator/(const Mat3 &m, const float v) {
+	Mat3 r;
+	for (int j = 0; j < 3; ++j)
+		for (int i = 0; i < 3; ++i)
+			r.m[i][j] = m.m[i][j] / v;
+	return r;
+}
+
 //
 tVec2<float> operator*(const Mat3 &m, const tVec2<float> &v) {
 	return tVec2<float>(v.x * m.m[0][0] + v.y * m.m[0][1] + m.m[0][2], v.x *m.m[1][0] + v.y *m.m[1][1] + m.m[1][2]);
@@ -432,6 +439,21 @@ Vec4 operator*(const Mat3 &m, const Vec4 &v) {
 Mat3 operator*(const Mat3 &a, const Mat3 &b) {
 #define __M33M33(__I, __J) a.m[__I][0] * b.m[0][__J] + a.m[__I][1] * b.m[1][__J] + a.m[__I][2] * b.m[2][__J]
 	return Mat3(__M33M33(0, 0), __M33M33(1, 0), __M33M33(2, 0), __M33M33(0, 1), __M33M33(1, 1), __M33M33(2, 1), __M33M33(0, 2), __M33M33(1, 2), __M33M33(2, 2));
+}
+
+Mat3 &Mat3::operator*=(const Mat3 &a) {
+	for (int i = 0; i < 3; i++) {
+		float u, v, w;
+
+		u = m[i][0] * a.m[0][0] + m[i][1] * a.m[1][0] + m[i][2] * a.m[2][0];
+		v = m[i][0] * a.m[0][1] + m[i][1] * a.m[1][1] + m[i][2] * a.m[2][1];
+		w = m[i][0] * a.m[0][2] + m[i][1] * a.m[1][2] + m[i][2] * a.m[2][2];
+
+		m[i][0] = u;
+		m[i][1] = v;
+		m[i][2] = w;
+	}
+	return *this;
 }
 
 //

@@ -8,8 +8,6 @@ namespace hg {
 
 template <typename T> struct tVec2;
 struct Vec4;
-struct Mat3;
-struct Mat4;
 
 /// 3-Component vector
 struct Vec3 {
@@ -75,7 +73,7 @@ struct Vec3 {
 		z *= k_;
 		return *this;
 	}
-
+	inline Vec3 operator-() const { return Vec3(-x, -y, -z); }
 	inline float operator[](size_t n) const { return (&x)[n]; }
 	inline float &operator[](size_t n) { return (&x)[n]; }
 

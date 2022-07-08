@@ -46,12 +46,7 @@ struct Mat3 {
 		return *this;
 	}
 
-	Mat3 &operator*=(const Mat3 &b) {
-		for (int j = 0; j < 3; ++j)
-			for (int i = 0; i < 3; ++i)
-				m[i][j] *= b.m[i][j];
-		return *this;
-	}
+	Mat3 &operator*=(const Mat3 &b);
 
 	float m[3][3];
 };
@@ -64,6 +59,7 @@ Mat3 operator+(const Mat3 &a, const Mat3 &b);
 Mat3 operator-(const Mat3 &a, const Mat3 &b);
 
 Mat3 operator*(const Mat3 &a, const float v);
+Mat3 operator/(const Mat3 &a, const float v);
 
 tVec2<float> operator*(const Mat3 &m, const tVec2<float> &v);
 Vec3 operator*(const Mat3 &m, const Vec3 &v);

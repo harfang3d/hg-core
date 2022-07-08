@@ -31,8 +31,8 @@ std::string slice(const std::string &str, ptrdiff_t from, ptrdiff_t count) {
 	return count > 0 ? str.substr(from, count) : "";
 }
 
-std::string left(const std::string &str, size_t count) { return slice(str, 0, count); }
-std::string right(const std::string &str, size_t count) { return slice(str, -(ptrdiff_t)count, 0); }
+std::string left(const std::string &str, ptrdiff_t count) { return slice(str, 0, count); }
+std::string right(const std::string &str, ptrdiff_t count) { return slice(str, -count, 0); }
 
 size_t replace_all(std::string &value, const std::string &what, const std::string &by) {
 	size_t what_len = what.length(), by_len = by.length();
@@ -61,13 +61,16 @@ std::vector<std::string> split(const std::string &value, const std::string &sepa
 		i = value.find(separator, i);
 
 		if (i == std::string::npos) {
-			std::string v = value.substr(s);
-			if (!v.empty())
+			std::string element = value.substr(s);
+			if (!element.empty()) {
+				if (trim_length)
+					replace_all(element, trim, "");
 #if __cplusplus >= 201103L
-				elements.push_back(std::move(v));
+				elements.push_back(std::move(element));
 #else
-				elements.push_back(v);
+				elements.push_back(element);
 #endif
+			}
 			break;
 		} else {
 			std::string element(value.substr(s, i - s));
@@ -89,20 +92,9 @@ std::vector<std::string> split(const std::string &value, const std::string &sepa
 	return elements;
 }
 
-std::string trim(const std::string &str, const std::string &pattern) {
-	const size_t str_begin = str.find_first_not_of(pattern);
-	if (str_begin == std::string::npos)
-		return ""; // no content
-
-	const size_t str_end = str.find_last_not_of(pattern);
-	const size_t str_range = str_end - str_begin + 1;
-
-	return str.substr(str_begin, str_range);
-}
-
 std::string reduce(const std::string &str, const std::string &fill, const std::string &pattern) {
 	// trim first
-	std::string result = trim(str, pattern);
+	std::string result = strip(str, pattern);
 
 	// replace sub ranges
 	size_t begin_space = result.find_first_of(pattern);

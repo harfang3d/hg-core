@@ -29,11 +29,13 @@ template <class T> constexpr T inline Clamp(const T &v, const T &min, const T &m
 template <class T> constexpr T inline Lerp(const T &a, const T &b, float k) { return T(a * (1.f - k) + b * k); }
 
 template <class T> T inline Wrap(T v, T range_start, T range_end) {
-	const T dt = range_end - range_start + 1;
+	const T start = Min(range_start, range_end);
+	const T end = Max(range_start, range_end);
+	const T dt = end - start;
 
-	while (v < range_start)
+	while (v < start)
 		v += dt;
-	while (v > range_end)
+	while (v > end)
 		v -= dt;
 
 	return v;
