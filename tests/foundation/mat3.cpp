@@ -7,6 +7,7 @@
 #include "foundation/matrix3.h"
 
 #include "foundation/math.h"
+#include "foundation/unit.h"
 #include "foundation/vector2.h"
 #include "foundation/vector3.h"
 #include "foundation/vector4.h"
@@ -219,10 +220,51 @@ void test_mat3() {
 		TEST_CHECK(TestEqual(v.z, -3.3f));
 		TEST_CHECK(TestEqual(v.w, 6.0f));
 	}
-
-// void TransformVec2(const Mat3 &__restrict m, tVec2<float> *__restrict out, const tVec2<float> *__restrict in, int count = 1);
-// void TransformVec3(const Mat3 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, int count = 1);
-// void TransformVec4(const Mat3 &__restrict m, Vec4 *__restrict out, const Vec4 *__restrict in, int count = 1);
+	{
+		const Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		Vec2 u[4] = {
+			Vec2(1.f, 0.f),
+			Vec2(0.f, 1.f),
+			Vec2(1.f, -1.f),
+			Vec2(0.2f, 0.3f),
+		};
+		Vec2 v[4];
+		TransformVec2(m, v, u, 4);
+		TEST_CHECK(v[0] == Vec2(8.f, 10.f));
+		TEST_CHECK(v[1] == Vec2(11.f, 13.f));
+		TEST_CHECK(v[2] == Vec2(4.f, 5.f));
+		TEST_CHECK(v[3] == Vec2(8.4f, 9.9f));
+	}
+	{
+		const Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		Vec3 u[4] = {
+			Vec3(1.f, 0.5f, 0.f),
+			Vec3(0.f, 1.f, 1.f),
+			Vec3(1.f, -1.f, -1.f),
+			Vec3(0.2f, 0.3f, 0.4f),
+		};
+		Vec3 v[4];
+		TransformVec3(m, v, u, 4);
+		TEST_CHECK(v[0] == Vec3(3.f, 4.5, 6.f));
+		TEST_CHECK(v[1] == Vec3(11.f, 13.f, 15.f));
+		TEST_CHECK(v[2] == Vec3(-10.f, -11.f, -12.f));
+		TEST_CHECK(v[3] == Vec3(4.2f, 5.1f, 6.f));
+	}
+	{
+		const Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		Vec4 u[4] = {
+			Vec4(0.f, 1.1f, 0.5f, 1.f),
+			Vec4(0.f, 1.f,-1.f, 2.f),
+			Vec4(-1.f, 1.f, -1.f, 0.f),
+			Vec4(4.f, 1.f, 2.f, 0.5f),
+		};
+		Vec4 v[4];
+		TransformVec4(m, v, u, 4);
+		TEST_CHECK(v[0] == Vec4(7.9f, 9.5f, 11.1f, 1.f));
+		TEST_CHECK(v[1] == Vec4(-3.f, -3.f, -3.f, 2.f));
+		TEST_CHECK(v[2] == Vec4(-4.f, -5.f, -6.f, 0.f));
+		TEST_CHECK(v[3] == Vec4(22.f, 29.f, 36.f, 0.5f));
+	}
 	{
 		const Mat3 m0(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
 		const Mat3 m1(7.f, 5.f, 6.f, 4.f, 2.f, 9.f, 1.f, 8.f, 3.f);
@@ -283,11 +325,38 @@ void test_mat3() {
 			TEST_CHECK(TestEqual(w0.z, w1.z));
 		}	
 	}
-// Mat3 RotationMat2D(float angle, const tVec2<float> &pivot);
-// Mat3 RotationMat3(float x = 0, float y = 0, float z = 0, RotationOrder order = RO_Default);
-// Mat3 RotationMat3(const Vec3 &euler, RotationOrder order = RO_Default);
-// Mat3 Mat3LookAt(const Vec3 &front);
-// Mat3 Mat3LookAt(const Vec3 &front, const Vec3 &up);
+	{
+		TEST_CHECK(RotationMat3(-30.f, 120.f, -45.f, RO_ZYX) == RotationMatZYX(-30.f, 120.f, -45.f));
+		TEST_CHECK(RotationMat3(-30.f, 120.f, -45.f, RO_YZX) == RotationMatYZX(-30.f, 120.f, -45.f));
+		TEST_CHECK(RotationMat3(-30.f, 120.f, -45.f, RO_ZXY) == RotationMatZXY(-30.f, 120.f, -45.f));
+		TEST_CHECK(RotationMat3(-30.f, 120.f, -45.f, RO_XZY) == RotationMatXZY(-30.f, 120.f, -45.f));
+		TEST_CHECK(RotationMat3(-30.f, 120.f, -45.f, RO_YXZ) == RotationMatYXZ(-30.f, 120.f, -45.f));
+		TEST_CHECK(RotationMat3(-30.f, 120.f, -45.f, RO_XYZ) == RotationMatXYZ(-30.f, 120.f, -45.f));
+	}
+	{
+		const Vec3 u = Deg3(30.f, -120.f, 45.f);
+		TEST_CHECK(RotationMat3(u, RO_ZYX) == RotationMatZYX(u.x, u.y, u.z));
+		TEST_CHECK(RotationMat3(u, RO_YZX) == RotationMatYZX(u.x, u.y, u.z));
+		TEST_CHECK(RotationMat3(u, RO_ZXY) == RotationMatZXY(u.x, u.y, u.z));
+		TEST_CHECK(RotationMat3(u, RO_XZY) == RotationMatXZY(u.x, u.y, u.z));
+		TEST_CHECK(RotationMat3(u, RO_YXZ) == RotationMatYXZ(u.x, u.y, u.z));
+		TEST_CHECK(RotationMat3(u, RO_XYZ) == RotationMatXYZ(u.x, u.y, u.z));
+	}
+	TEST_CHECK(AlmostEqual(RotationMat2D(Pi / 2.f, Vec2(-1.f, -2.f)) * Vec3(1.f, 2.f, 1.f), Vec3(-5.f, 0.f, 1.f), 0.000001f));
+	{ 
+		const Vec3 p = Vec3(1.5f, 2.3f, 10.f);
+		Mat3 m = Mat3LookAt(p);
+		Vec3 i = GetX(m), j = GetY(m), k = GetZ(m);
+		TEST_CHECK(AlmostEqual(Normalize(p), k, 0.000001f));
+		TEST_CHECK(TestEqual(Dot(i, j), 0.f));
+		TEST_CHECK(TestEqual(Dot(j, k), 0.f));
+		TEST_CHECK(TestEqual(Dot(k, i), 0.f));
+	}
+	{
+		TEST_CHECK(Mat3LookAt(Vec3(0.f, 0.f, 1.f), Vec3(0.f, 1.f, 0.f)) == Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f));
+		TEST_CHECK(Mat3LookAt(Vec3(0.f, 0.f, 1.f), Vec3(1.f, 0.f, 0.f)) == Mat3(0.f,-1.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f));
+		TEST_CHECK(Mat3LookAt(Vec3(1.f, 0.f, 0.f), Vec3(0.f, 0.f, 1.f)) == Mat3(0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f));
+	}
 	{
 		Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
 		Vec3 u = GetRow(m, 0);
@@ -517,13 +586,93 @@ void test_mat3() {
 		TEST_CHECK(TestEqual(w.y, 10.8f));
 		TEST_CHECK(TestEqual(w.z, 20.9f));
 	}
-// Vec3 GetTranslation(const Mat3 &m);
-// Vec3 GetScale(const Mat3 &m);
-// void SetTranslation(Mat3 &m, const tVec2<float> &T);
-// void SetTranslation(Mat3 &m, const Vec3 &T);
-// void SetScale(Mat3 &m, const Vec3 &S);
-// void SetAxises(Mat3 &m, const Vec3 &x, const Vec3 &y, const Vec3 &z);
-// Mat3 Orthonormalize(const Mat3 &m);
-// Mat3 Normalize(const Mat3 &m);
-// Vec3 ToEuler(const Mat3 &m, RotationOrder order = RO_Default);
+	TEST_CHECK(GetTranslation(Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, -1.f, 2.f, 3.f)) == Vec3(-1.f, 2.f, 0.f));
+	{ 
+		const float u = 2.f * sqrt(2.f);
+		Mat3 m(u, 0.f, -u, 2.f, u, 2.f, 2.f, -u, 2.f); // rotY(Pi/4) * rotX(Pi/4) * scale(4)
+		Vec3 s = GetScale(m);
+		TEST_CHECK(AlmostEqual(s, Vec3(4.f), 0.000001f));
+	}
+	{ 
+		Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		SetTranslation(m, Vec2(-1.f, 0.5f));
+		TEST_CHECK(m.m[0][0] == 1.f);
+		TEST_CHECK(m.m[1][0] == 2.f);
+		TEST_CHECK(m.m[2][0] == 3.f);
+		TEST_CHECK(m.m[0][1] == 4.f);
+		TEST_CHECK(m.m[1][1] == 5.f);
+		TEST_CHECK(m.m[2][1] == 6.f);
+		TEST_CHECK(m.m[0][2] == -1.f);
+		TEST_CHECK(m.m[1][2] == 0.5f);
+		TEST_CHECK(m.m[2][2] == 9.f);
+	}
+	{
+		Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		SetTranslation(m, Vec3(-1.25f, 11.75f, -99.f));
+		TEST_CHECK(m.m[0][0] == 1.f);
+		TEST_CHECK(m.m[1][0] == 2.f);
+		TEST_CHECK(m.m[2][0] == 3.f);
+		TEST_CHECK(m.m[0][1] == 4.f);
+		TEST_CHECK(m.m[1][1] == 5.f);
+		TEST_CHECK(m.m[2][1] == 6.f);
+		TEST_CHECK(m.m[0][2] == -1.25f);
+		TEST_CHECK(m.m[1][2] == 11.75f);
+		TEST_CHECK(m.m[2][2] == 9.f);
+	}
+	{
+		const float v = sqrt(2.f);
+		const float u = 2.f * v;
+		const float w = v / 2.f;
+		const Vec3 s0(1.f, 0.5f, 0.25f);
+		const Mat3 n(w, 0.f, -w, 0.25f, w/2.f, 0.25f, 0.125f, -w/4.f, 0.125f); //  rotY(Pi/4) * rotX(Pi/4) * scale(s0)
+		Mat3 m(u, 0.f, -u, 2.f, u, 2.f, 2.f, -u, 2.f); // rotY(Pi/4) * rotX(Pi/4) * scale(4)
+		SetScale(m, s0);
+		Vec3 s1 = GetScale(m);
+		Vec3 s2 = GetScale(n);
+		TEST_CHECK(AlmostEqual(s0, s1, 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+	}
+	{
+		Mat3 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		SetAxises(m, Vec3(-0.1f, -0.2f, -0.3f), Vec3(-1.1f, -2.2f, -3.3f), Vec3(-11.f, -22.f, -33.f));
+		TEST_CHECK(m.m[0][0] == -0.1f);
+		TEST_CHECK(m.m[1][0] == -0.2f);
+		TEST_CHECK(m.m[2][0] == -0.3f);
+		TEST_CHECK(m.m[0][1] == -1.1f);
+		TEST_CHECK(m.m[1][1] == -2.2f);
+		TEST_CHECK(m.m[2][1] == -3.3f);
+		TEST_CHECK(m.m[0][2] == -11.f);
+		TEST_CHECK(m.m[1][2] == -22.f);
+		TEST_CHECK(m.m[2][2] == -33.f);
+	}
+	{ 
+		Mat3 m = Orthonormalize(Mat3(8.f, 8.f, 6.f, 1.f, 1.f, 0.f, 8.f, 4.f, 5.f));
+		Vec3 i = GetX(m), j = GetY(m), k = GetZ(m);
+		TEST_CHECK(TestEqual(Dot(i, j), 0.f));
+		TEST_CHECK(TestEqual(Dot(j, k), 0.f));
+		TEST_CHECK(TestEqual(Dot(k, i), 0.f));
+		TEST_CHECK(TestEqual(Len2(i), 1.f));
+		TEST_CHECK(TestEqual(Len2(j), 1.f));
+		TEST_CHECK(TestEqual(Len2(k), 1.f));
+
+	}
+	{
+		Mat3 m = Normalize(Mat3(8.f, 8.f, 6.f, 1.f, 1.f, 0.f, 8.f, 4.f, 5.f));
+		TEST_CHECK(TestEqual(Len2(GetX(m)), 1.f));
+		TEST_CHECK(TestEqual(Len2(GetY(m)), 1.f));
+		TEST_CHECK(TestEqual(Len2(GetZ(m)), 1.f));
+	}
+	{
+		const Vec3 u = Deg3(30.f, 45.f, 60.f);
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u)), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_ZYX), RO_ZYX), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_YZX), RO_YZX), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_ZXY), RO_ZXY), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_XZY), RO_XZY), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_YXZ), RO_YXZ), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_XYZ), RO_XYZ), 0.000001f));
+		TEST_CHECK(AlmostEqual(u, ToEuler(RotationMat3(u, RO_XY), RO_XY), 0.000001f));
+	}
 }
