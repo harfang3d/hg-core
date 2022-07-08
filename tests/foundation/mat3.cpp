@@ -291,13 +291,58 @@ void test_mat3() {
 		TEST_CHECK(RotationMatY(Pi / 3.f) == ry);
 		TEST_CHECK(RotationMatZ(Pi / 3.f) == rz);
     }
-// Mat3 RotationMatXZY(float x, float y, float z);
-// Mat3 RotationMatZYX(float x, float y, float z);
-// Mat3 RotationMatXYZ(float x, float y, float z);
-// Mat3 RotationMatZXY(float x, float y, float z);
-// Mat3 RotationMatYZX(float x, float y, float z);
-// Mat3 RotationMatYXZ(float x, float y, float z);
-// Mat3 RotationMatXY(float x, float y);
+	{ 
+		const hg::Vec3 r = Deg3(30.f, 45.f, -60.f);
+		{
+			Mat3 m = RotationMatXZY(r.x, r.y, r.z);
+			Mat3 n = RotationMatX(r.x) * RotationMatZ(r.z) * RotationMatY(r.y);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+		{
+			Mat3 m = RotationMatZYX(r.x, r.y, r.z);
+			Mat3 n = RotationMatZ(r.z) * RotationMatY(r.y) * RotationMatX(r.x);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+		{
+			Mat3 m = RotationMatXYZ(r.x, r.y, r.z);
+			Mat3 n = RotationMatX(r.x) * RotationMatY(r.y) * RotationMatZ(r.z);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+		{
+			Mat3 m = RotationMatZXY(r.x, r.y, r.z);
+			Mat3 n = RotationMatZ(r.z) * RotationMatX(r.x) * RotationMatY(r.y);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+		{
+			Mat3 m = RotationMatYZX(r.x, r.y, r.z);
+			Mat3 n = RotationMatY(r.y) * RotationMatZ(r.z) * RotationMatX(r.x);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+		{
+			Mat3 m = RotationMatYZX(r.x, r.y, r.z);
+			Mat3 n = RotationMatY(r.y) * RotationMatZ(r.z) * RotationMatX(r.x);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+		{
+			Mat3 m = RotationMatXY(r.x, r.y);
+			Mat3 n = RotationMatX(r.x) * RotationMatY(r.y);
+			TEST_CHECK(AlmostEqual(GetRow(m, 0), GetRow(n, 0), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 1), GetRow(n, 1), 0.000001f));
+			TEST_CHECK(AlmostEqual(GetRow(m, 2), GetRow(n, 2), 0.000001f));
+		}
+	}
 	TEST_CHECK(VectorMat3(Vec3(1.f, -2.f, -3.f)) == Mat3(1.f, 0.f, 0.f, -2.f, 0.f, 0.f, -3.f, 0.f, 0.f));
 	TEST_CHECK(TranslationMat3(Vec2(2.f, -3.f)) == Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 2.f, -3.f, 1.f));
 	TEST_CHECK(TranslationMat3(Vec3(-1.f, 2.f, -5.f)) == Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, -1.f, 2.f, 1.f));
