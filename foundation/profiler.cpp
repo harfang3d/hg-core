@@ -161,7 +161,7 @@ void PrintProfilerFrame(const ProfilerFrame &frame) {
 		time_ns total = 0;
 
 		for (std::vector<size_t>::const_iterator j = i->section_indexes.begin(); j != i->section_indexes.end(); ++j) {
-			const Section &section = sections[*j];
+			const ProfilerFrame::Section &section = frame.sections[*j];
 			total += section.end - section.start;
 		}
 

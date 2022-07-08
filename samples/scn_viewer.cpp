@@ -2,6 +2,8 @@
 
 #include <fmt/format.h>
 
+#include "foundation/profiler.h"
+
 #include "engine/assets.h"
 #include "engine/scene.h"
 
@@ -26,6 +28,8 @@ int main(int narg, const char **args) {
 
 	LoadSceneContext ctx;
 	LoadSceneJsonFromAssets(args[2], scene, resources, info, ctx);
+
+	PrintProfilerFrame(EndProfilerFrame());
 
 	return 0;
 }

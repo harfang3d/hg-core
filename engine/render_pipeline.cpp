@@ -12,9 +12,11 @@
 #include "foundation/matrix44.h"
 #include "foundation/path_tools.h"
 #include "foundation/projection.h"
+#include "foundation/profiler.h"
 #include "foundation/time.h"
 
 #include <rapidjson/document.h>
+#include <fmt/format.h>
 #include <set>
 
 #define SOKOL_GFX_IMPL
@@ -298,6 +300,224 @@ TextureRef SkipLoadOrQueueTextureLoad(
 	return ref;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, ModelInfo *info, bool silent) {
+	ProfilerPerfSection section("LoadModel", name);
+
+	const auto t = time_now();
+
+	if (!ir.is_valid(h)) {
+		if (!silent)
+			warn(fmt::format("Cannot load model '{}', invalid file handle", name));
+		return Model();
+	}
+
+	if (Read<uint32_t>(ir, h) != HarfangMagic) {
+		if (!silent)
+			warn(fmt::format("Cannot load model '{}', invalid magic marker", name));
+		return Model();
+	}
+
+	if (Read<uint8_t>(ir, h) != ModelMarker) {
+		if (!silent)
+			warn(fmt::format("Cannot load model '{}', invalid file marker", name));
+		return Model();
+	}
+
+	const uint8_t version = Read<uint8_t>(ir, h);
+
+	if (version > 2) {
+		if (!silent)
+			warn(fmt::format("Cannot load model '{}', unsupported version {}", name, version));
+		return Model();
+	}
+
+	Model model;
+
+//	bgfx::VertexLayout vs_decl;
+//	ir.read(h, &vs_decl, sizeof(bgfx::VertexLayout)); // read vertex declaration
+
+	uint32_t tri_count = 0;
+
+	while (true) {
+		uint8_t idx_type_size = 2; // legacy is 16 bit indices
+		if (version > 1) {
+			Read(ir, h, idx_type_size); // idx type size in bytes
+
+			if (idx_type_size == 0)
+				break; // EOLists
+
+			//__ASSERT_MSG__(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
+		}
+
+		// index buffer
+		uint32_t size = Read<uint32_t>(ir, h);
+
+		if (version < 2)
+			if (size == 0)
+				break; // EOLists
+
+#if 0
+		const auto idx_mem = bgfx::alloc(size);
+		ir.read(h, idx_mem->data, idx_mem->size);
+		tri_count += (size / idx_type_size) / 3;
+
+		const auto idx_hnd = bgfx::createIndexBuffer(idx_mem, idx_type_size == 4 ? BGFX_BUFFER_INDEX32 : BGFX_BUFFER_NONE);
+		if (!bgfx::isValid(idx_hnd)) {
+			warn(format("%1: failed to create index buffer").arg(name));
+			break;
+		}
+
+		bgfx::setName(idx_hnd, name);
+		
+		// vertex buffer
+		size = Read<uint32_t>(ir, h);
+		const auto vtx_mem = bgfx::alloc(size);
+		ir.read(h, vtx_mem->data, vtx_mem->size);
+
+		const auto vtx_hnd = bgfx::createVertexBuffer(vtx_mem, vs_decl);
+		if (!bgfx::isValid(vtx_hnd)) {
+			warn(format("%1: failed to create vertex buffer").arg(name));
+			bgfx::destroy(idx_hnd);
+			break;
+		}
+		bgfx::setName(vtx_hnd, name);
+
+		// bones table
+		size = Read<uint32_t>(ir, h);
+		std::vector<uint16_t> bones_table;
+		bones_table.resize(size);
+		ir.read(h, bones_table.data(), bones_table.size() * sizeof(bones_table[0]));
+
+		//
+		model.lists.push_back({idx_hnd, vtx_hnd, std::move(bones_table)});
+		model.bounds.push_back(Read<MinMax>(ir, h));
+		model.mats.push_back(Read<uint16_t>(ir, h));
+#endif
+	}
+
+	if (info) {
+//		info->vs_decl = vs_decl;
+		info->tri_count = tri_count;
+	}
+
+	if (version > 0) { // version 1: add bind poses
+		const uint32_t bone_count = Read<uint32_t>(ir, h);
+
+		model.bind_pose.resize(bone_count);
+		for (uint32_t j = 0; j < bone_count; ++j)
+			Read(ir, h, model.bind_pose[j]);
+	}
+
+	if (!silent)
+		log(fmt::format("Load model '{}' ({} triangles, {} lists), took {} ms", name, tri_count, model.lists.size(), time_to_ms(time_now() - t)));
+
+	return model;
+}
+
+Model LoadModelFromFile(const std::string &path, ModelInfo *info, bool silent) {
+	return LoadModel(g_file_reader, ScopedReadHandle(g_file_read_provider, path, silent), path, info, silent);
+}
+
+Model LoadModelFromAssets(const std::string &name, ModelInfo *info, bool silent) {
+	return LoadModel(g_assets_reader, ScopedReadHandle(g_assets_read_provider, name, silent), name, info, silent);
+}
+
+//
+ModelRef LoadModel(const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool silent) {
+	ModelRef ref = resources.models.Has(path);
+	if (ref == InvalidModelRef) {
+		Model mdl = LoadModel(ir, ScopedReadHandle(ip, path), path, nullptr, silent);
+		ref = resources.models.Add(path, mdl);
+	}
+	return ref;
+}
+
+ModelRef LoadModelFromFile(const std::string &path, PipelineResources &resources, bool silent) {
+	return LoadModel(g_file_reader, g_file_read_provider, path, resources, silent);
+}
+
+ModelRef LoadModelFromAssets(const std::string &path, PipelineResources &resources, bool silent) {
+	return LoadModel(g_assets_reader, g_assets_read_provider, path, resources, silent);
+}
+
+//
+size_t ProcessModelLoadQueue(PipelineResources &res, time_ns t_budget, bool silent) {
+	ProfilerPerfSection section("ProcessModelLoadQueue");
+
+	size_t processed = 0;
+
+	const time_ns t_start = time_now();
+
+	while (!res.model_loads.empty()) {
+		const ModelLoad &load = res.model_loads.front();
+
+		if (res.models.IsValidRef(load.ref)) {
+			Model &mdl = res.models.Get(load.ref);
+			const std::string name = res.models.GetName(load.ref);
+			if (!silent)
+				debug(fmt::format("Queued model load '{}'", name));
+
+			ModelInfo info;
+			ScopedReadHandle h(load.ip, name, silent);
+//			mdl = LoadModel(load.ir, h, name, &info, silent);
+			res.model_infos[load.ref.ref] = info;
+		}
+
+		res.model_loads.pop_front();
+
+		++processed;
+
+		const time_ns elapsed = time_now() - t_start;
+		if (elapsed >= t_budget)
+			break;
+	}
+
+	return processed;
+}
+
+ModelRef QueueLoadModel(const Reader &ir, const ReadProvider &ip, const std::string &name, PipelineResources &resources) {
+	ModelRef ref = resources.models.Has(name);
+	if (ref != InvalidModelRef)
+		return ref;
+
+	ref = resources.models.Add(name, Model());
+
+	ModelLoad load;
+	load.ip = ip;
+	load.ir = ir;
+	load.ref = ref;
+	resources.model_loads.push_back(load);
+
+	return ref;
+}
+
+ModelRef QueueLoadModelFromFile(const std::string &path, PipelineResources &resources) { return QueueLoadModel(g_file_reader, g_file_read_provider, path, resources); }
+
+ModelRef QueueLoadModelFromAssets(const std::string &name, PipelineResources &resources) {
+	return QueueLoadModel(g_assets_reader, g_assets_read_provider, name, resources);
+}
+
+
 ModelRef SkipLoadOrQueueModelLoad(
 	const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool queue_load, bool do_not_load, bool silent) {
 	if (do_not_load)
@@ -305,15 +525,12 @@ ModelRef SkipLoadOrQueueModelLoad(
 
 	ModelRef ref = resources.models.Has(path);
 
-/*
 	if (ref == InvalidModelRef) {
 		if (queue_load)
 			ref = QueueLoadModel(ir, ip, path, resources);
 		else
 			ref = LoadModel(ir, ip, path, resources, silent);
 	}
-*/
-
 	return ref;
 }
 
