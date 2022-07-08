@@ -8,7 +8,8 @@ if(UNIX OR MSYS AND NOT APPLE AND NOT EMSCRIPTEN)
 	find_package(OpenGL)
 
 	if(OPENGL_FOUND)
-		target_link_libraries(test_render_pipeline PUBLIC OpenGL::GL)
+		target_link_libraries(geo_viewer PUBLIC OpenGL::GL)
+		target_link_libraries(scn_viewer PUBLIC OpenGL::GL)
 	else()
 		find_package(OpenGLES3)
 
