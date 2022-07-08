@@ -59,6 +59,7 @@ Mat3 operator+(const Mat3 &a, const Mat3 &b);
 Mat3 operator-(const Mat3 &a, const Mat3 &b);
 
 Mat3 operator*(const Mat3 &a, const float v);
+Mat3 operator/(const Mat3 &a, const float v);
 
 tVec2<float> operator*(const Mat3 &m, const tVec2<float> &v);
 Vec3 operator*(const Mat3 &m, const Vec3 &v);

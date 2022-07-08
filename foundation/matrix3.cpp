@@ -45,8 +45,7 @@ bool Inverse(const Mat3 &m, Mat3 &i) {
 
 //
 Mat3 VectorMat3(const Vec3 &v) { return Mat3(v.x, 0, 0, v.y, 0, 0, v.z, 0, 0); }
-Mat3 CrossProductMat3(const Vec3 &v) { return Mat3(0, -v.z, v.y, v.z, 0, -v.x, -v.y, v.x, 0); }
-
+Mat3 CrossProductMat3(const Vec3 &v) { return Mat3(0, v.z, -v.y, -v.z, 0, v.x, v.y, -v.x, 0); }
 //
 Mat3 Normalize(const Mat3 &m) { return Mat3(Normalize(GetColumn(m, 0)), Normalize(GetColumn(m, 1)), Normalize(GetColumn(m, 2))); }
 
@@ -411,6 +410,14 @@ Mat3 operator*(const Mat3 &m, const float v) {
 	for (int j = 0; j < 3; ++j)
 		for (int i = 0; i < 3; ++i)
 			r.m[i][j] = m.m[i][j] * v;
+	return r;
+}
+
+Mat3 operator/(const Mat3 &m, const float v) {
+	Mat3 r;
+	for (int j = 0; j < 3; ++j)
+		for (int i = 0; i < 3; ++i)
+			r.m[i][j] = m.m[i][j] / v;
 	return r;
 }
 

@@ -276,18 +276,68 @@ void test_vec3() {
 		TEST_CHECK(TestEqual(v.y, TwoPi / 3.f));
 		TEST_CHECK(TestEqual(v.z, Pi));
 	}
+	{
+		Vec3 u(4.f, -2.f, 0.5f);
+		Vec3 v = Clamp(u, -1.f, 1.f);
+		TEST_CHECK(TestEqual(v.x, 1.0f));
+		TEST_CHECK(TestEqual(v.y, -1.0f));
+		TEST_CHECK(TestEqual(v.z, 0.5f));
+	}
+	{
+		Vec3 u = Clamp(Vec3(-0.75f, 0.5f, 2.1f), Vec3(-1.f, -1.f, 1.5f), Vec3(-0.5f, 1.f, 3.f));
+		TEST_CHECK(TestEqual(u.x, -0.75f));
+		TEST_CHECK(TestEqual(u.y, 0.5f));
+		TEST_CHECK(TestEqual(u.z, 2.1f));
 
-// Vec3 Clamp(const Vec3 &v, float min, float max);
-// Vec3 Clamp(const Vec3 &v, const Vec3 &min, const Vec3 &max);
-// Vec3 ClampLen(const Vec3 &v, float min, float max);
-// Vec3 Abs(const Vec3 &v);
-// Vec3 Sign(const Vec3 &v);
-// Vec3 Reflect(const Vec3 &v, const Vec3 &n);
+		Vec3 v = Clamp(Vec3(-3.f, 4.f, 1.5f), Vec3(-1.f, -1.f, 2.f), Vec3(-0.5f, 1.f, 3.f));
+		TEST_CHECK(TestEqual(v.x, -1.0f));
+		TEST_CHECK(TestEqual(v.y, 1.0f));
+		TEST_CHECK(TestEqual(v.z, 2.0f));
+	}
+	{
+		TEST_CHECK(TestEqual(Len(ClampLen(Vec3(1.f, -1.f, 1.f), 0.5f, 1.f)), 1.f));
+		TEST_CHECK(TestEqual(Len(ClampLen(Vec3(0.2f, -0.1f, 0.2f), 1.2f, 2.f)), 1.2f));
+		TEST_CHECK(TestEqual(Len(ClampLen(Vec3(-3.0f, 4.0f, -12.0f), 2.0f, 20.0f)), 13.f));
+	}
+	TEST_CHECK(Abs(Vec3(-0.1f, 0.4f, -2.1f)) == Vec3(0.1f, 0.4f, 2.1f));
+	{
+		TEST_CHECK(Sign(Vec3(-0.1f, 0.4f, -2.1f)) == Vec3(-1.0f, 1.0f, -1.0f));
+		TEST_CHECK(Sign(Vec3(0.0f, -0.0f, 1.0f)) == Vec3(1.0f, -1.0f, 1.0f));
+	}
+	{
+		{
+			const Vec3 u = Vec3(1.0f, -2.0f, 0.5f);
+			const Vec3 v = Vec3(1.0f, 1.0f, 0.0f);
+			Vec3 w = Reflect(u, v);
+			TEST_CHECK(TestEqual(w.x, 2.0f));
+			TEST_CHECK(TestEqual(w.y, -1.0f));
+			TEST_CHECK(TestEqual(w.z, 0.5));
+		}
+		{
+			const Vec3 u = Vec3(1.0f,-2.f, -1.0f);
+			const Vec3 v = Vec3(1.0f, 1.0f, 1.0f);
+			Vec3 w = Reflect(u, v);
+			TEST_CHECK(TestEqual(w.x, 7.0f / 3.0f));
+			TEST_CHECK(TestEqual(w.y, -2.0f / 3.f));
+			TEST_CHECK(TestEqual(w.z, 1.0f / 3.0f));
+		}
+	}
+	TEST_CHECK(Floor(Vec3(-0.1f, 1.7f, 2.0f)) == Vec3(-1.0f, 1.0f, 2.0f));
+	TEST_CHECK(Ceil(Vec3(-3.2f, 1.0f, 4.1f)) == Vec3(-3.0f, 1.0f, 5.0f));
+	{ 
+		Vec3 u(2.0f, 1.0f, -0.5f);
+		Vec3 v = FaceForward(u, Vec3(1.0f, -1.0f, 1.0f));
+		TEST_CHECK(v.x == -u.x);
+		TEST_CHECK(v.y == -u.y);
+		TEST_CHECK(v.z == -u.z);
+
+		v = FaceForward(u, Vec3(-1.0f, -1.0f, -1.0f));
+		TEST_CHECK(v.x == u.x);
+		TEST_CHECK(v.y == u.y);
+		TEST_CHECK(v.z == u.z);
+	}
+	TEST_CHECK(MakeVec3(Vec4(1.0f, -1.0f, 2.0f, 3.0f)) == Vec3(1.0f, -1.0f, 2.0f));
 // Vec3 Refract(const Vec3 &v, const Vec3 &n, float k_in = 1.f, float k_out = 1.f);
-// Vec3 Floor(const Vec3 &v);
-// Vec3 Ceil(const Vec3 &v);
-// Vec3 FaceForward(const Vec3 &v, const Vec3 &d);
-// Vec3 MakeVec3(const Vec4 &v);
 // Vec3 Quantize(const Vec3 &v, float qx, float qy, float qz);
 // Vec3 Quantize(const Vec3 &v, float q);
 // Vec3 BaseToEuler(const Vec3 &u);

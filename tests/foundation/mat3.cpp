@@ -223,12 +223,32 @@ void test_mat3() {
 // void TransformVec2(const Mat3 &__restrict m, tVec2<float> *__restrict out, const tVec2<float> *__restrict in, int count = 1);
 // void TransformVec3(const Mat3 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, int count = 1);
 // void TransformVec4(const Mat3 &__restrict m, Vec4 *__restrict out, const Vec4 *__restrict in, int count = 1);
-// float Det(const Mat3 &m);
-// bool Inverse(const Mat3 &m, Mat3 &i);
-// Mat3 Transpose(const Mat3 &m);
-// Mat3 RotationMatX(float angle);
-// Mat3 RotationMatY(float angle);
-// Mat3 RotationMatZ(float angle);
+	{
+		const Mat3 m0(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		const Mat3 m1(7.f, 5.f, 6.f, 4.f, 2.f, 9.f, 1.f, 8.f, 3.f);
+		TEST_CHECK(Det(m0) == 0.f);
+		TEST_CHECK(Det(m1) == -297.f);
+	}
+	{
+		const Mat3 m0(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f);
+		const Mat3 m1(7.f, 5.f, 6.f, 4.f, 2.f, 9.f, 1.f, 8.f, 3.f);
+		const Mat3 n = Mat3(22.f, -11.f, -11.f, 1.f, -5.f, 13.f, -10.f, 17.f, 2.f) / 99.f;
+		Mat3 w;
+		TEST_CHECK(Inverse(m0, w) == false);
+		TEST_CHECK(Inverse(m1, w) == true);
+		TEST_CHECK(w == n);
+	}
+	TEST_CHECK(Transpose(Mat3(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f)) == Mat3(1.f, 4.f, 7.f, 2.f, 5.f, 8.f, 3.f, 6.f, 9.f));
+	{
+		const float cs = Cos(Pi / 3.f);
+		const float sn = Sin(Pi / 3.f);
+		const Mat3 rx(1.f, 0.f, 0.f, 0.f, cs, sn, 0.f, -sn, cs);
+		const Mat3 ry(cs, 0.f, -sn, 0.f, 1.f, 0.f, sn, 0.f, cs);
+		const Mat3 rz(cs, sn, 0.f, -sn, cs, 0.f, 0.f, 0.f, 1.f);
+		TEST_CHECK(RotationMatX(Pi / 3.f) == rx);
+		TEST_CHECK(RotationMatY(Pi / 3.f) == ry);
+		TEST_CHECK(RotationMatZ(Pi / 3.f) == rz);
+    }
 // Mat3 RotationMatXZY(float x, float y, float z);
 // Mat3 RotationMatZYX(float x, float y, float z);
 // Mat3 RotationMatXYZ(float x, float y, float z);
@@ -236,12 +256,33 @@ void test_mat3() {
 // Mat3 RotationMatYZX(float x, float y, float z);
 // Mat3 RotationMatYXZ(float x, float y, float z);
 // Mat3 RotationMatXY(float x, float y);
-// Mat3 VectorMat3(const Vec3 &v);
-// Mat3 TranslationMat3(const tVec2<float> &t);
-// Mat3 TranslationMat3(const Vec3 &t);
-// Mat3 ScaleMat3(const tVec2<float> &s);
-// Mat3 ScaleMat3(const Vec3 &s);
-// Mat3 CrossProductMat3(const Vec3 &v);
+	TEST_CHECK(VectorMat3(Vec3(1.f, -2.f, -3.f)) == Mat3(1.f, 0.f, 0.f, -2.f, 0.f, 0.f, -3.f, 0.f, 0.f));
+	TEST_CHECK(TranslationMat3(Vec2(2.f, -3.f)) == Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 2.f, -3.f, 1.f));
+	TEST_CHECK(TranslationMat3(Vec3(-1.f, 2.f, -5.f)) == Mat3(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, -1.f, 2.f, 1.f));
+	TEST_CHECK(ScaleMat3(Vec2(-2.f, 3.f)) == Mat3(-2.f, 0.f, 0.f, 0.f, 3.f, 0.f, 0.f, 0.f, 1.f));
+	TEST_CHECK(ScaleMat3(Vec3(0.5f, -1.f, -0.33f)) == Mat3(0.5f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f, 0.f, -0.33f));
+	{
+		{
+			const Vec3 u(2.02f, -1.5151f, 0.997f);
+			const Vec3 v(2.4042f, -0.67f, 0.789f);
+			Vec3 w0 = Cross(u, v);
+			Vec3 w1 = CrossProductMat3(u) * v;
+
+			TEST_CHECK(TestEqual(w0.x, w1.x));
+			TEST_CHECK(TestEqual(w0.y, w1.y));
+			TEST_CHECK(TestEqual(w0.z, w1.z));
+		}
+		{
+			const Vec3 u(-1.f, 1.f, 1.f);
+			const Vec3 v(1.f, -1.f, -1.f);
+			Vec3 w0 = Cross(u, v);
+			Vec3 w1 = CrossProductMat3(u) * v;
+
+			TEST_CHECK(TestEqual(w0.x, w1.x));
+			TEST_CHECK(TestEqual(w0.y, w1.y));
+			TEST_CHECK(TestEqual(w0.z, w1.z));
+		}	
+	}
 // Mat3 RotationMat2D(float angle, const tVec2<float> &pivot);
 // Mat3 RotationMat3(float x = 0, float y = 0, float z = 0, RotationOrder order = RO_Default);
 // Mat3 RotationMat3(const Vec3 &euler, RotationOrder order = RO_Default);
