@@ -49,13 +49,17 @@ public:
 
 	gen_ref first_ref() const {
 		const uint32_t idx = this->first();
-		gen_ref ref = {idx, idx == 0xffffffff ? 0xffffffff : generations[idx]};
+		gen_ref ref;
+		ref.idx = idx;
+		ref.gen = idx == 0xffffffff ? 0xffffffff : generations[idx];
 		return ref;
 	}
 
 	gen_ref next_ref(gen_ref ref) const {
 		const uint32_t idx = this->next(ref.idx);
-		gen_ref next_ref = {idx, idx == 0xffffffff ? 0xffffffff : generations[idx]};
+		gen_ref next_ref;
+		next_ref.idx = idx;
+		next_ref.gen = idx == 0xffffffff ? 0xffffffff : generations[idx];
 		return next_ref;
 	}
 
@@ -64,7 +68,9 @@ public:
 
 	gen_ref get_ref(uint32_t idx) const {
 		if (this->is_used(idx) && idx < generations.size()) {
-			gen_ref ref = {idx, generations[idx]};
+			gen_ref ref;
+			ref.idx = idx;
+			ref.gen = generations[idx];
 			return ref;
 		}
 		return invalid_gen_ref;

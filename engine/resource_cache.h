@@ -44,7 +44,12 @@ public:
 		if (i != name_to_ref.end())
 			return i->second;
 
-		R ref = {resources.add_ref(name, res)};
+		name_T nt;
+		nt.name = name;
+		nt.T_ = res;
+
+		R ref;
+		ref.ref = resources.add_ref(nt);
 		name_to_ref[name] = ref;
 		return ref;
 	}
@@ -78,7 +83,7 @@ public:
 	uint16_t GetValidatedRefIndex(R ref) const { return resources.is_valid(ref.ref) ? numeric_cast<uint16_t>(ref.ref.idx) : 0xffff; }
 
 	R Has(const std::string &name) const {
-		dict_iterator i = name_to_ref.find(name);
+		const_dict_iterator i = name_to_ref.find(name);
 		return i != name_to_ref.end() ? i->second : R();
 	}
 
@@ -129,6 +134,8 @@ public:
 	gen_ref first_ref() const { return resources.first_ref(); }
 	gen_ref next_ref(gen_ref ref) const { return resources.next_ref(ref); }
 
+#if 0
+
 #if __cplusplus >= 201103L
 	R Add(const std::string &name, T &&res) {
 		auto i = name_to_ref.find(name);
@@ -146,6 +153,8 @@ public:
 			resources[ref.ref.idx].T_ = std::move(res);
 		}
 	}
+#endif
+
 #endif
 
 private:

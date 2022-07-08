@@ -86,16 +86,16 @@ template <typename T> T CubicInterpolate(T y0, T y1, T y2, T y3, float t) {
 	bias: 0 is even, positive is towards first segment, negative towards the other
 */
 template <typename T> T HermiteInterpolate(T y0, T y1, T y2, T y3, float t, float tension, float bias) {
-	const T t2 = t * t;
-	const T t3 = t2 * t;
+	const float t2 = t * t;
+	const float t3 = t2 * t;
 	T t0 = (y1 - y0) * (1.f + bias) * (1.f - tension) / 2.f;
 	t0 += (y2 - y1) * (1.f - bias) * (1.f - tension) / 2.f;
 	T t1 = (y2 - y1) * (1.f + bias) * (1.f - tension) / 2.f;
 	t1 += (y3 - y2) * (1.f - bias) * (1.f - tension) / 2.f;
-	const T a0 = 2.f * t3 - 3 * t2 + 1.f;
-	const T a1 = t3 - 2.f * t2 + t;
-	const T a2 = t3 - t2;
-	const T a3 = -2.f * t3 + 3.f * t2;
+	const float a0 = 2.f * t3 - 3 * t2 + 1.f;
+	const float a1 = t3 - 2.f * t2 + t;
+	const float a2 = t3 - t2;
+	const float a3 = -2.f * t3 + 3.f * t2;
 	return y1 * a0 + t0 * a1 + t1 * a2 + y2 * a3;
 }
 

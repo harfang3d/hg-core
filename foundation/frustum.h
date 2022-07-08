@@ -13,8 +13,7 @@ struct Mat44;
 
 enum FrustumPlane { FP_Top, FP_Bottom, FP_Left, FP_Right, FP_Near, FP_Far, FP_Count };
 
-typedef std::array<Plane, FP_Count> Frustum;
-//typedef Plane Frustum[FP_Count]; // 96B
+typedef std::array<Plane, FP_Count> Frustum; // 96B
 
 Frustum MakeFrustum(const Mat44 &projection);
 Frustum MakeFrustum(const Mat44 &projection, const Mat4 &mtx);

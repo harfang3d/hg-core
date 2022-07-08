@@ -29,8 +29,8 @@ static generational_vector_list<FILE *> files;
 static FILE *_Open(const std::string &path, const std::string &mode, bool silent = false) {
 	FILE *file = nullptr;
 #if _WIN32
-	std::wstring wpath = utf8_to_wchar(path);
-	std::wstring wmode = utf8_to_wchar(mode);
+	const std::wstring wpath = utf8_to_wchar(path);
+	const std::wstring wmode = utf8_to_wchar(mode);
 
 	const errno_t err = _wfopen_s(&file, wpath.data(), wmode.data());
 

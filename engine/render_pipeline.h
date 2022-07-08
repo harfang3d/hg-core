@@ -19,8 +19,8 @@
 
 #include <deque>
 #include <functional>
-#include <json.h>
 #include <map>
+#include <rapidjson/document.h>
 #include <sokol_gfx.h>
 #include <string>
 #include <vector>
@@ -115,11 +115,11 @@ std::vector<bgfx::ShaderHandle> GetProgramShaders(bgfx::ProgramHandle prg_h);
 #endif
 
 //
-json::jobject LoadResourceMeta(const Reader &ir, const ReadProvider &ip, const std::string &name);
-json::jobject LoadResourceMetaFromFile(const std::string &path);
-json::jobject LoadResourceMetaFromAssets(const std::string &name);
+rapidjson::Value LoadResourceMeta(const Reader &ir, const ReadProvider &ip, const std::string &name);
+rapidjson::Value LoadResourceMetaFromFile(const std::string &path);
+rapidjson::Value LoadResourceMetaFromAssets(const std::string &name);
 
-bool SaveResourceMetaToFile(const std::string &path, const json::jobject &meta);
+bool SaveResourceMetaToFile(const std::string &path, const rapidjson::Value &meta);
 
 //
 struct PipelineInfo {
@@ -203,25 +203,9 @@ private:
 
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
 
-struct DisplayList {
-	size_t element_count;
-	sg_buffer index_buffer;
-	sg_buffer vertex_buffer;
-	std::vector<uint16_t> bones_table;
-};
-
-struct Model { // 96B (+heap)
-	std::vector<MinMax> bounds; // minmax/list
-	std::vector<DisplayList> lists;
-	std::vector<uint16_t> mats; // material/list
-	std::vector<Mat4> bind_pose; // bind pose matrices
-};
-
 //
 sg_buffer MakeIndexBuffer(const void *data, size_t size);
 sg_buffer MakeVertexBuffer(const void *data, size_t size);
-
-#if 0
 
 //
 struct PipelineProgram;
@@ -229,10 +213,10 @@ struct Material;
 struct Texture;
 struct Model;
 
-using PipelineProgramRef = ResourceRef<PipelineProgram>;
-using MaterialRef = ResourceRef<Material>;
-using TextureRef = ResourceRef<Texture>;
-using ModelRef = ResourceRef<Model>;
+typedef ResourceRef<PipelineProgram> PipelineProgramRef;
+typedef ResourceRef<Material> MaterialRef;
+typedef ResourceRef<Texture> TextureRef;
+typedef ResourceRef<Model> ModelRef;
 
 static const PipelineProgramRef InvalidPipelineProgramRef;
 static const MaterialRef InvalidMaterialRef;
@@ -240,21 +224,30 @@ static const TextureRef InvalidTextureRef;
 static const ModelRef InvalidModelRef;
 
 //
+static const float default_shadow_bias = 0.0001f;
+static const Vec4 default_pssm_split = Vec4(10.f, 50.f, 100.f, 500.f);
+
+#if 1
+
+//
 struct ProgramHandle {
-	bgfx::ProgramHandle handle = BGFX_INVALID_HANDLE;
-	bool loaded{false};
+	ProgramHandle() : loaded(false) {}
+	//	bgfx::ProgramHandle handle = BGFX_INVALID_HANDLE;
+	bool loaded;
 };
 
 struct TextureUniform {
-	bgfx::UniformHandle handle;
+	TextureUniform() : channel(0xff) {}
+	//	bgfx::UniformHandle handle;
 	TextureRef tex_ref;
-	uint8_t channel{0xff};
+	uint8_t channel;
 };
 
 struct Vec4Uniform {
-	bgfx::UniformHandle handle;
-	Vec4 value = {1.f, 1.f, 1.f, 1.f};
-	bool is_color = false;
+	Vec4Uniform() : value(1.f, 1.f, 1.f, 1.f), is_color(false) {}
+	//	bgfx::UniformHandle handle;
+	Vec4 value;
+	bool is_color;
 };
 
 struct PipelineProgram {
@@ -277,8 +270,8 @@ PipelineProgram LoadPipelineProgramFromAssets(const std::string &name, PipelineR
 void Destroy(PipelineProgram &pipeline_program);
 
 //
-bool LoadPipelineProgramUniforms(const Reader &ir, const ReadProvider &ip, const std::string &name, std::vector<TextureUniform> &texs, std::vector<Vec4Uniform> &vecs,
-	PipelineResources &resources, bool silent = false);
+bool LoadPipelineProgramUniforms(const Reader &ir, const ReadProvider &ip, const std::string &name, std::vector<TextureUniform> &texs,
+	std::vector<Vec4Uniform> &vecs, PipelineResources &resources, bool silent = false);
 bool LoadPipelineProgramUniformsFromFile(
 	const std::string &path, std::vector<TextureUniform> &texs, std::vector<Vec4Uniform> &vecs, PipelineResources &resources, bool silent = false);
 bool LoadPipelineProgramUniformsFromAssets(
@@ -286,17 +279,18 @@ bool LoadPipelineProgramUniformsFromAssets(
 
 //
 struct DisplayList { // 4B
-	bgfx::IndexBufferHandle index_buffer;
-	bgfx::VertexBufferHandle vertex_buffer;
+	size_t element_count;
+	sg_buffer index_buffer;
+	sg_buffer vertex_buffer;
 	std::vector<uint16_t> bones_table;
 };
 
 /// Create an empty texture.
 /// @see CreateTextureFromPicture and UpdateTextureFromPicture.
-Texture CreateTexture(int width, int height, const std::string &name, uint64_t flags, bgfx::TextureFormat::Enum format = bgfx::TextureFormat::RGBA8);
+// Texture CreateTexture(int width, int height, const std::string &name, uint64_t flags, bgfx::TextureFormat::Enum format = bgfx::TextureFormat::RGBA8);
 /// Create a texture from a picture.
 /// @see Picture, CreateTexture and UpdateTextureFromPicture.
-Texture CreateTextureFromPicture(const Picture &pic, const std::string &name, uint64_t flags, bgfx::TextureFormat::Enum format = bgfx::TextureFormat::RGBA8);
+// Texture CreateTextureFromPicture(const Picture &pic, const std::string &name, uint64_t flags, bgfx::TextureFormat::Enum format = bgfx::TextureFormat::RGBA8);
 
 void UpdateTextureFromPicture(Texture &tex, const Picture &pic);
 
@@ -304,46 +298,31 @@ uint64_t LoadTextureFlags(const Reader &ir, const ReadProvider &ip, const std::s
 uint64_t LoadTextureFlagsFromFile(const std::string &path, bool silent = false);
 uint64_t LoadTextureFlagsFromAssets(const std::string &name, bool silent = false);
 
-Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, uint64_t flags, bgfx::TextureInfo *info = nullptr,
-	bimg::Orientation::Enum *orientation = nullptr, bool silent = false);
-Texture LoadTextureFromFile(
-	const std::string &path, uint64_t flags, bgfx::TextureInfo *info = nullptr, bimg::Orientation::Enum *orientation = nullptr, bool silent = false);
-Texture LoadTextureFromAssets(
-	const std::string &name, uint64_t flags, bgfx::TextureInfo *info = nullptr, bimg::Orientation::Enum *orientation = nullptr, bool silent = false);
+struct TextureInfo {};
+
+Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, uint64_t flags, TextureInfo *info = nullptr, bool silent = false);
+Texture LoadTextureFromFile(const std::string &path, uint64_t flags, TextureInfo *info = nullptr, bool silent = false);
+Texture LoadTextureFromAssets(const std::string &name, uint64_t flags, TextureInfo *info = nullptr, bool silent = false);
 
 void Destroy(Texture &texture);
 
 struct Texture { // 8B
-	uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE;
-	bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
+	// uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE;
+	// bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
 };
 
-inline Texture MakeTexture(bgfx::TextureHandle handle, uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE) { return {flags, handle}; }
-
-// for engine internal use
-struct RenderBufferResourceFactory {
-	std::function<bgfx::TextureHandle(bgfx::BackbufferRatio::Enum ratio, bool hasMips, uint16_t numLayers, bgfx::TextureFormat::Enum format, uint64_t flags)>
-		create_texture2d;
-
-	std::function<bgfx::FrameBufferHandle(bgfx::BackbufferRatio::Enum ratio, bgfx::TextureFormat::Enum format, uint64_t textureFlags)> create_framebuffer;
-
-	// resources will be created in terms of this custom size
-	static RenderBufferResourceFactory Custom(uint16_t width, uint16_t height);
-
-	// resources will be created in terms of the backbuffer's size
-	static RenderBufferResourceFactory Backbuffer();
-};
+// inline Texture MakeTexture(bgfx::TextureHandle handle, uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE) { return {flags, handle}; }
 
 //
 struct UniformSetValue { // burn it with fire, complete insanity
-	UniformSetValue() = default;
+	UniformSetValue() : count(1) {}
 	UniformSetValue(const UniformSetValue &v);
 	UniformSetValue &operator=(const UniformSetValue &v);
 	~UniformSetValue();
 
-	bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+	// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
 	std::vector<float> value;
-	uint16_t count{1};
+	uint16_t count;
 };
 
 UniformSetValue MakeUniformSetValue(const std::string &name, float v, uint16_t count = 1);
@@ -355,22 +334,22 @@ UniformSetValue MakeUniformSetValue(const std::string &name, const Mat4 &mtx, ui
 UniformSetValue MakeUniformSetValue(const std::string &name, const Mat44 &mtx, uint16_t count = 1);
 
 struct UniformSetTexture { // burn it with fire, complete insanity
-	UniformSetTexture() = default;
+	UniformSetTexture() : stage(0) {}
 	UniformSetTexture(const UniformSetTexture &v);
 	UniformSetTexture &operator=(const UniformSetTexture &v);
 	~UniformSetTexture();
 
-	bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+	// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
 	Texture texture;
-	uint8_t stage{0};
+	uint8_t stage;
 };
 
 UniformSetTexture MakeUniformSetTexture(const std::string &name, const Texture &texture, uint8_t stage);
 
 //
 struct RenderState {
-	uint64_t state{BGFX_STATE_DEFAULT};
-	uint32_t rgba{0};
+	// uint64_t state{BGFX_STATE_DEFAULT};
+	// uint32_t rgba{0};
 };
 
 //
@@ -382,31 +361,37 @@ static const int MF_NormalMapInWorldSpace = 0x10;
 static const int MF_EnableAlphaCut = 0x20;
 
 struct Material { // 56B
+	Material() : variant_idx(0), flags(0) {}
+
 	PipelineProgramRef program;
-	uint32_t variant_idx{0};
+	uint32_t variant_idx;
 
 	struct Value {
-		bgfx::UniformType::Enum type{bgfx::UniformType::Vec4};
-		std::vector<float> value;
-		uint16_t count{1};
+		Value() : count(1) {}
 
-		bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+		// bgfx::UniformType::Enum type{bgfx::UniformType::Vec4};
+		std::vector<float> value;
+		uint16_t count;
+
+		// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
 	};
 
 	std::map<std::string, Value> values;
 
 	struct Texture {
-		TextureRef texture;
-		uint8_t channel{0};
+		Texture() : channel(0) {}
 
-		bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+		TextureRef texture;
+		uint8_t channel;
+
+		// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
 	};
 
 	std::map<std::string, Texture> textures;
 
 	RenderState state;
 
-	uint8_t flags{0};
+	uint8_t flags;
 };
 
 Material CreateMaterial(PipelineProgramRef prg);
@@ -476,12 +461,12 @@ RenderState ComputeRenderState(BlendMode blend, DepthTest test = DT_Less, FaceCu
 	bool write_g = true, bool write_b = true, bool write_a = true);
 
 //
-bgfx::VertexLayout VertexLayoutPosFloatNormFloat();
-bgfx::VertexLayout VertexLayoutPosFloatNormUInt8();
-bgfx::VertexLayout VertexLayoutPosFloatColorFloat();
-bgfx::VertexLayout VertexLayoutPosFloatColorUInt8();
-bgfx::VertexLayout VertexLayoutPosFloatTexCoord0UInt8();
-bgfx::VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
+VertexLayout VertexLayoutPosFloatNormFloat();
+VertexLayout VertexLayoutPosFloatNormUInt8();
+VertexLayout VertexLayoutPosFloatColorFloat();
+VertexLayout VertexLayoutPosFloatColorUInt8();
+VertexLayout VertexLayoutPosFloatTexCoord0UInt8();
+VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
 
 //
 struct Model { // 96B (+heap)
@@ -492,8 +477,8 @@ struct Model { // 96B (+heap)
 };
 
 struct ModelInfo {
-	bgfx::VertexLayout vs_decl{};
-	uint32_t tri_count{};
+	VertexLayout vs_decl;
+	uint32_t tri_count;
 };
 
 Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, ModelInfo *info = nullptr, bool silent = false);
@@ -529,7 +514,7 @@ struct PipelineResources {
 	ResourceCache<Model, ModelRef> models;
 
 	std::deque<TextureLoad> texture_loads;
-	std::map<gen_ref, bgfx::TextureInfo> texture_infos;
+	std::map<gen_ref, TextureInfo> texture_infos;
 
 	std::deque<ModelLoad> model_loads;
 	std::map<gen_ref, ModelInfo> model_infos;
@@ -558,16 +543,16 @@ ModelRef SkipLoadOrQueueModelLoad(
 	const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool queue_load, bool do_not_load, bool silent = false);
 
 //
-Material LoadMaterial(const json &js, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources, const PipelineInfo &pipeline,
-	bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
+Material LoadMaterial(const rapidjson::Value &js, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
+	const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
 Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
 	const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
-Material LoadMaterialFromFile(
-	const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
-Material LoadMaterialFromAssets(
-	const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
+Material LoadMaterialFromFile(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
+	bool do_not_load_resources, bool silent = false);
+Material LoadMaterialFromAssets(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
+	bool do_not_load_resources, bool silent = false);
 
-bool SaveMaterial(const Material &mat, json &js, const PipelineResources &resources);
+bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources);
 bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources);
 bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources);
 
@@ -582,7 +567,8 @@ ModelRef LoadModelFromFile(const std::string &path, PipelineResources &resources
 ModelRef LoadModelFromAssets(const std::string &path, PipelineResources &resources, bool silent = false);
 
 struct TextureMeta {
-	uint64_t flags{};
+	TextureMeta() : flags(0) {}
+	uint64_t flags;
 };
 
 TextureMeta LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
@@ -601,10 +587,10 @@ uint32_t CaptureTexture(const PipelineResources &resources, const TextureRef &t,
 
 MaterialRef LoadMaterialRef(const Reader &ir, const Handle &h, const std::string &path, const Reader &deps_ir, const ReadProvider &deps_ip,
 	PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
-MaterialRef LoadMaterialRefFromFile(
-	const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
-MaterialRef LoadMaterialRefFromAssets(
-	const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent = false);
+MaterialRef LoadMaterialRefFromFile(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
+	bool do_not_load_resources, bool silent = false);
+MaterialRef LoadMaterialRefFromAssets(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
+	bool do_not_load_resources, bool silent = false);
 
 //
 size_t GetQueuedResourceCount(const PipelineResources &res);
@@ -632,14 +618,15 @@ uint32_t ComputeSortKey(float view_depth);
 uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view);
 uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &model);
 
-//
-void DrawDisplayList(bgfx::ViewId view_id, bgfx::IndexBufferHandle idx, bgfx::VertexBufferHandle vtx, bgfx::ProgramHandle prg,
-	const std::vector<UniformSetValue> &values = {}, const std::vector<UniformSetTexture> &textures = {}, RenderState state = {}, uint32_t depth = 0);
+// FIXSOKOL
+// void DrawDisplayList(bgfx::ViewId view_id, bgfx::IndexBufferHandle idx, bgfx::VertexBufferHandle vtx, bgfx::ProgramHandle prg,
+//	const std::vector<UniformSetValue> &values = {}, const std::vector<UniformSetTexture> &textures = {}, RenderState state = {}, uint32_t depth = 0);
 
 /// Draw a model to the specified view.
 /// @see UniformSetValueList and UniformSetTextureList to pass uniform values to the shader program.
-void DrawModel(bgfx::ViewId view_id, const Model &mdl, bgfx::ProgramHandle prg, const std::vector<UniformSetValue> &values,
-	const std::vector<UniformSetTexture> &textures, const Mat4 *mtxs, size_t mtx_count = 1, RenderState state = {}, uint32_t depth = 0);
+// FIXSOKOL
+// void DrawModel(bgfx::ViewId view_id, const Model &mdl, bgfx::ProgramHandle prg, const std::vector<UniformSetValue> &values,
+//	const std::vector<UniformSetTexture> &textures, const Mat4 *mtxs, size_t mtx_count = 1, RenderState state = {}, uint32_t depth = 0);
 
 //
 struct ModelDisplayList { // 16B
@@ -651,6 +638,7 @@ struct ModelDisplayList { // 16B
 
 void CullModelDisplayLists(const Frustum &frustum, std::vector<ModelDisplayList> &display_lists, const std::vector<Mat4> &mtxs, const PipelineResources &res);
 
+/*
 void DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<ModelDisplayList> &display_lists, uint8_t pipeline_config_idx,
 	const std::vector<UniformSetValue> &values, const std::vector<UniformSetTexture> &textures, const std::vector<Mat4> &mtxs, const PipelineResources &res);
 void DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<ModelDisplayList> &display_lists, const std::vector<uint32_t> &depths,
@@ -659,6 +647,7 @@ void DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<ModelDisplayL
 void DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<ModelDisplayList> &display_lists, uint8_t pipeline_config_idx,
 	const std::vector<UniformSetValue> &values, const std::vector<UniformSetTexture> &textures, const std::vector<Mat4> &mtxs,
 	const std::vector<Mat4> &prv_mtxs, const PipelineResources &res);
+*/
 
 //
 struct SkinnedModelDisplayList { // 782B
@@ -670,6 +659,7 @@ struct SkinnedModelDisplayList { // 782B
 	uint16_t lst_idx; // 2
 };
 
+/*
 void DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vector<SkinnedModelDisplayList> &display_lists, uint8_t pipeline_config_idx,
 	const std::vector<UniformSetValue> &values, const std::vector<UniformSetTexture> &textures, const std::vector<Mat4> &mtxs, const PipelineResources &res);
 void DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vector<SkinnedModelDisplayList> &display_lists, const std::vector<uint32_t> &depths,
@@ -678,14 +668,15 @@ void DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vector<Skinne
 void DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vector<SkinnedModelDisplayList> &display_lists, uint8_t pipeline_config_idx,
 	const std::vector<UniformSetValue> &values, const std::vector<UniformSetTexture> &textures, const std::vector<Mat4> &mtxs,
 	const std::vector<Mat4> &prv_mtxs, const PipelineResources &res);
+*/
 
 //
-using Indices = std::vector<uint16_t>;
+typedef std::vector<uint16_t> Indices;
 
 struct Vertices {
-	Vertices(const bgfx::VertexLayout &decl, size_t count);
+	Vertices(const VertexLayout &layout, size_t count);
 
-	const bgfx::VertexLayout &GetDecl() const { return decl; }
+	const VertexLayout &GetDecl() const { return layout; }
 
 	Vertices &Begin(size_t i);
 	Vertices &SetPos(const Vec3 &pos);
@@ -714,21 +705,23 @@ struct Vertices {
 	const void *GetData() const { return data.data(); }
 
 	size_t GetSize() const { return data.size(); }
-	size_t GetCount() const { return data.size() / decl.getStride(); }
-	size_t GetCapacity() const { return data.capacity() / decl.getStride(); }
+	size_t GetCount() const { return data.size() / layout.GetStride(); }
+	size_t GetCapacity() const { return data.capacity() / layout.GetStride(); }
 
 private:
-	bgfx::VertexLayout decl;
+	VertexLayout layout;
 	std::vector<char> data;
 
-	int idx{-1};
-	uint32_t vtx_attr_flag{};
+	int idx;
+	uint32_t vtx_attr_flag;
 };
 
 //
 void SetTransform(const Mat4 &world);
 void SetUniforms(const std::vector<UniformSetValue> &values, const std::vector<UniformSetTexture> &textures);
 
+// FIXSOKOL
+#if 0
 /// Draw a list of lines to the specified view.
 /// @see UniformSetValueList and UniformSetTextureList to pass uniform values to the shader program.
 void DrawLines(bgfx::ViewId view_id, const Vertices &vtx, bgfx::ProgramHandle prg, RenderState = {}, uint32_t depth = 0);
@@ -754,12 +747,10 @@ void DrawTriangles(bgfx::ViewId view_id, const Indices &idx, const Vertices &vtx
 void DrawSprites(bgfx::ViewId view_id, const Mat3 &inv_view_R, bgfx::VertexLayout &decl, const std::vector<Vec3> &pos, const Vec2 &size,
 	bgfx::ProgramHandle prg, const std::vector<UniformSetValue> &values, const std::vector<UniformSetTexture> &textures, RenderState state = {},
 	uint32_t depth = 0);
+#endif
 
 //
-static const float default_shadow_bias = 0.0001f;
-static const Vec4 default_pssm_split = {10.f, 50.f, 100.f, 500.f};
-
-//
+#if 0
 struct Pipeline {
 	std::map<std::string, bgfx::TextureHandle> textures;
 	std::map<std::string, bgfx::FrameBufferHandle> framebuffers;
@@ -777,7 +768,8 @@ struct FrameBuffer {
 
 FrameBuffer CreateFrameBuffer(const Texture &color, const Texture &depth, const std::string &name);
 FrameBuffer CreateFrameBuffer(bgfx::TextureFormat::Enum color_format, bgfx::TextureFormat::Enum depth_format, int aa, const std::string &name);
-FrameBuffer CreateFrameBuffer(int width, int height, bgfx::TextureFormat::Enum color_format, bgfx::TextureFormat::Enum depth_format, int aa, const std::string &name);
+FrameBuffer CreateFrameBuffer(
+	int width, int height, bgfx::TextureFormat::Enum color_format, bgfx::TextureFormat::Enum depth_format, int aa, const std::string &name);
 
 Texture GetColorTexture(FrameBuffer &frameBuffer);
 Texture GetDepthTexture(FrameBuffer &frameBuffer);
@@ -791,6 +783,7 @@ bimg::ImageContainer *LoadImage(const Reader &ir, const ReadProvider &ip, const 
 bimg::ImageContainer *LoadImageFromFile(const std::string &name);
 bimg::ImageContainer *LoadImageFromAssets(const std::string &name);
 void UpdateTextureFromImage(Texture &tex, bimg::ImageContainer *img, bool auto_delete = true);
+#endif
 
 #endif
 

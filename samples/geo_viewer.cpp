@@ -12,6 +12,9 @@
 #include "engine/geometry.h"
 #include "engine/render_pipeline.h"
 
+#include "engine/scene.h"
+#include "engine/assets.h"
+
 #define SOKOL_GFX_IMPL
 #define SOKOL_GLCORE33
 #include <sokol_gfx.h>

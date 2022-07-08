@@ -5,11 +5,33 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "(Windows) Samples: Geo viewer",
+			"name": "(Windows) Samples: Geometry viewer",
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/samples/geo_viewer.exe",
 			"args": ["d:/LOD0.geo"],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"console": "externalTerminal"
+		},
+		{
+			"name": "(Windows) Samples: Scene viewer",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/samples/scn_viewer.exe",
+			"args": ["d:/assemble-demo-assets/range_rover_simple/project", "scene_no_texture.scn"],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"console": "externalTerminal"
+		},
+		{
+			"name": "(Windows) TU: Foundation",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/tests/test_foundation.exe",
+			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

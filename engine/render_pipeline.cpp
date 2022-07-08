@@ -3,7 +3,6 @@
 #include "engine/render_pipeline.h"
 #include "engine/assets_rw_interface.h"
 #include "engine/file_format.h"
-//#include "engine/meta.h"
 
 #include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
@@ -15,10 +14,17 @@
 #include "foundation/projection.h"
 #include "foundation/time.h"
 
-#include <json.h>
+#include <rapidjson/document.h>
 #include <set>
 
 namespace hg {
+
+void Destroy(PipelineProgram &) {}
+void Destroy(Texture &) {}
+void Destroy(Model &) {}
+void Destroy(Material &) {}
+
+void PipelineResources::DestroyAll() {}
 
 #if 0
 
@@ -194,6 +200,126 @@ sg_buffer MakeVertexBuffer(const void *data, size_t size) {
 
 	return sg_make_buffer(&buffer_desc);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+Material LoadMaterial(const rapidjson::Value &js, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
+	const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent) {
+		return Material();
+}
+
+Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
+	const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent) {
+	return Material();
+}
+
+Material LoadMaterialFromFile(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
+	bool do_not_load_resources, bool silent) {
+	return Material();
+}
+
+Material LoadMaterialFromAssets(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
+	bool do_not_load_resources, bool silent) {
+	return Material();
+}
+
+
+
+
+
+bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) {
+	return false;
+}
+
+bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) {
+	return false;
+}
+
+bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) {
+	return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TextureRef SkipLoadOrQueueTextureLoad(
+	const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool queue_load, bool do_not_load, bool silent) {
+	if (do_not_load)
+		return resources.textures.Add(path, Texture());
+
+	TextureRef ref = resources.textures.Has(path);
+/*
+	if (ref == InvalidTextureRef) {
+		const auto meta = LoadTextureMeta(ir, ip, path, silent);
+
+		if (queue_load)
+			ref = QueueLoadTexture(ir, ip, path, meta.flags, resources);
+		else
+			ref = LoadTexture(ir, ip, path, meta.flags, resources, silent);
+	}
+*/
+	return ref;
+}
+
+ModelRef SkipLoadOrQueueModelLoad(
+	const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool queue_load, bool do_not_load, bool silent) {
+	if (do_not_load)
+		return resources.models.Add(path, Model());
+
+	ModelRef ref = resources.models.Has(path);
+
+/*
+	if (ref == InvalidModelRef) {
+		if (queue_load)
+			ref = QueueLoadModel(ir, ip, path, resources);
+		else
+			ref = LoadModel(ir, ip, path, resources, silent);
+	}
+*/
+
+	return ref;
+}
+
+
+
+
+
+
+
+
 
 #if 0
 
@@ -2441,7 +2567,7 @@ void Vertices::Clear() { data.clear(); }
 void Vertices::Reserve(size_t count) { data.reserve(decl.getSize(numeric_cast<uint32_t>(count))); }
 void Vertices::Resize(size_t count) { data.resize(decl.getSize(numeric_cast<uint32_t>(count))); }
 
-Vertices::Vertices(const bgfx::VertexLayout &decl_, size_t count) : decl(decl_) { Resize(count); }
+Vertices::Vertices(const bgfx::VertexLayout &decl_, size_t count) : decl(decl_), idx(-1), vtx_attr_flag(0) { Resize(count); }
 
 Vertices &Vertices::Begin(size_t i) {
 	if (i >= GetCount()) {

@@ -5,7 +5,7 @@
 namespace hg {
 
 template <typename T> struct intrusive_shared_ptr_st {
-	inline intrusive_shared_ptr_st() = default;
+	inline intrusive_shared_ptr_st() : t_(nullptr) {}
 	inline intrusive_shared_ptr_st(T *t) : t_(t) { acquire(); }
 	inline intrusive_shared_ptr_st(const intrusive_shared_ptr_st<T> &o) : t_(o.t_) { acquire(); }
 	inline ~intrusive_shared_ptr_st() { release(); }
@@ -44,12 +44,13 @@ template <typename T> struct intrusive_shared_ptr_st {
 #endif
 
 private:
-	T *t_{nullptr};
+	T *t_;
 
 	inline void acquire() const {
 		if (t_)
 			++t_->ref_count;
 	}
+
 	inline void release() const {
 		if (t_)
 			if (--t_->ref_count == 0)
