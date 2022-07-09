@@ -58,7 +58,7 @@ Data LoadData(const Reader &i, const Handle &h) {
 
 	const size_t size = i.size(h);
 
-	if (!data.Skip(size))
+	if (data.Skip(size))
 		i.read(h, data.GetData(), data.GetSize());
 	else
 		i.seek(h, size, SM_Current);
