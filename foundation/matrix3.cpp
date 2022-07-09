@@ -331,8 +331,11 @@ Mat3 Mat3LookAt(const Vec3 &w, const Vec3 &v) {
 	if (l == 0.f)
 		return Mat3::Identity;
 
-	Vec3 vn = Normalize(v), wn = w / l;
-	return Mat3(Cross(vn, wn), vn, w / l);
+    Vec3 wn = w / l;
+	Vec3 vn = Normalize(v);
+    Vec3 u  = Normalize(Cross(vn, wn));
+    vn = Normalize(Cross(wn, u));
+	return Mat3(u, vn, wn);
 }
 
 //
