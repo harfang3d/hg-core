@@ -23,6 +23,8 @@ if(WIN32)
 	add_compile_definitions(GLFW_WIN32=1)
 endif()
 
+add_compile_definitions(__STDC_WANT_LIB_EXT1__=1)
+
 # add_compile_options(-pedantic)
 add_subdirectory(foundation)
 add_subdirectory(engine)

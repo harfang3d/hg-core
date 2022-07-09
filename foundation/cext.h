@@ -218,8 +218,13 @@ template <> struct CompileTimeError<true> {};
 template <typename T> struct memory_block {
 	memory_block() : data(nullptr), size(0) {}
 	memory_block(const T *data_, size_t size_) : data(new char[size_]), size(size_) {
-		if (data_)
-			memcpy(data, data_, size_);
+		if (data_) {
+#ifdef __STDC_LIB_EXT1__
+			memcpy_s(data, size_, data_, size_);
+#else
+			memcpy_s(data, data_, size_);
+#endif
+		}
 	}
 	~memory_block() { delete[] data; }
 
