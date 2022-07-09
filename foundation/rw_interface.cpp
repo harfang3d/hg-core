@@ -21,7 +21,7 @@ bool Read(const Reader &i, const Handle &h, std::string &v) {
 		return false;
 
 	std::vector<char> s_(size_t(size) + 1);
-	if (i.read(h, s_.data(), size) != size)
+	if (i.read(h, s_.data(), size) != size) // flawfinder: ignore (this can't fail as we are reading size bytes into a buffer of size + 1 bytes)
 		return false;
 
 	if (size)
