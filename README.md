@@ -4,18 +4,29 @@
 
 ## Features
 
+- Scene graph
+- Forward pipeline
+- Unit tested
 - C++98 compliant
 
 ## Dependencies
 
-- SOKOL
-- fmt 4.x (last major revision with C++98 support)
-- acutest
+### engine/
 
-## Geometry vertex attributes layout
+- sokol_gfx.h
+- meshoptimizer
+- mikktspace
+- stb_image.h/stb_image_write.h/stb_image_resize.h
 
+### foundation/
 
+- Miniz
+- RapidJSON
+- utf8-cpp
+- fmt::format 4.1 (last revision with C++98 support)
+- srombauts/shared_ptr
+- xxHash
 
-## Configuration flags
+### tests/
 
-HG_ENABLE_SCENE_SCRIPTS
+- Acutest
