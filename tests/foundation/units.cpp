@@ -70,6 +70,7 @@ void test_units() {
 	TEST_CHECK(FormatMemorySize(KB(1) + 512) == "1.5KB");
 	TEST_CHECK(FormatMemorySize(MB(2048+768)) == "2.7GB");
 	TEST_CHECK(FormatMemorySize(MB(1) + KB(512)) == "1.5MB");
+	TEST_CHECK(FormatMemorySize(-KB(4)) == "-4.0KB");
 
 	TEST_CHECK(FormatCount(1) == "1");
 	TEST_CHECK(FormatCount(10) == "10");
@@ -77,6 +78,8 @@ void test_units() {
 	TEST_CHECK(FormatCount(12345) == "12.3K");
 	TEST_CHECK(FormatCount(2000000) == "2.0M");
 	TEST_CHECK(FormatCount(5555555) == "5.5M");
+	TEST_CHECK(FormatCount(3100L*1000L*1000L) == "3.1G");
+	TEST_CHECK(FormatCount(-2300) == "-2.3K");
 
 	TEST_CHECK(FormatDistance(Mm(1.f)) == "1.0mm");
 	TEST_CHECK(FormatDistance(Mm(8.2f)) == "8.2mm");
@@ -85,6 +88,7 @@ void test_units() {
 	TEST_CHECK(FormatDistance(45.3f) == "45.3m");
 	TEST_CHECK(FormatDistance(Km(1.f)) == "1.0km");
 	TEST_CHECK(FormatDistance(Km(12.345)) == "12.3km");
+	TEST_CHECK(FormatDistance(Cm(-0.1f)) == "-1.0mm");
 
 	TEST_CHECK(FormatTime(time_from_sec(1) + time_from_ms(100)) == "1 sec 100 ms");
 	TEST_CHECK(FormatTime(time_from_min(30) + time_from_sec(26) + time_from_ms(3)) == "30 min 26 sec 3 ms");

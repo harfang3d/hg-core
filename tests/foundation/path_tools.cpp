@@ -36,6 +36,7 @@ void test_path_tools() {
 	TEST_CHECK(CleanPath("/home/user0001/../../home/../home/user0000/.config/app/hg.cfg") == "/home/user0000/.config/app/hg.cfg");
 	TEST_CHECK(CleanPath("") == "");
 	TEST_CHECK(CleanPath("Lorem ipsum dolor sit amet, consectetur") == "Lorem ipsum dolor sit amet, consectetur");
+	TEST_CHECK(CleanPath("/home/user0001/./.") == "/home/user0001");
 
 	TEST_CHECK(CleanFileName("<movie>\"1080p\"cyber city render\\final?\\.mp4") == "_movie__1080p_cyber city render_final__.mp4");
 	TEST_CHECK(CleanFileName("render_pass_0000-pbr-no-shadows.png") == "render_pass_0000-pbr-no-shadows.png");
@@ -52,7 +53,11 @@ void test_path_tools() {
 	TEST_CHECK(GetFilePath("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
 	TEST_CHECK(GetFilePath("image.jpg") == "./");
 	TEST_CHECK(GetFilePath("") == "./");
-	
+#if WIN32
+	TEST_CHECK(GetFilePath("/") == "./");
+#else
+	TEST_CHECK(GetFilePath("/") == "/");
+#endif
 	TEST_CHECK(CutFileName("/usr/local/bin/deltree.exe") == "/usr/local/bin/");
 	TEST_CHECK(CutFileName("/proc/sys/Device/00000032") == "/proc/sys/Device/");
 	TEST_CHECK(CutFileName("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
@@ -98,6 +103,8 @@ void test_path_tools() {
 #else
 	TEST_CHECK(PathJoin("/usr/local/bin/dummy", "../../../bin/bash") == "/usr/bin/bash");
 #endif
+	TEST_CHECK(PathJoin("dir0/dir1/dir2", "../dir3/dir4", "../foo") == "dir0/dir1/dir3/foo");
+
 	std::vector<std::string> elements(6);
 	elements[0] = "001";
 	elements[1] = "002";

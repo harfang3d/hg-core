@@ -62,11 +62,13 @@ void test_string() {
 	TEST_CHECK(lstrip("     Baorisa hieroglyphica") == "Baorisa hieroglyphica");
 	TEST_CHECK(lstrip("\t\t    \tStigmodera cancellata", " \t") == "Stigmodera cancellata");
 	TEST_CHECK(lstrip(" - Stigmodera cancellata", " ") != "Stigmodera cancellata");
+	TEST_CHECK(lstrip("  ____    __ _", " _") == std::string());
 
 	TEST_CHECK(rstrip("Selenocosmia crassipes") == "Selenocosmia crassipes");
 	TEST_CHECK(rstrip("Agrias claudina    ") == "Agrias claudina");
 	TEST_CHECK(rstrip("Mormolyce phyllodes...;;-;..-_-", "_.-;") == "Mormolyce phyllodes");
 	TEST_CHECK(rstrip("Phymateus viridipes\n\n ", " \t") != "Stigmodera cancellata");
+	TEST_CHECK(rstrip("@ ++ @ @@ ", " @+") == std::string());
 
 	TEST_CHECK(strip("Ornithoptera euphorion") == "Ornithoptera euphorion");
 	TEST_CHECK(strip("    Phyllium bioculatum        ") == "Phyllium bioculatum");
@@ -103,6 +105,7 @@ void test_string() {
 	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies + 4, " Dragonfly\n") ==
 			   "Yellow-legged Dragonfly\nClub-tailed Dragonfly\nGreen club-tailed Dragonfly\nGreen-eyed hook-tailed");
 	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies + 1, " // ") == "Yellow-legged");
+	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies, "-", "Plane") == std::string());
 
 	const char *path[] = {
 		"e:",
@@ -262,5 +265,6 @@ void test_string() {
 	
 	TEST_CHECK(pad_left("Valanga irregularis", 11, '|') == "Valanga irregularis");
 	TEST_CHECK(pad_right("Goliathus regius", 23, ':') == "Goliathus regius:::::::");
-	TEST_CHECK(pad_right("Macrodontia cervicornis", 27) == "Macrodontia cervicornis    ");	
+	TEST_CHECK(pad_right("Macrodontia cervicornis", 27) == "Macrodontia cervicornis    ");
+	TEST_CHECK(pad_right("Bocydium globulare", -2) == "Bocydium globulare");
 }
