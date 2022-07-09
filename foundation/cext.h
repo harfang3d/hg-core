@@ -124,11 +124,14 @@ public:
 
 	void fill(const T &value) { std::fill(begin(), end(), value); }
 
-	private:
+private:
 	T _elmnt[N];
 };
 
-template <typename T, size_t N> bool operator==(const array<T, N> &lhs, const array<T, N> &rhs) { return std::equal(lhs.begin(), lhs.end(), rhs.begin()); }
+template <typename T, size_t N> bool operator==(const array<T, N> &lhs, const array<T, N> &rhs) {
+	// both arguments are to statically sized arrays of size N: no overflow is possible
+	return std::equal(lhs.begin(), lhs.end(), rhs.begin()); // flawfinder: ignore
+}
 template <typename T, size_t N> bool operator!=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs == rhs); }
 template <typename T, size_t N> bool operator<(const array<T, N> &lhs, const array<T, N> &rhs) {
 	return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
@@ -137,12 +140,12 @@ template <typename T, size_t N> bool operator>(const array<T, N> &lhs, const arr
 template <typename T, size_t N> bool operator<=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs > rhs); }
 template <typename T, size_t N> bool operator>=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs < rhs); }
 
-}
+} // namespace std
 #endif
 
 #if __cplusplus >= 201103L
 #include <type_traits>
-#else 
+#else
 namespace std {
 
 template <typename T> struct remove_const { typedef T type; };
@@ -198,7 +201,7 @@ template <typename T> struct is_signed<T, false> : public std::false_type {};
 
 template <typename T> struct is_signed : public detail::is_signed<T>::type {};
 
-}
+} // namespace std
 #endif
 
 // static assert
@@ -206,11 +209,11 @@ template <typename T> struct is_signed : public detail::is_signed<T>::type {};
 namespace detail {
 template <int> struct CompileTimeError;
 template <> struct CompileTimeError<true> {};
-} // detail
-#define static_assert(cond, msg)                                        \
-	do {                                                                \
-		detail::CompileTimeError<(cond) != 0> static_assertion_failed;  \
-		(void)static_assertion_failed;                                  \
+} // namespace detail
+#define static_assert(cond, msg)                                                                                                                               \
+	do {                                                                                                                                                       \
+		detail::CompileTimeError<(cond) != 0> static_assertion_failed;                                                                                         \
+		(void)static_assertion_failed;                                                                                                                         \
 	} while (0)
 #endif
 

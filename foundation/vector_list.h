@@ -256,7 +256,7 @@ private:
 #ifdef __STDC_LIB_EXT1__
 		memcpy_s(new_storage, new_storage_size, storage_, sizeof(U) * storage_capacity_);
 #else
-		memcpy(new_storage, storage_, sizeof(U) * storage_capacity_);
+		memcpy(new_storage, storage_, sizeof(U) * storage_capacity_); // flawfinder: ignore
 #endif
 	}
 
