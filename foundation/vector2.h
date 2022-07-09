@@ -121,4 +121,6 @@ template <typename T> T Dist2(const tVec2<T> &a, const tVec2<T> &b) { return (b.
 /// Vector distance.
 template <typename T> T Dist(const tVec2<T> &a, const tVec2<T> &b);
 
+bool TestEqual(const Vec2 &a, const Vec2 &b, float e=0.000001f);
+
 } // namespace hg
