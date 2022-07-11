@@ -78,7 +78,7 @@ void test_units() {
 	TEST_CHECK(FormatCount(12345) == "12.3K");
 	TEST_CHECK(FormatCount(2000000) == "2.0M");
 	TEST_CHECK(FormatCount(5555555) == "5.5M");
-	TEST_CHECK(FormatCount(3100L*1000L*1000L) == "3.1G");
+	TEST_CHECK(FormatCount(3100000000) == "3.1G");
 	TEST_CHECK(FormatCount(-2300) == "-2.3K");
 
 	TEST_CHECK(FormatDistance(Mm(1.f)) == "1.0mm");

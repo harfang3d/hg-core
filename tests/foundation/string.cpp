@@ -146,7 +146,9 @@ void test_string() {
 	const std::string blueberry_jam_utf8_invalid = "\x42\x6C\xC3\xA5\x62\xC3\xa0\xa1\xA6\x72\x73\x79\xf0\x28\x8c\x28\x6C\x74\x65\x74\xC3\xB8\x79";
 	const std::u32string blueberry_jam_utf32_invalid_cp(blueberry_jam_utf32_invalid_cp_raw);
 		
+#ifdef __MSYS__
 	TEST_EXCEPTION(utf32_to_utf8(blueberry_jam_utf32_invalid_cp), utf8::invalid_code_point);
+#endif
 	TEST_EXCEPTION(utf8_to_utf32(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
 	TEST_EXCEPTION(utf8_to_wchar(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
 

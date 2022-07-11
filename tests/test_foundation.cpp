@@ -26,6 +26,7 @@ extern void test_vec4();
 extern void test_mat3();
 extern void test_mat4();
 extern void test_mat44();
+extern void test_color();
 
 //
 void test_clock_update() {
@@ -65,6 +66,7 @@ TEST_LIST = {
 	{"Mat3", test_mat3},
 	{"Mat4", test_mat4},
 	{"Mat44", test_mat44},
+	{"Color", test_color},
 
 	{"Clock.Update", test_clock_update},
 

@@ -240,9 +240,52 @@ void test_mat4() {
 		TEST_CHECK(AlmostEqual(GetColumn(r, 1), GetColumn(r0, 1), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetColumn(r, 2), GetColumn(r0, 2), 0.000001f));
     }
-// void TransformVec3(const Mat4 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
-// void TransformVec3(const Mat4 &__restrict m, Vec4 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
-// void RotateVec3(const Mat4 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
+	{
+		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
+		Vec3 in[8] = {Vec3(0.1f, 0.2f, 0.3f), Vec3(0.1f, -0.2f, 0.3f), Vec3(-0.1f, -0.2f, 0.3f), Vec3(-0.1f, 0.2f, 0.3f), Vec3(0.1f, 0.2f, -0.3f),
+			Vec3(0.1f, -0.2f, -0.3f), Vec3(-0.1f, -0.2f, -0.3f), Vec3(-0.1f, 0.2f, -0.3f)};
+		Vec3 out[8];
+		TransformVec3(m, out, in, 8);
+		TEST_CHECK(AlmostEqual(out[0], Vec3(13.f, 14.6f, 16.2f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[1], Vec3(11.4f, 12.6f, 13.8f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[2], Vec3(11.2f, 12.2f, 13.2f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[3], Vec3(12.8f, 14.2f, 15.6f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[4], Vec3(8.8f, 9.8f, 10.8f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[5], Vec3(7.2f, 7.8f, 8.4f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[6], Vec3(7.f, 7.4f, 7.8f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[7], Vec3(8.6f, 9.4f, 10.2f), 0.000001f));
+	}
+	{
+		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
+		Vec3 in[8] = {Vec3(0.1f, 0.2f, 0.3f), Vec3(0.1f, -0.2f, 0.3f), Vec3(-0.1f, -0.2f, 0.3f), Vec3(-0.1f, 0.2f, 0.3f), Vec3(0.1f, 0.2f, -0.3f),
+			Vec3(0.1f, -0.2f, -0.3f), Vec3(-0.1f, -0.2f, -0.3f), Vec3(-0.1f, 0.2f, -0.3f)};
+		Vec4 out[8];
+		TransformVec3(m, out, in, 8);
+		TEST_CHECK(AlmostEqual(out[0], Vec4(13.f, 14.6f, 16.2f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[1], Vec4(11.4f, 12.6f, 13.8f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[2], Vec4(11.2f, 12.2f, 13.2f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[3], Vec4(12.8f, 14.2f, 15.6f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[4], Vec4(8.8f, 9.8f, 10.8f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[5], Vec4(7.2f, 7.8f, 8.4f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[6], Vec4(7.f, 7.4f, 7.8f, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[7], Vec4(8.6f, 9.4f, 10.2f, 1.f), 0.000001f));
+	}
+	{ 
+		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
+		Vec3 in[8] = {Vec3(0.1f, 0.2f, 0.3f), Vec3(0.1f, -0.2f, 0.3f), Vec3(-0.1f, -0.2f, 0.3f), Vec3(-0.1f, 0.2f, 0.3f), Vec3(0.1f, 0.2f, -0.3f),
+			Vec3(0.1f, -0.2f, -0.3f), Vec3(-0.1f, -0.2f, -0.3f), Vec3(-0.1f, 0.2f, -0.3f)};
+		Vec3 out[8];
+		RotateVec3(m, out, in, 8);
+		TEST_CHECK(AlmostEqual(out[0], Vec3(3.f, 3.6f, 4.2f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[1], Vec3(1.4f, 1.6f, 1.8f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[2], Vec3(1.2f, 1.2f, 1.2f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[3], Vec3(2.8f, 3.2f, 3.6f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[4], Vec3(-1.2f, -1.2f, -1.2f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[5], Vec3(-2.8f, -3.2f, -3.6f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[6], Vec3(-3.f, -3.6f, -4.2f), 0.000001f));
+		TEST_CHECK(AlmostEqual(out[7], Vec3(-1.4f, -1.6f, -1.8f), 0.000001f));
+
+	}
 	{
 		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
 		TEST_CHECK(AlmostEqual(GetX(m), Vec3(1.f, 2.f, 3.f), 0.00001f));
@@ -269,10 +312,39 @@ void test_mat4() {
         TEST_CHECK(AlmostEqual(GetRotation(RotationMat4(u, RO_XYZ), RO_XYZ), u, 0.000001f));
         TEST_CHECK(AlmostEqual(GetRotation(RotationMat4(u, RO_XY), RO_XY), u, 0.000001f));
 	}
-// Mat3 GetRMatrix(const Mat4 &m);
-// Mat3 GetRotationMatrix(const Mat4 &m);
-// Vec3 GetS(const Mat4 &m);
-// Vec3 GetScale(const Mat4 &m);
+	{
+		const Vec3 theta = Deg3(30.f, -60.f, 45.f);
+		const float cx = cos(theta.x), sx = sin(theta.x);
+		const float cy = cos(theta.y), sy = sin(theta.y);
+		const float cz = cos(theta.z), sz = sin(theta.z);
+		const Mat4 rx = Mat4(1.f, 0.f, 0.f, 0.f, cx, sx, 0.f, -sx, cx, 0.f, 0.f, 0.f);
+		const Mat4 ry = Mat4(cy, 0.f, -sy, 0.f, 1.f, 0.f, sy, 0.f, cy, 0.f, 0.f, 0.f);
+		const Mat4 rz = Mat4(cz, sz, 0.f, -sz, cz, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f);
+		const Mat4 ryxz = ry * rx * rz;
+		const Mat4 rzyx = rz * ry * rx;
+		const Mat4 t = Mat4(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, -4.f, 3.f, 1.f);
+		{
+			Mat3 r = GetRMatrix(ryxz * t);
+			TEST_CHECK(AlmostEqual(GetColumn(r, 0), GetColumn(ryxz, 0), 0.00001f));
+			TEST_CHECK(AlmostEqual(GetColumn(r, 1), GetColumn(ryxz, 1), 0.00001f));
+			TEST_CHECK(AlmostEqual(GetColumn(r, 2), GetColumn(ryxz, 2), 0.00001f));
+			TEST_CHECK(AlmostEqual(ToEuler(r, RO_YXZ), theta, 0.00001f));
+		}
+		{
+			Mat3 r = GetRotationMatrix(rzyx * t);
+			TEST_CHECK(AlmostEqual(GetColumn(r, 0), GetColumn(rzyx, 0), 0.00001f));
+			TEST_CHECK(AlmostEqual(GetColumn(r, 1), GetColumn(rzyx, 1), 0.00001f));
+			TEST_CHECK(AlmostEqual(GetColumn(r, 2), GetColumn(rzyx, 2), 0.00001f));
+			TEST_CHECK(AlmostEqual(ToEuler(r, RO_ZYX), theta, 0.00001f));
+		}
+	}
+	{
+		const Vec3 scale(2.f, 1.f, 4.f);
+		const Mat4 ms = Mat4(scale.x, 0.f, 0.f, 0.f, scale.y, 0.f, 0.f, 0.f, scale.z, 0.f, 0.f, 0.f);
+		const Mat4 mrt = RotationMat4(Deg3(-60.f, 45.f, 30.f)) * Mat4(1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, -4.f, 3.f, 1.f);
+		TEST_CHECK(AlmostEqual(GetS(mrt * ms), scale, 0.00001f));
+		TEST_CHECK(AlmostEqual(GetScale(ms), scale, 0.00001f));
+	}
 	{
 		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
 		SetX(m, Vec3(-0.1f,-0.2f,-0.3f));
@@ -438,7 +510,6 @@ void test_mat4() {
 			TEST_CHECK(AlmostEqual(GetColumn(m, 3), Vec3(-0.1f, -0.2f, -0.3f), 0.00001f));
 		}
 	}
-// Mat4 LerpAsOrthonormalBase(const Mat4 &a, const Mat4 &b, float k, bool fast = false);
     {
         const Vec3 eye(-1.f, 2.f, -5.f);
         const Vec3 target(0.5f, 0.6f, 4.f);
@@ -652,7 +723,40 @@ void test_mat4() {
         TEST_CHECK(AlmostEqual(GetColumn(n, 2), Vec3(0.f, 0.f, 1.f), 0.000001f));
         TEST_CHECK(AlmostEqual(GetColumn(n, 3), Vec3(0.f, 0.f, 0.f), 0.000001f));
     }
-// Mat4 Mat4FromFloat16Transposed(const float m[16]);
-// void Mat4ToFloat16Transposed(const Mat4 &m, float t[16]);
+	{ 
+		const float transposed[] = { 
+			1.f, 2.f, 3.f, 0.f,
+			4.f, 5.f, 6.f, 0.f, 
+			7.f, 8.f, 9.f, 0.f, 
+			10.f, 11.f, 12.f, 1.f
+		};
+		Mat4 m = Mat4FromFloat16Transposed(transposed);
+		TEST_CHECK(AlmostEqual(GetColumn(m, 0), Vec3(1.f, 2.f, 3.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetColumn(m, 1), Vec3(4.f, 5.f, 6.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetColumn(m, 2), Vec3(7.f, 8.f, 9.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetColumn(m, 3), Vec3(10.f,11.f,12.f), 0.000001f));
+	}
+	{
+		const Mat4 m = Mat4(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
+		float u[16];
+		Mat4ToFloat16Transposed(m, u);
+		TEST_CHECK(TestEqual(u[0], 1.f));
+		TEST_CHECK(TestEqual(u[1], 2.f));
+		TEST_CHECK(TestEqual(u[2], 3.f));
+		TEST_CHECK(TestEqual(u[3], 0.f));
+		TEST_CHECK(TestEqual(u[4], 4.f));
+		TEST_CHECK(TestEqual(u[5], 5.f));
+		TEST_CHECK(TestEqual(u[6], 6.f));
+		TEST_CHECK(TestEqual(u[7], 0.f));
+		TEST_CHECK(TestEqual(u[8], 7.f));
+		TEST_CHECK(TestEqual(u[9], 8.f));
+		TEST_CHECK(TestEqual(u[10], 9.f));
+		TEST_CHECK(TestEqual(u[11], 0.f));
+		TEST_CHECK(TestEqual(u[12], 10.f));
+		TEST_CHECK(TestEqual(u[13], 11.f));
+		TEST_CHECK(TestEqual(u[14], 12.f));
+		TEST_CHECK(TestEqual(u[15], 1.f));
+	}
+// Mat4 LerpAsOrthonormalBase(const Mat4 &a, const Mat4 &b, float k, bool fast = false);
 // Mat4 ComputeBillboardMat4(const Vec3 &pos, const Mat3 &camera, const Vec3 &scale = Vec3::One);
 }
