@@ -65,16 +65,11 @@ unsigned int ARGB32ToRGBA32(unsigned int argb) {
 	return ((argb & 0xff) << 24) + (((argb >> 8) & 0xff) << 16) + (((argb >> 16) & 0xff) << 8) + ((argb >> 24) & 0xff);
 }
 
+static inline uint32_t pack_u32(uint8_t r, uint8_t s, uint8_t t, uint8_t p) { return (r << 24) | (s << 16) | (t << 8) | p; }
 //
-uint32_t RGBA32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-	uint8_t u8[4] = {a, b, g, r};
-	return *reinterpret_cast<uint32_t *>(u8);
-}
+uint32_t RGBA32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) { return pack_u32(a, b, g, r); }
 
-uint32_t ARGB32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-	uint8_t u8[4] = {b, g, r, a};
-	return *reinterpret_cast<uint32_t *>(u8);
-}
+uint32_t ARGB32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) { return pack_u32(r, g, b, a); }
 
 /// Vector squared distance.
 float Dist2(const Color &i, const Color &j) {

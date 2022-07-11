@@ -223,17 +223,69 @@ void test_color() {
 		TEST_CHECK(TestEqual(ColLen2(ClampLen(Color(0.2f, -0.1f, 0.2f, 0.3f), 1.2f, 2.f)), 1.2f * 1.2f));
 		TEST_CHECK(TestEqual(ColLen2(ClampLen(Color(-3.0f, 4.0f, -12.0f, 0.f), 2.0f, 20.0f)), 13.f * 13.f));
 	}
-//float ColorToGrayscale(const Color &c);
-//uint32_t ColorToRGBA32(const Color &c);
-//uint32_t ColorToABGR32(const Color &c);
-//Color ColorFromRGBA32(unsigned int rgba32);
-//Color ColorFromABGR32(unsigned int abgr32);
-//uint32_t ARGB32ToRGBA32(unsigned int argb);
-//uint32_t RGBA32(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
-//uint32_t ARGB32(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
-//float Dist2(const Color &i, const Color &j);
-//float Dist(const Color &i, const Color &j);
-//Color ChromaScale(const Color &c, float k);
+	{
+		TEST_CHECK(TestEqual(ColorToGrayscale(Color(0.376f, 0.471f, 0.627f)), 0.459659964f));
+		TEST_CHECK(TestEqual(ColorToGrayscale(Color(0.f, 0.f, 0.f)), 0.f));
+		TEST_CHECK(TestEqual(ColorToGrayscale(Color(1.f, 1.f, 1.f)), 1.f));
+	}
+	{
+		TEST_CHECK(ColorToRGBA32(Color(0.376f, 0.471f, 0.627f, 0.5f)) == 0x7f9f785f);
+		TEST_CHECK(ColorToRGBA32(Color(0.f, 0.f, 0.f, 1.f)) == 0xff000000);
+		TEST_CHECK(ColorToRGBA32(Color(1.f, 1.f, 1.f, 0.f)) == 0x00ffffff);
+	}
+	{
+		TEST_CHECK(ColorToABGR32(Color(0.376f, 0.471f, 0.627f, 0.5f)) == 0x5f789f7f);
+		TEST_CHECK(ColorToABGR32(Color(0.f, 0.f, 0.f, 1.f)) == 0x000000ff);
+		TEST_CHECK(ColorToABGR32(Color(1.f, 1.f, 1.f, 0.f)) == 0xffffff00);
+	}
+	{
+		TEST_CHECK(AlmostEqual(ColorFromRGBA32(0x7f9f785f), Color(0.376f, 0.471f, 0.627f, 0.5f), 1.f / 255.f));
+		TEST_CHECK(AlmostEqual(ColorFromRGBA32(0xff000000), Color(0.f, 0.f, 0.f, 1.f), 1.f / 255.f));
+		TEST_CHECK(AlmostEqual(ColorFromRGBA32(0x00ffffff), Color(1.f, 1.f, 1.f, 0.f), 1.f / 255.f));
+	}
+	{
+		Color c = ColorFromABGR32(0x5f789f7f);
+		TEST_CHECK(AlmostEqual(ColorFromABGR32(0x5f789f7f), Color(0.376f, 0.471f, 0.627f, 0.5f), 1.f/255.f));
+		TEST_CHECK(AlmostEqual(ColorFromABGR32(0x000000ff), Color(0.f, 0.f, 0.f, 1.f), 1.f / 255.f));
+		TEST_CHECK(AlmostEqual(ColorFromABGR32(0xffffff00), Color(1.f, 1.f, 1.f, 0.f), 1.f / 255.f));
+	}
+	{
+		TEST_CHECK(ARGB32ToRGBA32(0x5f789f7f) == 0x7f9f785f);
+		TEST_CHECK(ARGB32ToRGBA32(0x000000ff) == 0xff000000);
+		TEST_CHECK(ARGB32ToRGBA32(0xffffff00) == 0x00ffffff);
+	}
+	{
+		uint32_t v = RGBA32(96, 120, 160, 128);
+		TEST_CHECK(RGBA32(96, 120, 160, 128) == 0x80a07860);
+		TEST_CHECK(RGBA32(0, 0, 0, 255) == 0xff000000);
+		TEST_CHECK(RGBA32(255, 255, 255, 0) == 0x00ffffff);
+	}
+	{
+		TEST_CHECK(ARGB32(96, 120, 160, 128) == 0x6078a080);
+		TEST_CHECK(ARGB32(0, 0, 0, 255) == 0x000000ff);
+		TEST_CHECK(ARGB32(255, 255, 255, 0) == 0xffffff00);
+	}
+	{
+		float l = (0.376f - 0.75f) * (0.376f - 0.75f) + (0.471f - 0.8f) * (0.471f - 0.8f) + (0.627f - 0.24f) * (0.627f - 0.24f) + (0.5f - 1.f) * (0.5f - 1.f);
+		TEST_CHECK(TestEqual(Dist2(Color(0.376f, 0.471f, 0.627f, 0.5f), Color(0.75f, 0.8f, 0.24f, 1.f)), l));
+		TEST_CHECK(TestEqual(Dist2(Color(-3.0f, 4.0f, -12.0f, 0.f), Color(0.f, 0.f, 0.f, 0.f)), 169.f));
+		TEST_CHECK(TestEqual(Dist(Color(0.376f, 0.471f, 0.627f, 0.5f), Color(0.75f, 0.8f, 0.24f, 1.f)), sqrt(l)));
+		TEST_CHECK(TestEqual(Dist(Color(-3.0f, 4.0f, -12.0f, 0.f), Color(0.f, 0.f, 0.f, 0.f)), 13.f));
+	}
+	{
+		Color c0 = ChromaScale(Color(1.f, 2.f, 3.f, 4.f), -0.5f);
+		TEST_CHECK(TestEqual(c0.r, -0.5f));
+		TEST_CHECK(TestEqual(c0.g, -1.0f));
+		TEST_CHECK(TestEqual(c0.b, -1.5f));
+		TEST_CHECK(TestEqual(c0.a, 4.f));
+	}
+	{
+		Color c0 = AlphaScale(Color(1.f, 2.f, 3.f, 4.f), -0.5f);
+		TEST_CHECK(TestEqual(c0.r, 1.0f));
+		TEST_CHECK(TestEqual(c0.g, 2.0f));
+		TEST_CHECK(TestEqual(c0.b, 3.f));
+		TEST_CHECK(TestEqual(c0.a, -2.f));
+	}
 	{
 		Color c0(-3.0444f, 102.001f, -0.0001f, 2.2012f);
 		Color c1(-3.0443f, 102.00105f, -0.00005f, 2.20115f);
@@ -242,13 +294,86 @@ void test_color() {
 		TEST_CHECK(AlmostEqual(c0, c2, 0.0001f) == false);
 		TEST_CHECK(AlmostEqual(c0, c2, 0.005f));
 	}
-//inline Color ColorI(int r, int g, int b, int a = 255) { return Color(float(r) / 255.f, float(g) / 255.f, float(b) / 255.f, float(a) / 255.f); }
-//Color ToHLS(const Color &);
-//Color FromHLS(const Color &);
-//Color SetHue(const Color &c, float h);
-//Color SetSaturation(const Color &c, float s);
-//Color SetLuminance(const Color &c, float l);
-//Color ScaleHue(const Color &c, float k);
-//Color ScaleSaturation(const Color &c, float k);
-//Color ScaleLuminance(const Color &c, float k);
+	{
+		Color c0 = ColorI(96, 120, 160, 128);
+		TEST_CHECK(TestEqual(c0.r, 0.376f, 1.f / 255.f));
+		TEST_CHECK(TestEqual(c0.g, 0.471f, 1.f / 255.f));
+		TEST_CHECK(TestEqual(c0.b, 0.627f, 1.f / 255.f));
+		TEST_CHECK(TestEqual(c0.a, 0.5f, 1.f/255.f));
+	}
+	{ 
+		Color c0 = ToHLS(Color(0.376f, 0.471f, 0.627f));
+		TEST_CHECK(TestEqual(c0.r, 217.3f, 0.1f));
+		TEST_CHECK(TestEqual(c0.g, 0.5015f, 0.01f));
+		TEST_CHECK(TestEqual(c0.b, 0.2517f, 0.01f));
+		TEST_CHECK(TestEqual(c0.a, 1.f, 0.01f));
+
+		TEST_CHECK(AlmostEqual(ToHLS(Color::Red), Color(0.f, 0.5f, 1.f), 0.0001f));
+		TEST_CHECK(AlmostEqual(ToHLS(Color::Yellow), Color(60.f, 0.5f, 1.f), 0.0001f));
+		TEST_CHECK(AlmostEqual(ToHLS(Color::Green), Color(120.f, 0.5f, 1.f), 0.0001f));
+		TEST_CHECK(AlmostEqual(ToHLS(ColorI(0, 255, 255)), Color(180.f, 0.5f, 1.f), 0.0001f));
+		TEST_CHECK(AlmostEqual(ToHLS(Color::Blue), Color(240.f, 0.5f, 1.f), 0.0001f));
+		TEST_CHECK(AlmostEqual(ToHLS(ColorI(255, 0, 255)), Color(300.f, 0.5f, 1.f), 0.0001f));
+	}
+	{
+		Color c0 = FromHLS(Color(217.3f, 0.5015f, 0.2517f));
+		TEST_CHECK(TestEqual(c0.r, 0.376f, 0.1f));
+		TEST_CHECK(TestEqual(c0.g, 0.471f, 0.01f));
+		TEST_CHECK(TestEqual(c0.b, 0.627f, 0.01f));
+		TEST_CHECK(TestEqual(c0.a, 1.f, 0.01f));
+	
+		Color c1 = FromHLS(Color(0.f, 0.75f, 0.f));
+		TEST_CHECK(TestEqual(c1.r, 0.75f));
+		TEST_CHECK(TestEqual(c1.g, 0.75));
+		TEST_CHECK(TestEqual(c1.b, 0.75f));
+		TEST_CHECK(TestEqual(c1.a, 1.f));
+	}
+	{
+		Color c0 = SetHue(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 60.f);
+		Color c1 = ToHLS(c0);
+		TEST_CHECK(TestEqual(c1.r, 60.f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.g, 0.5015f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.b, 0.2517f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.a, 1.f, 0.0001f));
+	}
+	{
+		Color c0 = SetSaturation(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 0.8f);
+		Color c1 = ToHLS(c0);
+		TEST_CHECK(TestEqual(c1.r, 217.3f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.g, 0.5015f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.b, 0.8f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.a, 1.f, 0.0001f));
+	}
+	{
+		Color c0 = SetLuminance(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 0.1f);
+		Color c1 = ToHLS(c0);
+		TEST_CHECK(TestEqual(c1.r, 217.3f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.g, 0.1f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.b, 0.2517f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.a, 1.f, 0.0001f));
+	}
+	{
+		Color c0 = ScaleHue(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 0.5f);
+		Color c1 = ToHLS(c0);
+		TEST_CHECK(TestEqual(c1.r, 108.65f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.g, 0.5015f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.b, 0.2517f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.a, 1.f, 0.0001f));
+	}
+	{
+		Color c0 = ScaleSaturation(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 0.5f);
+		Color c1 = ToHLS(c0);
+		TEST_CHECK(TestEqual(c1.r, 217.3f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.g, 0.5015f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.b, 0.12585f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.a, 1.f, 0.0001f));
+	}
+	{
+		Color c0 = ScaleLuminance(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 0.5f);
+		Color c1 = ToHLS(c0);
+		TEST_CHECK(TestEqual(c1.r, 217.3f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.g, 0.25075f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.b, 0.2517f, 0.0001f));
+		TEST_CHECK(TestEqual(c1.a, 1.f, 0.0001f));
+	} 
 }
