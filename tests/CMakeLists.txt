@@ -11,6 +11,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/mat44.cpp
 	foundation/color.cpp
 	foundation/minmax.cpp
+	foundation/plane.cpp
 )
 
 add_executable(test_foundation test_foundation.cpp ${TEST_FOUNDATION_SRCS})
