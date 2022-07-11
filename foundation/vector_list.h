@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <vector>
-#include <iterator>
 #include <cstring>
+#include <iterator>
+#include <vector>
 
 namespace hg {
 
@@ -24,8 +24,7 @@ namespace hg {
 
 	shrink() shrink the index table to the minimum size possible.
 */
-template <typename T>
-class vector_list {
+template <typename T> class vector_list {
 public:
 	static const uint32_t invalid_idx = 0xffffffff;
 
@@ -252,34 +251,36 @@ private:
 	void *storage_;
 
 #if __cplusplus >= 201103L
-	template <typename U=T>
-	inline typename std::enable_if<std::is_trivially_copyable<U>::value, void>::type
-	transfer_storage(U *new_storage) {
-		memcpy(new_storage, storage_, sizeof(U) * storage_capacity_); 
+	template <typename U = T>
+	inline typename std::enable_if<std::is_trivially_copyable<U>::value, void>::type transfer_storage(U *new_storage, const size_t new_storage_size) {
+#ifdef __STDC_LIB_EXT1__
+		memcpy_s(new_storage, new_storage_size, storage_, sizeof(U) * storage_capacity_);
+#else
+		memcpy(new_storage, storage_, sizeof(U) * storage_capacity_); // flawfinder: ignore
+#endif
 	}
 
-	template <typename U=T>
-	inline typename std::enable_if<(!std::is_trivially_copyable<U>::value) && std::is_move_constructible<U>::value, void>::type
-	transfer_storage(U *new_storage) {
+	template <typename U = T>
+	inline typename std::enable_if<(!std::is_trivially_copyable<U>::value) && std::is_move_constructible<U>::value, void>::type transfer_storage(
+		U *new_storage, const size_t new_storage_size) {
 		for (auto i = first(); i != invalid_idx; i = next(i)) {
-			U* dst = reinterpret_cast<U *>(new_storage) + i;
-			U* src = reinterpret_cast<U *>(storage_) + i;
+			U *dst = reinterpret_cast<U *>(new_storage) + i;
+			U *src = reinterpret_cast<U *>(storage_) + i;
 			new (dst) T(std::move(*src));
 		}
 	}
 
-	template <typename U=T>
-	inline typename std::enable_if<(!std::is_trivially_copyable<U>::value) && (!std::is_move_constructible<U>::value), void>::type
-	transfer_storage(U *new_storage) {
+	template <typename U = T>
+	inline typename std::enable_if<(!std::is_trivially_copyable<U>::value) && (!std::is_move_constructible<U>::value), void>::type transfer_storage(
+		U *new_storage, const size_t new_storage_size) {
 		for (auto i = first(); i != invalid_idx; i = next(i)) {
-			U* dst = reinterpret_cast<U *>(new_storage) + i;
-			U* src = reinterpret_cast<U *>(storage_) + i;
+			U *dst = reinterpret_cast<U *>(new_storage) + i;
+			U *src = reinterpret_cast<U *>(storage_) + i;
 			new (dst) U(*src);
 		}
 	}
 #else
-	template <typename U>
-	inline void transfer_storage(U *new_storage) {
+	template <typename U> inline void transfer_storage(U *new_storage, const size_t new_storage_size) {
 		for (uint32_t i = first(); i != invalid_idx; i = next(i)) {
 			U *dst = reinterpret_cast<U *>(new_storage) + i;
 			U *src = reinterpret_cast<U *>(storage_) + i;
@@ -291,7 +292,7 @@ private:
 	void reserve_storage_(size_t capacity) {
 		if (capacity > storage_capacity_) {
 			void *new_storage_ = malloc(sizeof(T) * capacity);
-			transfer_storage((T*)new_storage_);
+			transfer_storage((T *)new_storage_, sizeof(T) * capacity);
 			for (uint32_t i = first(); i != invalid_idx; i = next(i))
 				reinterpret_cast<T *>(storage_)[i].~T();
 			free(storage_);

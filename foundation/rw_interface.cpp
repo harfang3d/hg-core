@@ -21,7 +21,7 @@ bool Read(const Reader &i, const Handle &h, std::string &v) {
 		return false;
 
 	std::vector<char> s_(size_t(size) + 1);
-	if (i.read(h, s_.data(), size) != size)
+	if (i.read(h, s_.data(), size) != size) // flawfinder: ignore (this can't fail as we are reading size bytes into a buffer of size + 1 bytes)
 		return false;
 
 	if (size)
@@ -55,14 +55,19 @@ bool Seek(const Writer &i, const Handle &h, ptrdiff_t offset, SeekMode mode) { r
 //
 Data LoadData(const Reader &i, const Handle &h) {
 	Data data;
-	size_t size = i.size(h);
-	data.Skip(size);
-	i.read(h, data.GetData(), data.GetSize());
+
+	const size_t size = i.size(h);
+
+	if (data.Skip(size))
+		i.read(h, data.GetData(), data.GetSize());
+	else
+		i.seek(h, size, SM_Current);
+
 	return data;
 }
 
 std::string LoadString(const Reader &i, const Handle &h) {
-	size_t size = i.size(h);
+	const size_t size = i.size(h);
 	std::string str(size, 0);
 	i.read(h, &str[0], size);
 	return str;
