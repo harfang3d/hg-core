@@ -50,7 +50,7 @@ inline MinMax Union(const MinMax &a, const MinMax &b) { return MinMax(Min(a.mn, 
 inline MinMax Union(const MinMax &mm, const Vec3 &p) { return MinMax(Min(mm.mn, p), Max(mm.mx, p)); }
 
 /// Return a transformed copy of a minmax instance.
-MinMax operator*(const MinMax &mm, const Mat4 &m);
+MinMax operator*(const Mat4 &m, const MinMax &mm);
 
 /// Intersect ray with this minmax.
 bool IntersectRay(const MinMax &mm, const Vec3 &o, const Vec3 &d, float &tmin, float &tmax);
