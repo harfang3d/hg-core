@@ -16,6 +16,7 @@
 using namespace hg;
 
 //
+extern void test_os();
 extern void test_math();
 extern void test_units();
 extern void test_string();
@@ -61,6 +62,7 @@ void test_log() {
 
 //
 TEST_LIST = {
+	{"OS", test_os},
 	{"Math", test_math},
 	{"Units", test_units},
 	{"String", test_string},

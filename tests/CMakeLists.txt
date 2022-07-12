@@ -1,4 +1,5 @@
 set(TEST_FOUNDATION_SRCS
+	foundation/os.cpp
 	foundation/math.cpp
 	foundation/units.cpp
 	foundation/string.cpp
