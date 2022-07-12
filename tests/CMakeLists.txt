@@ -13,6 +13,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/minmax.cpp
 	foundation/plane.cpp
 	foundation/projection.cpp
+	foundation/obb.cpp
 )
 
 add_executable(test_foundation test_foundation.cpp ${TEST_FOUNDATION_SRCS})
