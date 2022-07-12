@@ -31,6 +31,7 @@ extern void test_minmax();
 extern void test_plane();
 extern void test_projection();
 extern void test_obb();
+extern void test_easing();
 
 //
 void test_clock_update() {
@@ -75,6 +76,7 @@ TEST_LIST = {
 	{"Plane", test_plane},
 	{"Projection", test_projection},
 	{"OBB", test_obb},
+	{"Easing", test_easing},
 
 	{"Clock.Update", test_clock_update},
 

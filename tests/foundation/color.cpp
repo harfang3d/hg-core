@@ -327,6 +327,15 @@ void test_color() {
 		TEST_CHECK(TestEqual(c1.g, 0.75));
 		TEST_CHECK(TestEqual(c1.b, 0.75f));
 		TEST_CHECK(TestEqual(c1.a, 1.f));
+
+		Color c2 = FromHLS(Color(30.f, 0.5f, 0.5f));
+		TEST_CHECK(TestEqual(c2.r, 0.75f, 0.00001f));
+		TEST_CHECK(TestEqual(c2.g, 0.5f, 0.00001f));
+		TEST_CHECK(TestEqual(c2.b, 0.25f, 0.00001f));
+		TEST_CHECK(TestEqual(c2.a, 1.f, 0.00001f));
+
+		Color c3 = FromHLS(Color(390.f, 0.5f, 0.5f));
+		TEST_CHECK(c2 == c3);
 	}
 	{
 		Color c0 = SetHue(FromHLS(Color(217.3f, 0.5015f, 0.2517f)), 60.f);
