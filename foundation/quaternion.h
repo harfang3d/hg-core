@@ -96,6 +96,7 @@ inline Quaternion operator*(const Quaternion &a, const Quaternion &b) {
 }
 
 inline Quaternion operator*(const Quaternion &q, float v) { return Quaternion(q.x * v, q.y * v, q.z * v, q.w * v); }
+inline Quaternion operator*(float v, const Quaternion &q) { return q * v; }
 inline Quaternion operator/(const Quaternion &q, float v) { return Quaternion(q.x / v, q.y / v, q.z / v, q.w / v); }
 
 /// Normalize quaternion.

@@ -16,6 +16,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/projection.cpp
 	foundation/obb.cpp
 	foundation/easing.cpp
+	foundation/quaternion.cpp
 )
 
 add_executable(test_foundation test_foundation.cpp ${TEST_FOUNDATION_SRCS})

@@ -33,6 +33,7 @@ extern void test_plane();
 extern void test_projection();
 extern void test_obb();
 extern void test_easing();
+extern void test_quaternion();
 
 //
 void test_clock_update() {
@@ -79,6 +80,7 @@ TEST_LIST = {
 	{"Projection", test_projection},
 	{"OBB", test_obb},
 	{"Easing", test_easing},
+    {"Quaternion", test_quaternion},
 
 	{"Clock.Update", test_clock_update},
 
