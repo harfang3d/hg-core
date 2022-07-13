@@ -9,6 +9,7 @@
 #include "foundation/math.h"
 #include "foundation/unit.h"
 #include "foundation/vector3.h"
+#include "foundation/vector4.h"
 #include "foundation/matrix3.h"
 #include "foundation/matrix4.h"
 
@@ -264,7 +265,65 @@ void test_quaternion() {
 		Quaternion q1(0.1f, 0.2f, 0.3f,-0.4f);
 		TEST_CHECK(TestEqual(Dist(q0, q1), Sqrt(35.9f)));
 	}
-// Quaternion Slerp(const Quaternion &a, const Quaternion &b, float t);
+	{ 
+		{
+			Quaternion q0 = QuaternionFromAxisAngle(Deg(90.f), Vec3::Up);
+			Quaternion q1 = QuaternionFromAxisAngle(Deg(180.f), Vec3::Up);
+			Quaternion q2 = QuaternionFromAxisAngle(Deg(90.f + 45.f), Vec3::Up);
+			Quaternion q3 = Slerp(q0, q1, 0.f);
+			TEST_CHECK(TestEqual(q3.x, q0.x));
+			TEST_CHECK(TestEqual(q3.y, q0.y));
+			TEST_CHECK(TestEqual(q3.z, q0.z));
+			TEST_CHECK(TestEqual(q3.w, q0.w));
+
+			Quaternion q4 = Slerp(q0, q1, 1.f);
+			TEST_CHECK(TestEqual(q4.x, q1.x));
+			TEST_CHECK(TestEqual(q4.y, q1.y));
+			TEST_CHECK(TestEqual(q4.z, q1.z));
+			TEST_CHECK(TestEqual(q4.w, q1.w));
+
+			Quaternion q5 = Slerp(q0, q1, 0.5f);
+			TEST_CHECK(TestEqual(q5.x, q2.x));
+			TEST_CHECK(TestEqual(q5.y, q2.y));
+			TEST_CHECK(TestEqual(q5.z, q2.z));
+			TEST_CHECK(TestEqual(q5.w, q2.w));
+		}
+		{ 
+			float t = 0.4f;
+			Quaternion q0 = QuaternionFromAxisAngle(Deg(160.f), Normalize(Vec3(1.f, -2.f, -1.f)));
+			Quaternion q1 = QuaternionFromAxisAngle(Deg(45.f), Normalize(Vec3(1.f, 0.f, -2.f)));
+			Quaternion q2 = Slerp(q0, q1, t);
+			Quaternion q3 = Slerp(q1, q0, 1.f-t);
+			TEST_CHECK(TestEqual(q3.x, q2.x));
+			TEST_CHECK(TestEqual(q3.y, q2.y));
+			TEST_CHECK(TestEqual(q3.z, q2.z));
+			TEST_CHECK(TestEqual(q3.w, q2.w));
+		}
+		{
+			float t = 0.75f;
+			Quaternion q0 = QuaternionFromAxisAngle(Deg(30.f), Vec3::Up);
+			Quaternion q1 = QuaternionFromAxisAngle(Deg(-30.f), -Vec3::Up);
+			Quaternion q2 = Lerp(q0, q1, t);
+			Quaternion q3 = Slerp(q0, q1, t);
+			TEST_CHECK(TestEqual(q3.x, q2.x));
+			TEST_CHECK(TestEqual(q3.y, q2.y));
+			TEST_CHECK(TestEqual(q3.z, q2.z));
+			TEST_CHECK(TestEqual(q3.w, q2.w));
+		}
+		{
+			const Vec3 axis = Normalize(Vec3::One);
+			const float t = 0.25f;
+			const float a0 = 30.f, a1 = 180.f + a0;
+			Quaternion q0 = QuaternionFromAxisAngle(Deg(a1), axis);
+			Quaternion q1 = QuaternionFromAxisAngle(Deg(a0), -axis);
+			Quaternion q2 = QuaternionFromAxisAngle(Deg(240.f), axis);
+			Quaternion q3 = Slerp(q0, q1, t);
+			TEST_CHECK(TestEqual(q3.x, q2.x));
+			TEST_CHECK(TestEqual(q3.y, q2.y));
+			TEST_CHECK(TestEqual(q3.z, q2.z));
+			TEST_CHECK(TestEqual(q3.w, q2.w));
+		}
+	}
 	{
 		Vec3 angle = Deg3(-60.f, 30.f, 45.f);
 		{
@@ -359,5 +418,28 @@ void test_quaternion() {
 			TEST_CHECK(AlmostEqual(GetColumn(m, 2), GetColumn(rot, 2), 0.000001f));
 		}
 	}
-// Quaternion QuaternionLookAt(const Vec3 &at);
+	{
+		const Vec3 p = Vec3(1.5f, 2.3f, 10.f);
+		const Mat3 m = Mat3LookAt(p);
+		Quaternion q = QuaternionLookAt(p);
+		TEST_CHECK(AlmostEqual(ToEuler(m), ToEuler(q), 0.00001f));
+	}
+	{ 
+		const Vec3 angle = Deg3(-60.f, 45.f, 90.f);
+		const Quaternion q = QuaternionFromEuler(angle);
+		const Mat3 m = RotationMat3(angle);
+		Vec3 v0(-2.f, 3.f, -4.f);
+		TEST_CHECK(AlmostEqual(m * v0, Rotate(q, v0), 0.000001f));
+	}
+	{
+		const Vec3 angle = Deg3(-60.f, 45.f, 90.f);
+		const Quaternion q = QuaternionFromEuler(angle);
+		const Mat4 m = RotationMat4(angle);
+		Vec4 v0(-2.f, 3.f, -4.f, 11.f);
+		TEST_CHECK(AlmostEqual(m * v0, Rotate(q, v0), 0.000001f));
+
+		TEST_CHECK(AlmostEqual(Rotate(QuaternionFromEuler(Deg3(90.f, 0.f, 0.f)), Vec3::Up), Vec3::Front, 0.000001f));
+		TEST_CHECK(AlmostEqual(Rotate(QuaternionFromEuler(Deg3(0.f, 0.f, 90.f)), Vec3::Up), Vec3::Left, 0.000001f));
+		TEST_CHECK(AlmostEqual(Rotate(QuaternionFromEuler(Deg3(0.f, 90.f, 0.f)), Vec3::Left), Vec3::Front, 0.000001f));
+	}
 }

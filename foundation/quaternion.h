@@ -7,6 +7,7 @@
 namespace hg {
 
 struct Vec3;
+struct Vec4;
 struct Mat3;
 
 /// Quaternion
@@ -128,5 +129,9 @@ Quaternion QuaternionFromAxisAngle(float angle, const Vec3 &axis);
 Mat3 ToMatrix3(const Quaternion &q);
 /// To Euler angle triplet.
 Vec3 ToEuler(const Quaternion &q, RotationOrder = RO_Default);
+
+/// Rotate a vector
+Vec3 Rotate(const Quaternion &q, const Vec3 &v);
+Vec4 Rotate(const Quaternion &q, const Vec4 &v);
 
 } // namespace hg

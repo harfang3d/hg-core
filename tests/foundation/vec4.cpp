@@ -283,5 +283,11 @@ void test_vec4() {
 		TEST_CHECK(TestEqual(v.z, 11.11f));
 		TEST_CHECK(TestEqual(v.w, 1.f));
 	}
-	// inline Vec4 Vec4I(int x, int y, int z, int w = 255) { return Vec4(float(x) / 255.f, float(y) / 255.f, float(z) / 255.f, float(w) / 255.f); }
+	{ 
+		Vec4 u = Vec4I(255, 0, 128);
+		TEST_CHECK(TestEqual(u.x, 1.f, 1.f/255.f));
+		TEST_CHECK(TestEqual(u.y, 0.f, 1.f / 255.f));
+		TEST_CHECK(TestEqual(u.z, 0.5f, 1.f / 255.f));
+		TEST_CHECK(TestEqual(u.w, 1.f, 1.f / 255.f));
+	}
 }
