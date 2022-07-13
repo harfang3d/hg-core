@@ -2,16 +2,12 @@
 
 #include <fmt/format.h>
 
+#include "app_glfw/app_glfw.h"
+
 #include "foundation/profiler.h"
 
 #include "engine/assets.h"
 #include "engine/scene.h"
-
-#define SOKOL_GFX_IMPL
-#define SOKOL_GLCORE33
-#include <sokol_gfx.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 
 using namespace hg;
 
@@ -20,6 +16,8 @@ int main(int narg, const char **args) {
 	if (narg < 3)
 		return -1;
 
+	GLFWwindow *win = RenderInit(640, 480, "Harfang Core - Scene Viewer");
+
 	Scene scene;
 	PipelineResources resources;
 	PipelineInfo info;
@@ -27,9 +25,11 @@ int main(int narg, const char **args) {
 	AddAssetsFolder(args[1]);
 
 	LoadSceneContext ctx;
-	LoadSceneJsonFromAssets(args[2], scene, resources, info, ctx);
+//	LoadSceneJsonFromAssets(args[2], scene, resources, info, ctx);
+	LoadSceneBinaryFromAssets(args[2], scene, resources, info, ctx);
 
 	PrintProfilerFrame(EndProfilerFrame());
 
+	RenderShutdown();
 	return 0;
 }

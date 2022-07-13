@@ -8,4 +8,4 @@ add_subdirectory(extern/glfw-3.3.7)
 
 #
 add_library(app_glfw STATIC app_glfw.cpp app_glfw.h)
-target_link_libraries(app_glfw PUBLIC engine glfw)
+target_link_libraries(app_glfw PUBLIC glfw engine)

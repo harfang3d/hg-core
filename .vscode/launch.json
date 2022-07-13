@@ -20,7 +20,7 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/samples/scn_viewer.exe",
-			"args": ["d:/assemble-demo-assets/range_rover_simple/project", "scene_no_texture.scn"],
+			"args": ["d:/assemble-demo-assets/range_rover_simple/project_compiled", "scene_no_texture.scn"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

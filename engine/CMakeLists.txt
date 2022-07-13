@@ -17,8 +17,9 @@ set(ENGINE_HDRS
 	create_model.h
 	file_format.h
 	fps_controller.h
-	json.h
 	geometry.h
+	json.h
+	load_dds.h
 	model_builder.h
 	node.h
 	picture.h
@@ -38,8 +39,9 @@ set(ENGINE_SRCS
 	component.cpp
 	create_model.cpp
 	fps_controller.cpp
-	json.cpp
 	geometry.cpp
+	json.cpp
+	load_dds.cpp
 	model_builder.cpp
 	node.cpp
 	picture.cpp

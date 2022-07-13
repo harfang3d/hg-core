@@ -46,7 +46,7 @@ template <typename Track> void SaveAnimTracks(rapidjson::Document &jd, rapidjson
 			tracks_js.PushBack(track_js, jd.GetAllocator());
 		}
 
-		set_json_key(jd, js, name.c_str(), tracks_js);
+		set_json_key(jd, js, name, tracks_js);
 	}
 }
 

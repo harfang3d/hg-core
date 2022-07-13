@@ -1444,7 +1444,7 @@ bool Scene::NodeSetupInstance(
 
 		{
 			const Instance_ &i_ = instances[i->second.idx];
-			if (!LoadScene(ir, ScopedReadHandle(ip, i_.name.c_str(), flags & LSSF_Silent), i_.name.c_str(), *this, ir, ip, resources, pipeline, ctx, flags))
+			if (!LoadScene(ir, ScopedReadHandle(ip, i_.name, flags & LSSF_Silent), i_.name, *this, ir, ip, resources, pipeline, ctx, flags))
 				return false;
 		}
 
@@ -1994,7 +1994,7 @@ bool LoadSceneBinaryFromFile(
 }
 
 bool LoadSceneBinaryFromAssets(
-	const char *name, Scene &scene, PipelineResources &resources, const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
+	const std::string &name, Scene &scene, PipelineResources &resources, const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 	ScopedReadHandle handle(g_assets_read_provider, name, debug);
 #else
@@ -2003,8 +2003,8 @@ bool LoadSceneBinaryFromAssets(
 	return scene.Load_binary(g_assets_reader, handle, name, g_assets_reader, g_assets_read_provider, resources, pipeline, ctx, flags);
 }
 
-bool LoadSceneBinaryFromData(const Data &data, const char *name, Scene &scene, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
-	const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
+bool LoadSceneBinaryFromData(const Data &data, const std::string &name, Scene &scene, const Reader &deps_ir, const ReadProvider &deps_ip,
+	PipelineResources &resources, const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 	DataReadHandle handle(data, debug);
 #else

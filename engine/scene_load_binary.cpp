@@ -129,7 +129,7 @@ void LoadComponent(Scene::Object_ *data_, const Reader &ir, const Handle &h, con
 
 	if (!name.empty())
 		if (name[0] != '#') // resource starting with # are generated/handled in a special way
-			data_->model = SkipLoadOrQueueModelLoad(deps_ir, deps_ip, name.c_str(), resources, queue_model_loads, do_not_load_resources, silent);
+			data_->model = SkipLoadOrQueueModelLoad(deps_ir, deps_ip, name, resources, queue_model_loads, do_not_load_resources, silent);
 
 	const uint16_t mat_count = Read<uint16_t>(ir, h);
 	data_->materials.resize(mat_count);
@@ -213,12 +213,14 @@ static void LoadProbe(Probe &probe, const Reader &ir, const Handle &h, const Rea
 
 	Read(ir, h, tex_name);
 	if (!tex_name.empty())
-		probe.irradiance_map = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name.c_str(), resources, queue_texture_loads, do_not_load_resources, silent);
+		probe.irradiance_map = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name, resources, queue_texture_loads, do_not_load_resources, silent);
 	Read(ir, h, tex_name);
 	if (!tex_name.empty())
-		probe.radiance_map = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name.c_str(), resources, queue_texture_loads, do_not_load_resources, silent);
+		probe.radiance_map = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name, resources, queue_texture_loads, do_not_load_resources, silent);
 
-	Read(ir, h, probe.type);
+	uint8_t type;
+	Read(ir, h, type);
+	probe.type = ProbeType(type);
 	Read(ir, h, probe.parallax);
 	Read(ir, h, probe.trs);
 }
@@ -226,10 +228,7 @@ static void LoadProbe(Probe &probe, const Reader &ir, const Handle &h, const Rea
 static void SkipProbe(const Reader &ir, const Handle &h) {
 	SkipString(ir, h);
 	SkipString(ir, h);
-
-	Skip<ProbeType>(ir, h);
-	Skip<uint8_t>(ir, h);
-	Skip<TransformTRS>(ir, h);
+	ir.seek(h, sizeof(uint8_t) * 2 + sizeof(TransformTRS), SM_Current);
 }
 
 //
@@ -781,7 +780,7 @@ bool Scene::Load_binary(const Reader &ir, const Handle &h, const std::string &na
 
 				if (!name.empty())
 					environment.brdf_map = SkipLoadOrQueueTextureLoad(
-						deps_ir, deps_ip, name.c_str(), resources, load_flags & LSSF_QueueTextureLoads, load_flags & LSSF_DoNotLoadResources, silent);
+						deps_ir, deps_ip, name, resources, load_flags & LSSF_QueueTextureLoads, load_flags & LSSF_DoNotLoadResources, silent);
 			}
 
 			Read(ir, h, canvas.clear_z);

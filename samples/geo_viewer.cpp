@@ -15,46 +15,9 @@
 #include "engine/scene.h"
 #include "engine/assets.h"
 
-#define SOKOL_GFX_IMPL
-#define SOKOL_GLCORE33
-#include <sokol_gfx.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+#include "app_glfw/app_glfw.h"
 
 using namespace hg;
-
-//----------------------------------------------
-bool RenderInit(GLFWwindow *win) {
-	sg_desc desc;
-	memset(&desc, 0, sizeof(sg_desc));
-	sg_setup(&desc);
-
-	return true;
-}
-
-GLFWwindow *RenderInit(int width, int height, const std::string &title) {
-	glfwInit();
-
-#if defined(SOKOL_GLCORE33) || defined(SOKOL_GLES2) || defined(SOKOL_GLES3) // any GL
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	GLFWwindow *win = glfwCreateWindow(640, 480, title.c_str(), 0, 0);
-	glfwMakeContextCurrent(win);
-	glfwSwapInterval(1);
-#else
-#error "Unsupported graphic API"
-#endif
-
-	RenderInit(win);
-	return win;
-}
-
-void RenderShutdown() {
-	sg_shutdown();
-	glfwTerminate();
-}
 
 //----------------------------------------------
 static bool key_up = false, key_down = false, key_left = false, key_right = false;
@@ -95,7 +58,7 @@ sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, co
 
 //
 int main(int narg, const char **args) {
-	GLFWwindow *win = RenderInit(640, 480, "Sokol Triangle GLFW");
+	GLFWwindow *win = RenderInit(640, 480, "Harfang Core - Geometry Viewer");
 
 	glfwSetKeyCallback(win, key_callback);
 

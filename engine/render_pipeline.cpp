@@ -3,6 +3,7 @@
 #include "engine/render_pipeline.h"
 #include "engine/assets_rw_interface.h"
 #include "engine/file_format.h"
+#include "engine/load_dds.h"
 
 #include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
@@ -11,12 +12,12 @@
 #include "foundation/matrix4.h"
 #include "foundation/matrix44.h"
 #include "foundation/path_tools.h"
-#include "foundation/projection.h"
 #include "foundation/profiler.h"
+#include "foundation/projection.h"
 #include "foundation/time.h"
 
-#include <rapidjson/document.h>
 #include <fmt/format.h>
+#include <rapidjson/document.h>
 #include <set>
 
 #define SOKOL_GFX_IMPL
@@ -26,7 +27,6 @@
 namespace hg {
 
 void Destroy(PipelineProgram &) {}
-void Destroy(Texture &) {}
 void Destroy(Model &) {}
 void Destroy(Material &) {}
 
@@ -207,123 +207,195 @@ sg_buffer MakeVertexBuffer(const void *data, size_t size) {
 	return sg_make_buffer(&buffer_desc);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //
 Material LoadMaterial(const rapidjson::Value &js, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
 	const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent) {
-		return Material();
+	return Material();
 }
 
 Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
 	const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent) {
+	ProfilerPerfSection section("LoadMaterial");
+
+	Material mat;
+
+	std::string name;
+	Read(ir, h, name); // shader name
+	/*
+		if (do_not_load_resources)
+			mat.program = resources.programs.Add(name, PipelineProgram());
+		else
+			mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, name, resources, pipeline, silent);
+	*/
+	const uint16_t value_count = Read<uint16_t>(ir, h);
+
+	for (size_t i = 0; i < value_count; ++i) {
+		Read(ir, h, name);
+		Material::Value &v = mat.values[name];
+
+		Read(ir, h, v.type);
+		Read(ir, h, v.count);
+
+		uint16_t value_count;
+		Read(ir, h, value_count);
+
+		v.value.resize(value_count);
+		ir.read(h, v.value.data(), value_count * sizeof(float));
+	}
+
+	const uint16_t texture_count = Read<uint16_t>(ir, h);
+
+	for (size_t i = 0; i < texture_count; ++i) {
+		Read(ir, h, name);
+		Material::Texture &t = mat.textures[name];
+
+		Read(ir, h, t.channel);
+
+		if (Read<uint8_t>(ir, h) == 1) {
+			std::string tex_name;
+			Read(ir, h, tex_name);
+
+			uint32_t dummy_flags; // probably will be removed, serves no purpose since proper meta file support
+			Read(ir, h, dummy_flags);
+
+			if (!tex_name.empty())
+				t.texture = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name, resources, queue_texture_loads, do_not_load_resources, silent);
+		}
+	}
+
+	Read(ir, h, mat.state.state);
+	Read(ir, h, mat.state.rgba);
+
+	Read(ir, h, mat.flags);
+
+	return mat;
+}
+
+Material LoadMaterialFromFile(
+	const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent) {
 	return Material();
 }
 
-Material LoadMaterialFromFile(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
-	bool do_not_load_resources, bool silent) {
+Material LoadMaterialFromAssets(
+	const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads, bool do_not_load_resources, bool silent) {
 	return Material();
 }
 
-Material LoadMaterialFromAssets(const std::string &path, PipelineResources &resources, const PipelineInfo &pipeline, bool queue_texture_loads,
-	bool do_not_load_resources, bool silent) {
-	return Material();
+bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) { return false; }
+
+bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) { return false; }
+
+bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) { return false; }
+
+//
+Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
+	ScopedReadHandle h(ip, name, silent);
+	return LoadDDS(ir, h, name);
 }
 
+Texture LoadTextureFromFile(const std::string &path, bool silent) { return Texture(); }
 
+Texture LoadTextureFromAssets(const std::string &name, bool silent) { return Texture(); }
 
+void Destroy(Texture &tex) {}
 
+//
+TextureRef LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, PipelineResources &resources, bool silent) {
+	TextureRef ref = resources.textures.Has(name);
 
-bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) {
-	return false;
+	if (ref == InvalidTextureRef)
+		ref = resources.textures.Add(name, LoadTexture(ir, ip, name, silent));
+
+	return ref;
 }
 
-bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) {
-	return false;
+TextureRef LoadTextureFromFile(const std::string &path, PipelineResources &resources, bool silent) {
+	return LoadTexture(g_file_reader, g_file_read_provider, path, resources, silent);
 }
 
-bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) {
-	return false;
+TextureRef LoadTextureFromAssets(const std::string &name, PipelineResources &resources, bool silent) {
+	return LoadTexture(g_assets_reader, g_assets_read_provider, name, resources, silent);
 }
 
+//
+TextureRef QueueLoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, PipelineResources &resources) {
+	TextureRef ref = resources.textures.Has(name);
 
+	if (ref != InvalidTextureRef)
+		return ref;
 
+	ref = resources.textures.Add(name, Texture());
 
+	TextureLoad tl;
+	tl.ir = ir;
+	tl.ip = ip;
+	tl.ref = ref;
+	resources.texture_loads.push_back(tl);
 
+	return ref;
+}
 
+TextureRef QueueLoadTextureFromFile(const std::string &path, PipelineResources &resources) {
+	return QueueLoadTexture(g_file_reader, g_file_read_provider, path, resources);
+}
 
+TextureRef QueueLoadTextureFromAssets(const std::string &name, PipelineResources &resources) {
+	return QueueLoadTexture(g_assets_reader, g_assets_read_provider, name, resources);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+//
 TextureRef SkipLoadOrQueueTextureLoad(
 	const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool queue_load, bool do_not_load, bool silent) {
 	if (do_not_load)
 		return resources.textures.Add(path, Texture());
 
 	TextureRef ref = resources.textures.Has(path);
-/*
-	if (ref == InvalidTextureRef) {
-		const auto meta = LoadTextureMeta(ir, ip, path, silent);
 
+	if (ref == InvalidTextureRef) {
 		if (queue_load)
-			ref = QueueLoadTexture(ir, ip, path, meta.flags, resources);
+			ref = QueueLoadTexture(ir, ip, path, resources);
 		else
-			ref = LoadTexture(ir, ip, path, meta.flags, resources, silent);
+			ref = LoadTexture(ir, ip, path, resources, silent);
 	}
-*/
+
 	return ref;
 }
 
+//
+enum legacy_Attrib {
+	lA_Position,
+	lA_Normal,
+	lA_Tangent,
+	lA_Bitangent,
+	lA_Color0,
+	lA_Color1,
+	lA_Color2,
+	lA_Color3,
+	lA_Indices,
+	lA_Weight,
+	lA_TexCoord0,
+	lA_TexCoord1,
+	lA_TexCoord2,
+	lA_TexCoord3,
+	lA_TexCoord4,
+	lA_TexCoord5,
+	lA_TexCoord6,
+	lA_TexCoord7,
+	lA_Count
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+struct legacy_VertexLayout {
+	uint32_t m_hash; // hash
+	uint16_t m_stride; // stride
+	uint16_t m_offset[lA_Count]; // attribute offsets
+	uint16_t m_attributes[lA_Count]; // used attributes
+};
 
 //
-Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, ModelInfo *info, bool silent) {
+Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool silent) {
 	ProfilerPerfSection section("LoadModel", name);
 
-	const auto t = time_now();
+	const time_ns t = time_now();
 
 	if (!ir.is_valid(h)) {
 		if (!silent)
@@ -353,10 +425,12 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, Mode
 
 	Model model;
 
-//	bgfx::VertexLayout vs_decl;
-//	ir.read(h, &vs_decl, sizeof(bgfx::VertexLayout)); // read vertex declaration
+	legacy_VertexLayout vs_decl;
+	ir.read(h, &vs_decl, sizeof(legacy_VertexLayout)); // read vertex declaration
 
 	uint32_t tri_count = 0;
+
+	std::vector<uint8_t> data;
 
 	while (true) {
 		uint8_t idx_type_size = 2; // legacy is 16 bit indices
@@ -376,49 +450,36 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, Mode
 			if (size == 0)
 				break; // EOLists
 
-#if 0
-		const auto idx_mem = bgfx::alloc(size);
-		ir.read(h, idx_mem->data, idx_mem->size);
-		tri_count += (size / idx_type_size) / 3;
+		DisplayList list;
 
-		const auto idx_hnd = bgfx::createIndexBuffer(idx_mem, idx_type_size == 4 ? BGFX_BUFFER_INDEX32 : BGFX_BUFFER_NONE);
-		if (!bgfx::isValid(idx_hnd)) {
-			warn(format("%1: failed to create index buffer").arg(name));
-			break;
-		}
+		data.resize(size);
+		ir.read(h, data.data(), size); // load indices
 
-		bgfx::setName(idx_hnd, name);
-		
+		list.element_count = size / idx_type_size; // index count
+		list.index_buffer = MakeIndexBuffer(data.data(), size);
+		tri_count += list.element_count / 3;
+
 		// vertex buffer
 		size = Read<uint32_t>(ir, h);
-		const auto vtx_mem = bgfx::alloc(size);
-		ir.read(h, vtx_mem->data, vtx_mem->size);
 
-		const auto vtx_hnd = bgfx::createVertexBuffer(vtx_mem, vs_decl);
-		if (!bgfx::isValid(vtx_hnd)) {
-			warn(format("%1: failed to create vertex buffer").arg(name));
-			bgfx::destroy(idx_hnd);
-			break;
-		}
-		bgfx::setName(vtx_hnd, name);
+		data.resize(size);
+		ir.read(h, data.data(), size); // load vertices
+		list.vertex_buffer = MakeVertexBuffer(data.data(), size);
 
 		// bones table
 		size = Read<uint32_t>(ir, h);
-		std::vector<uint16_t> bones_table;
-		bones_table.resize(size);
-		ir.read(h, bones_table.data(), bones_table.size() * sizeof(bones_table[0]));
+		list.bones_table.resize(size);
+		ir.read(h, list.bones_table.data(), list.bones_table.size() * sizeof(list.bones_table[0]));
+
+		model.lists.push_back(list);
 
 		//
-		model.lists.push_back({idx_hnd, vtx_hnd, std::move(bones_table)});
 		model.bounds.push_back(Read<MinMax>(ir, h));
 		model.mats.push_back(Read<uint16_t>(ir, h));
-#endif
 	}
 
-	if (info) {
-//		info->vs_decl = vs_decl;
-		info->tri_count = tri_count;
-	}
+	// model.vtx_layout = ; FIXME implement lightweight vtx layout
+	model.tri_count = tri_count;
 
 	if (version > 0) { // version 1: add bind poses
 		const uint32_t bone_count = Read<uint32_t>(ir, h);
@@ -434,21 +495,21 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, Mode
 	return model;
 }
 
-Model LoadModelFromFile(const std::string &path, ModelInfo *info, bool silent) {
-	return LoadModel(g_file_reader, ScopedReadHandle(g_file_read_provider, path, silent), path, info, silent);
+Model LoadModelFromFile(const std::string &path, bool silent) {
+	return LoadModel(g_file_reader, ScopedReadHandle(g_file_read_provider, path, silent), path, silent);
 }
 
-Model LoadModelFromAssets(const std::string &name, ModelInfo *info, bool silent) {
-	return LoadModel(g_assets_reader, ScopedReadHandle(g_assets_read_provider, name, silent), name, info, silent);
+Model LoadModelFromAssets(const std::string &name, bool silent) {
+	return LoadModel(g_assets_reader, ScopedReadHandle(g_assets_read_provider, name, silent), name, silent);
 }
 
 //
 ModelRef LoadModel(const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool silent) {
 	ModelRef ref = resources.models.Has(path);
-	if (ref == InvalidModelRef) {
-		Model mdl = LoadModel(ir, ScopedReadHandle(ip, path), path, nullptr, silent);
-		ref = resources.models.Add(path, mdl);
-	}
+
+	if (ref == InvalidModelRef)
+		ref = resources.models.Add(path, LoadModel(ir, ScopedReadHandle(ip, path), path, silent));
+
 	return ref;
 }
 
@@ -477,10 +538,8 @@ size_t ProcessModelLoadQueue(PipelineResources &res, time_ns t_budget, bool sile
 			if (!silent)
 				debug(fmt::format("Queued model load '{}'", name));
 
-			ModelInfo info;
 			ScopedReadHandle h(load.ip, name, silent);
-//			mdl = LoadModel(load.ir, h, name, &info, silent);
-			res.model_infos[load.ref.ref] = info;
+			mdl = LoadModel(load.ir, h, name, silent);
 		}
 
 		res.model_loads.pop_front();
@@ -511,18 +570,20 @@ ModelRef QueueLoadModel(const Reader &ir, const ReadProvider &ip, const std::str
 	return ref;
 }
 
-ModelRef QueueLoadModelFromFile(const std::string &path, PipelineResources &resources) { return QueueLoadModel(g_file_reader, g_file_read_provider, path, resources); }
+ModelRef QueueLoadModelFromFile(const std::string &path, PipelineResources &resources) {
+	return QueueLoadModel(g_file_reader, g_file_read_provider, path, resources);
+}
 
 ModelRef QueueLoadModelFromAssets(const std::string &name, PipelineResources &resources) {
 	return QueueLoadModel(g_assets_reader, g_assets_read_provider, name, resources);
 }
-
 
 ModelRef SkipLoadOrQueueModelLoad(
 	const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool queue_load, bool do_not_load, bool silent) {
 	if (do_not_load)
 		return resources.models.Add(path, Model());
 
+#if 1
 	ModelRef ref = resources.models.Has(path);
 
 	if (ref == InvalidModelRef) {
@@ -531,16 +592,12 @@ ModelRef SkipLoadOrQueueModelLoad(
 		else
 			ref = LoadModel(ir, ip, path, resources, silent);
 	}
+
 	return ref;
+#else
+	return InvalidModelRef;
+#endif
 }
-
-
-
-
-
-
-
-
 
 #if 0
 
@@ -752,135 +809,135 @@ std::vector<std::string> GetMaterialValues(Material &mat) {
 
 //
 void GetMaterialWriteRGBA(const Material &m, bool &write_r, bool &write_g, bool &write_b, bool &write_a) {
-	write_r = m.state.state & BGFX_STATE_WRITE_R;
-	write_g = m.state.state & BGFX_STATE_WRITE_G;
-	write_b = m.state.state & BGFX_STATE_WRITE_B;
-	write_a = m.state.state & BGFX_STATE_WRITE_A;
+	write_r = m.state.state & RENDER_STATE_WRITE_R;
+	write_g = m.state.state & RENDER_STATE_WRITE_G;
+	write_b = m.state.state & RENDER_STATE_WRITE_B;
+	write_a = m.state.state & RENDER_STATE_WRITE_A;
 }
 
-bool GetMaterialWriteZ(const Material &m) { return m.state.state & BGFX_STATE_WRITE_Z; }
+bool GetMaterialWriteZ(const Material &m) { return m.state.state & RENDER_STATE_WRITE_Z; }
 
 //
 void SetMaterialWriteRGBA(Material &m, bool write_r, bool write_g, bool write_b, bool write_a) {
-	m.state.state &= ~(BGFX_STATE_WRITE_R | BGFX_STATE_WRITE_G | BGFX_STATE_WRITE_B | BGFX_STATE_WRITE_A);
+	m.state.state &= ~(RENDER_STATE_WRITE_R | RENDER_STATE_WRITE_G | RENDER_STATE_WRITE_B | RENDER_STATE_WRITE_A);
 	m.state.state |=
-		(write_r ? BGFX_STATE_WRITE_R : 0) | (write_g ? BGFX_STATE_WRITE_G : 0) | (write_b ? BGFX_STATE_WRITE_B : 0) | (write_a ? BGFX_STATE_WRITE_A : 0);
+		(write_r ? RENDER_STATE_WRITE_R : 0) | (write_g ? RENDER_STATE_WRITE_G : 0) | (write_b ? RENDER_STATE_WRITE_B : 0) | (write_a ? RENDER_STATE_WRITE_A : 0);
 }
 
 void SetMaterialWriteZ(Material &m, bool enable) {
 	if (enable)
-		m.state.state |= BGFX_STATE_WRITE_Z;
+		m.state.state |= RENDER_STATE_WRITE_Z;
 	else
-		m.state.state &= ~BGFX_STATE_WRITE_Z;
+		m.state.state &= ~RENDER_STATE_WRITE_Z;
 }
 
 //
 FaceCulling GetMaterialFaceCulling(const Material &mat) {
-	const auto cull = mat.state.state & BGFX_STATE_CULL_MASK;
+	const auto cull = mat.state.state & RENDER_STATE_CULL_MASK;
 
-	if (cull == BGFX_STATE_CULL_CW)
+	if (cull == RENDER_STATE_CULL_CW)
 		return FC_Clockwise;
-	if (cull == BGFX_STATE_CULL_CCW)
+	if (cull == RENDER_STATE_CULL_CCW)
 		return FC_CounterClockwise;
 
 	return FC_Disabled;
 }
 
 void SetMaterialFaceCulling(Material &mat, FaceCulling mode) {
-	mat.state.state &= ~BGFX_STATE_CULL_MASK;
+	mat.state.state &= ~RENDER_STATE_CULL_MASK;
 
 	if (mode == FC_Clockwise)
-		mat.state.state |= BGFX_STATE_CULL_CW;
+		mat.state.state |= RENDER_STATE_CULL_CW;
 	else if (mode == FC_CounterClockwise)
-		mat.state.state |= BGFX_STATE_CULL_CCW;
+		mat.state.state |= RENDER_STATE_CULL_CCW;
 }
 
 DepthTest GetMaterialDepthTest(const Material &mat) {
-	const auto depth_test = mat.state.state & BGFX_STATE_DEPTH_TEST_MASK;
+	const auto depth_test = mat.state.state & RENDER_STATE_DEPTH_TEST_MASK;
 
-	if (depth_test == BGFX_STATE_DEPTH_TEST_LESS)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_LESS)
 		return DT_Less;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_LEQUAL)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_LEQUAL)
 		return DT_LessEqual;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_EQUAL)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_EQUAL)
 		return DT_Equal;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_GEQUAL)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_GEQUAL)
 		return DT_GreaterEqual;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_GREATER)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_GREATER)
 		return DT_Greater;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_NOTEQUAL)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_NOTEQUAL)
 		return DT_NotEqual;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_NEVER)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_NEVER)
 		return DT_Never;
-	if (depth_test == BGFX_STATE_DEPTH_TEST_ALWAYS)
+	if (depth_test == RENDER_STATE_DEPTH_TEST_ALWAYS)
 		return DT_Always;
 
 	return DT_Disabled;
 }
 
 void SetMaterialDepthTest(Material &mat, DepthTest test) {
-	mat.state.state &= ~BGFX_STATE_DEPTH_TEST_MASK;
+	mat.state.state &= ~RENDER_STATE_DEPTH_TEST_MASK;
 
 	if (test == DT_Less)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_LESS;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_LESS;
 	else if (test == DT_LessEqual)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_LEQUAL;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_LEQUAL;
 	else if (test == DT_Equal)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_EQUAL;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_EQUAL;
 	else if (test == DT_GreaterEqual)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_GEQUAL;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_GEQUAL;
 	else if (test == DT_Greater)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_GREATER;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_GREATER;
 	else if (test == DT_NotEqual)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_NOTEQUAL;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_NOTEQUAL;
 	else if (test == DT_Never)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_NEVER;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_NEVER;
 	else if (test == DT_Always)
-		mat.state.state |= BGFX_STATE_DEPTH_TEST_ALWAYS;
+		mat.state.state |= RENDER_STATE_DEPTH_TEST_ALWAYS;
 }
 
 BlendMode GetMaterialBlendMode(const Material &mat) {
-	const auto blend_state = mat.state.state & (BGFX_STATE_BLEND_MASK | BGFX_STATE_BLEND_EQUATION_MASK);
+	const auto blend_state = mat.state.state & (RENDER_STATE_BLEND_MASK | RENDER_STATE_BLEND_EQUATION_MASK);
 
-	if (blend_state == BGFX_STATE_BLEND_ADD)
+	if (blend_state == RENDER_STATE_BLEND_ADD)
 		return BM_Additive;
-	if (blend_state == BGFX_STATE_BLEND_ALPHA)
+	if (blend_state == RENDER_STATE_BLEND_ALPHA)
 		return BM_Alpha;
-	if (blend_state == BGFX_STATE_BLEND_DARKEN)
+	if (blend_state == RENDER_STATE_BLEND_DARKEN)
 		return BM_Darken;
-	if (blend_state == BGFX_STATE_BLEND_LIGHTEN)
+	if (blend_state == RENDER_STATE_BLEND_LIGHTEN)
 		return BM_Lighten;
-	if (blend_state == BGFX_STATE_BLEND_MULTIPLY)
+	if (blend_state == RENDER_STATE_BLEND_MULTIPLY)
 		return BM_Multiply;
-	if (blend_state == BGFX_STATE_BLEND_NORMAL)
+	if (blend_state == RENDER_STATE_BLEND_NORMAL)
 		return BM_Opaque;
-	if (blend_state == BGFX_STATE_BLEND_SCREEN)
+	if (blend_state == RENDER_STATE_BLEND_SCREEN)
 		return BM_Screen;
-	if (blend_state == BGFX_STATE_BLEND_LINEAR_BURN)
+	if (blend_state == RENDER_STATE_BLEND_LINEAR_BURN)
 		return BM_LinearBurn;
 
 	return BM_Opaque;
 }
 
 void SetMaterialBlendMode(Material &mat, BlendMode mode) {
-	mat.state.state &= ~(BGFX_STATE_BLEND_MASK | BGFX_STATE_BLEND_EQUATION_MASK);
+	mat.state.state &= ~(RENDER_STATE_BLEND_MASK | RENDER_STATE_BLEND_EQUATION_MASK);
 
 	if (mode == BM_Additive)
-		mat.state.state |= BGFX_STATE_BLEND_ADD;
+		mat.state.state |= RENDER_STATE_BLEND_ADD;
 	else if (mode == BM_Alpha)
-		mat.state.state |= BGFX_STATE_BLEND_ALPHA;
+		mat.state.state |= RENDER_STATE_BLEND_ALPHA;
 	else if (mode == BM_Darken)
-		mat.state.state |= BGFX_STATE_BLEND_DARKEN;
+		mat.state.state |= RENDER_STATE_BLEND_DARKEN;
 	else if (mode == BM_Lighten)
-		mat.state.state |= BGFX_STATE_BLEND_LIGHTEN;
+		mat.state.state |= RENDER_STATE_BLEND_LIGHTEN;
 	else if (mode == BM_Multiply)
-		mat.state.state |= BGFX_STATE_BLEND_MULTIPLY;
+		mat.state.state |= RENDER_STATE_BLEND_MULTIPLY;
 	//	else if (mode == BM_Opaque)
-	//		mat.state.state |= BGFX_STATE_BLEND_NORMAL;
+	//		mat.state.state |= RENDER_STATE_BLEND_NORMAL;
 	else if (mode == BM_Screen)
-		mat.state.state |= BGFX_STATE_BLEND_SCREEN;
+		mat.state.state |= RENDER_STATE_BLEND_SCREEN;
 	else if (mode == BM_LinearBurn)
-		mat.state.state |= BGFX_STATE_BLEND_LINEAR_BURN;
+		mat.state.state |= RENDER_STATE_BLEND_LINEAR_BURN;
 }
 
 bool GetMaterialNormalMapInWorldSpace(const Material &m) { return m.flags & MF_NormalMapInWorldSpace; }
@@ -933,58 +990,58 @@ void SetMaterialAlphaCut(Material &m, bool enable) {
 
 //
 RenderState ComputeRenderState(BlendMode blend, DepthTest test, FaceCulling culling, bool write_z, bool write_r, bool write_g, bool write_b, bool write_a) {
-	RenderState state{BGFX_STATE_MSAA, 0};
+	RenderState state{RENDER_STATE_MSAA, 0};
 
 	if (write_r)
-		state.state |= BGFX_STATE_WRITE_R;
+		state.state |= RENDER_STATE_WRITE_R;
 	if (write_g)
-		state.state |= BGFX_STATE_WRITE_G;
+		state.state |= RENDER_STATE_WRITE_G;
 	if (write_b)
-		state.state |= BGFX_STATE_WRITE_B;
+		state.state |= RENDER_STATE_WRITE_B;
 	if (write_a)
-		state.state |= BGFX_STATE_WRITE_A;
+		state.state |= RENDER_STATE_WRITE_A;
 
 	if (write_z)
-		state.state |= BGFX_STATE_WRITE_Z;
+		state.state |= RENDER_STATE_WRITE_Z;
 
 	if (culling == FC_Clockwise)
-		state.state |= BGFX_STATE_CULL_CW;
+		state.state |= RENDER_STATE_CULL_CW;
 	else if (culling == FC_CounterClockwise)
-		state.state |= BGFX_STATE_CULL_CCW;
+		state.state |= RENDER_STATE_CULL_CCW;
 
 	if (test == DT_Less)
-		state.state |= BGFX_STATE_DEPTH_TEST_LESS;
+		state.state |= RENDER_STATE_DEPTH_TEST_LESS;
 	else if (test == DT_LessEqual)
-		state.state |= BGFX_STATE_DEPTH_TEST_LEQUAL;
+		state.state |= RENDER_STATE_DEPTH_TEST_LEQUAL;
 	else if (test == DT_Equal)
-		state.state |= BGFX_STATE_DEPTH_TEST_EQUAL;
+		state.state |= RENDER_STATE_DEPTH_TEST_EQUAL;
 	else if (test == DT_GreaterEqual)
-		state.state |= BGFX_STATE_DEPTH_TEST_GEQUAL;
+		state.state |= RENDER_STATE_DEPTH_TEST_GEQUAL;
 	else if (test == DT_Greater)
-		state.state |= BGFX_STATE_DEPTH_TEST_GREATER;
+		state.state |= RENDER_STATE_DEPTH_TEST_GREATER;
 	else if (test == DT_NotEqual)
-		state.state |= BGFX_STATE_DEPTH_TEST_NOTEQUAL;
+		state.state |= RENDER_STATE_DEPTH_TEST_NOTEQUAL;
 	else if (test == DT_Never)
-		state.state |= BGFX_STATE_DEPTH_TEST_NEVER;
+		state.state |= RENDER_STATE_DEPTH_TEST_NEVER;
 	else if (test == DT_Always)
-		state.state |= BGFX_STATE_DEPTH_TEST_ALWAYS;
+		state.state |= RENDER_STATE_DEPTH_TEST_ALWAYS;
 
 	if (blend == BM_Additive)
-		state.state |= BGFX_STATE_BLEND_ADD;
+		state.state |= RENDER_STATE_BLEND_ADD;
 	else if (blend == BM_Alpha)
-		state.state |= BGFX_STATE_BLEND_ALPHA;
+		state.state |= RENDER_STATE_BLEND_ALPHA;
 	else if (blend == BM_Darken)
-		state.state |= BGFX_STATE_BLEND_DARKEN;
+		state.state |= RENDER_STATE_BLEND_DARKEN;
 	else if (blend == BM_Lighten)
-		state.state |= BGFX_STATE_BLEND_LIGHTEN;
+		state.state |= RENDER_STATE_BLEND_LIGHTEN;
 	else if (blend == BM_Multiply)
-		state.state |= BGFX_STATE_BLEND_MULTIPLY;
+		state.state |= RENDER_STATE_BLEND_MULTIPLY;
 	// else if (mode == BM_Opaque)
-	//	state.state |= BGFX_STATE_BLEND_NORMAL;
+	//	state.state |= RENDER_STATE_BLEND_NORMAL;
 	else if (blend == BM_Screen)
-		state.state |= BGFX_STATE_BLEND_SCREEN;
+		state.state |= RENDER_STATE_BLEND_SCREEN;
 	else if (blend == BM_LinearBurn)
-		state.state |= BGFX_STATE_BLEND_LINEAR_BURN;
+		state.state |= RENDER_STATE_BLEND_LINEAR_BURN;
 
 	return state;
 }
@@ -1063,7 +1120,7 @@ bgfx::ProgramHandle LoadProgram(const Reader &ir, const ReadProvider &ip, const 
 
 bgfx::ProgramHandle LoadProgram(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
 	const std::string _name(name);
-	return LoadProgram(ir, ip, (_name + ".vsb").c_str(), (_name + ".fsb").c_str(), silent);
+	return LoadProgram(ir, ip, _name + ".vsb", _name + ".fsb", silent);
 }
 
 bgfx::ProgramHandle LoadComputeProgram(const Reader &ir, const ReadProvider &ip, const std::string &cs_name, bool silent) {
@@ -1213,7 +1270,7 @@ bool LoadPipelineProgramUniforms(const Reader &ir, const ReadProvider &ip, const
 
 		if (utype == "Vec4" || utype == "Color") {
 			Vec4Uniform u;
-			u.handle = bgfx::createUniform(uname.c_str(), bgfx::UniformType::Vec4);
+			u.handle = bgfx::createUniform(uname, bgfx::UniformType::Vec4);
 			u.is_color = utype == "Color";
 
 			const auto v = j.find("value");
@@ -1230,7 +1287,7 @@ bool LoadPipelineProgramUniforms(const Reader &ir, const ReadProvider &ip, const
 			vecs.push_back(u);
 		} else if (utype == "Sampler") {
 			TextureUniform u;
-			u.handle = bgfx::createUniform(uname.c_str(), bgfx::UniformType::Sampler);
+			u.handle = bgfx::createUniform(uname, bgfx::UniformType::Sampler);
 
 			auto c = j.find("channel");
 			if (c != std::end(j)) {
@@ -1241,7 +1298,7 @@ bool LoadPipelineProgramUniforms(const Reader &ir, const ReadProvider &ip, const
 					if (v->is_string()) {
 						const auto path = v->get<std::string>();
 						const auto flags = LoadTextureFlags(ir, ip, path);
-						u.tex_ref = LoadTexture(ir, ip, path.c_str(), flags, resources, silent);
+						u.tex_ref = LoadTexture(ir, ip, path, flags, resources, silent);
 					}
 
 				texs.push_back(u);
@@ -1390,17 +1447,17 @@ static void CreateMissingMaterialSampler(
 		TextureRef ref{};
 		if (!tex.empty()) {
 			debug(format("Loading missing material sampler uniform texture %1").arg(tex));
-			ref = LoadTexture(ir, ip, tex.c_str(), 0, resources, true);
+			ref = LoadTexture(ir, ip, tex, 0, resources, true);
 		}
 
-		SetMaterialTexture(mat, name.c_str(), ref, stage);
+		SetMaterialTexture(mat, name, ref, stage);
 	}
 }
 
 static void CreateMissingMaterialVec4(Material &mat, const std::string &name, const Vec4 &val) {
 	if (mat.values.find(name) == std::end(mat.values)) {
 		debug(format("Creating missing material vec4 uniform %1").arg(name));
-		SetMaterialValue(mat, name.c_str(), val);
+		SetMaterialValue(mat, name, val);
 	}
 }
 
@@ -1471,13 +1528,13 @@ static bx::DefaultAllocator g_allocator;
 //
 json LoadResourceMeta(const Reader &ir, const ReadProvider &ip, const std::string &name) {
 	const auto meta_path = name + ".meta";
-	return LoadJson(ir, ScopedReadHandle(ip, meta_path.c_str(), true));
+	return LoadJson(ir, ScopedReadHandle(ip, meta_path, true));
 }
 
 json LoadResourceMetaFromFile(const std::string &path) { return LoadResourceMeta(g_file_reader, g_file_read_provider, path); }
 json LoadResourceMetaFromAssets(const std::string &name) { return LoadResourceMeta(g_assets_reader, g_assets_read_provider, name); }
 
-bool SaveResourceMetaToFile(const std::string &path, const json &meta) { return SaveJsonToFile(meta, (path + ".meta").c_str()); }
+bool SaveResourceMetaToFile(const std::string &path, const json &meta) { return SaveJsonToFile(meta, path + ".meta"); }
 
 //
 TextureMeta LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
@@ -1555,7 +1612,7 @@ uint64_t LoadTextureFlagsFromAssets(const std::string &name, bool silent) { retu
 Texture CreateTexture(int width, int height, const std::string &name, uint64_t flags, bgfx::TextureFormat::Enum texture_format) {
 	ProfilerPerfSection section("CreateTexture", name);
 
-	log(format("Creating texture '%1' (empty %2x%3)").arg(name).arg(width).arg(height).c_str());
+	log(format("Creating texture '%1' (empty %2x%3)").arg(name).arg(width).arg(height));
 
 	bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
 
@@ -1565,7 +1622,7 @@ Texture CreateTexture(int width, int height, const std::string &name, uint64_t f
 	if (bgfx::isValid(handle))
 		bgfx::setName(handle, name);
 	else
-		warn(format("Failed to create texture '%1', format:%2 flags:%3").arg(name).arg(texture_format).arg(flags).c_str());
+		warn(format("Failed to create texture '%1', format:%2 flags:%3").arg(name).arg(texture_format).arg(flags));
 
 	return MakeTexture(handle, flags);
 }
@@ -1573,7 +1630,7 @@ Texture CreateTexture(int width, int height, const std::string &name, uint64_t f
 Texture CreateTextureFromPicture(const Picture &pic, const std::string &name, uint64_t flags, bgfx::TextureFormat::Enum texture_format) {
 	ProfilerPerfSection section("CreateTextureFromPicture", name);
 
-	log(format("Creating texture '%1' from picture").arg(name).c_str());
+	log(format("Creating texture '%1' from picture").arg(name));
 
 	bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
 
@@ -1585,7 +1642,7 @@ Texture CreateTextureFromPicture(const Picture &pic, const std::string &name, ui
 	if (bgfx::isValid(handle))
 		bgfx::setName(handle, name);
 	else
-		warn(format("Failed to create texture '%1', format:%2 flags:%3").arg(name).arg(texture_format).arg(flags).c_str());
+		warn(format("Failed to create texture '%1', format:%2 flags:%3").arg(name).arg(texture_format).arg(flags));
 
 	return MakeTexture(handle, flags);
 }
@@ -1602,7 +1659,7 @@ Texture LoadTexture(
 	ProfilerPerfSection section("LoadTexture", name);
 
 	if (!silent)
-		log(format("Loading texture '%1'").arg(name).c_str());
+		log(format("Loading texture '%1'").arg(name));
 
 	bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
 
@@ -1631,7 +1688,7 @@ Texture LoadTexture(
 
 		if (!bgfx::isValid(handle)) {
 			if (!silent)
-				warn(format("Failed to load texture '%1', unsupported format").arg(name).c_str());
+				warn(format("Failed to load texture '%1', unsupported format").arg(name));
 
 			static const uint32_t dummy = 0xff00ffff;
 			handle = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_NONE, bgfx::copy(&dummy, 4));
@@ -1641,7 +1698,7 @@ Texture LoadTexture(
 			bgfx::setName(handle, name);
 	} else {
 		if (!silent)
-			warn(format("Failed to load texture '%1', could not load data").arg(name).c_str());
+			warn(format("Failed to load texture '%1', could not load data").arg(name));
 	}
 
 	return MakeTexture(handle, flags);
@@ -1828,9 +1885,9 @@ Material LoadMaterial(const json &js, const Reader &deps_ir, const ReadProvider 
 	const std::string prg_name = js.at("program");
 
 	if (do_not_load_resources)
-		mat.program = resources.programs.Add(prg_name.c_str(), {});
+		mat.program = resources.programs.Add(prg_name, {});
 	else
-		mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, prg_name.c_str(), resources, pipeline, silent);
+		mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, prg_name, resources, pipeline, silent);
 
 	const auto i_values = js.find("values");
 
@@ -1850,7 +1907,7 @@ Material LoadMaterial(const json &js, const Reader &deps_ir, const ReadProvider 
 
 			v.uniform = BGFX_INVALID_HANDLE;
 			if (IsRenderUp())
-				v.uniform = bgfx::createUniform(name.c_str(), v.type, v.count);
+				v.uniform = bgfx::createUniform(name, v.type, v.count);
 		}
 
 	const auto i_textures = js.find("textures");
@@ -1874,11 +1931,11 @@ Material LoadMaterial(const json &js, const Reader &deps_ir, const ReadProvider 
 			}
 
 			if (!path.empty())
-				t.texture = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, path.c_str(), resources, queue_texture_loads, do_not_load_resources, silent);
+				t.texture = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, path, resources, queue_texture_loads, do_not_load_resources, silent);
 
 			t.uniform = BGFX_INVALID_HANDLE;
 			if (IsRenderUp())
-				t.uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Sampler);
+				t.uniform = bgfx::createUniform(name, bgfx::UniformType::Sampler);
 		}
 
 	SetMaterialFaceCulling(mat, GetOptional(js, "face_culling", FC_Clockwise));
@@ -1923,9 +1980,9 @@ Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, 
 	Read(ir, h, name);
 
 	if (do_not_load_resources)
-		mat.program = resources.programs.Add(name.c_str(), {});
+		mat.program = resources.programs.Add(name, {});
 	else
-		mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, name.c_str(), resources, pipeline, silent);
+		mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, name, resources, pipeline, silent);
 
 	const auto value_count = Read<uint16_t>(ir, h);
 
@@ -1941,7 +1998,7 @@ Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, 
 
 		v.uniform = BGFX_INVALID_HANDLE;
 		if (IsRenderUp())
-			v.uniform = bgfx::createUniform(name.c_str(), v.type);
+			v.uniform = bgfx::createUniform(name, v.type);
 
 		v.value.clear();
 		v.value.resize(value_count);
@@ -1965,12 +2022,12 @@ Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, 
 			Read(ir, h, dummy_flags);
 
 			if (!tex_name.empty())
-				t.texture = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name.c_str(), resources, queue_texture_loads, do_not_load_resources, silent);
+				t.texture = SkipLoadOrQueueTextureLoad(deps_ir, deps_ip, tex_name, resources, queue_texture_loads, do_not_load_resources, silent);
 		}
 
 		t.uniform = BGFX_INVALID_HANDLE;
 		if (IsRenderUp())
-			t.uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Sampler);
+			t.uniform = bgfx::createUniform(name, bgfx::UniformType::Sampler);
 	}
 
 	Read(ir, h, mat.state.state);
@@ -2077,8 +2134,8 @@ size_t ProcessModelLoadQueue(PipelineResources &res, time_ns t_budget, bool sile
 				debug(format("Queued model load '%1'").arg(name));
 
 			ModelInfo info;
-			ScopedReadHandle h(m.ip, name.c_str(), silent);
-			mdl = LoadModel(m.ir, h, name.c_str(), &info, silent);
+			ScopedReadHandle h(m.ip, name, silent);
+			mdl = LoadModel(m.ir, h, name, &info, silent);
 			res.model_infos[m.ref.ref] = info;
 		}
 
@@ -2239,8 +2296,7 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, Mode
 				.arg(name)
 				.arg(tri_count)
 				.arg(model.lists.size())
-				.arg(time_to_ms(time_now() - t))
-				.c_str());
+				.arg(time_to_ms(time_now() - t)));
 
 	return model;
 }
@@ -2465,7 +2521,7 @@ static bgfx::ProgramHandle RequestPipelineProgramVariantConfigProgram(const Pipe
 
 			log(format("On-request loading pipeline shader program '%1'").arg(path));
 
-			prg.handle = LoadProgram(pprg.ir, pprg.ip, path.c_str());
+			prg.handle = LoadProgram(pprg.ir, pprg.ip, path);
 			prg.loaded = true; // we tried at least...
 		}
 
@@ -2705,7 +2761,7 @@ size_t ProcessTextureLoadQueue(PipelineResources &res, time_ns t_budget, bool si
 			debug(format("Queued texture load '%1'").arg(name));
 
 			bgfx::TextureInfo info;
-			tex = LoadTexture(t.ir, t.ip, name.c_str(), tex.flags, &info, nullptr, silent);
+			tex = LoadTexture(t.ir, t.ip, name, tex.flags, &info, nullptr, silent);
 			res.texture_infos[t.ref.ref] = info;
 		}
 
@@ -2967,12 +3023,12 @@ static void DrawPrimitives(bgfx::ViewId view_id, const Vertices &vtx, bgfx::Prog
 //
 void DrawLines(bgfx::ViewId view_id, const Vertices &vtx, bgfx::ProgramHandle program, const std::vector<UniformSetValue> &values,
 	const std::vector<UniformSetTexture> &textures, RenderState state, uint32_t depth) {
-	DrawPrimitives(view_id, vtx, program, values, textures, nullptr, (state.state & ~BGFX_STATE_PT_MASK) | BGFX_STATE_PT_LINES, state.rgba, depth);
+	DrawPrimitives(view_id, vtx, program, values, textures, nullptr, (state.state & ~RENDER_STATE_PT_MASK) | RENDER_STATE_PT_LINES, state.rgba, depth);
 }
 
 void DrawTriangles(bgfx::ViewId view_id, const Vertices &vtx, bgfx::ProgramHandle program, const std::vector<UniformSetValue> &values,
 	const std::vector<UniformSetTexture> &textures, RenderState state, uint32_t depth) {
-	DrawPrimitives(view_id, vtx, program, values, textures, nullptr, state.state & ~BGFX_STATE_PT_MASK, state.rgba, depth);
+	DrawPrimitives(view_id, vtx, program, values, textures, nullptr, state.state & ~RENDER_STATE_PT_MASK, state.rgba, depth);
 }
 
 void DrawLines(bgfx::ViewId view_id, const Vertices &vtx, bgfx::ProgramHandle program, RenderState state, uint32_t depth) {
@@ -2986,12 +3042,12 @@ void DrawTriangles(bgfx::ViewId view_id, const Vertices &vtx, bgfx::ProgramHandl
 //
 void DrawLines(bgfx::ViewId view_id, const Indices &idx, const Vertices &vtx, bgfx::ProgramHandle program, const std::vector<UniformSetValue> &values,
 	const std::vector<UniformSetTexture> &textures, RenderState state, uint32_t depth) {
-	DrawPrimitives(view_id, vtx, program, values, textures, &idx, (state.state & ~BGFX_STATE_PT_MASK) | BGFX_STATE_PT_LINES, state.rgba, depth);
+	DrawPrimitives(view_id, vtx, program, values, textures, &idx, (state.state & ~RENDER_STATE_PT_MASK) | RENDER_STATE_PT_LINES, state.rgba, depth);
 }
 
 void DrawTriangles(bgfx::ViewId view_id, const Indices &idx, const Vertices &vtx, bgfx::ProgramHandle program, const std::vector<UniformSetValue> &values,
 	const std::vector<UniformSetTexture> &textures, RenderState state, uint32_t depth) {
-	DrawPrimitives(view_id, vtx, program, values, textures, &idx, state.state & ~BGFX_STATE_PT_MASK, state.rgba, depth);
+	DrawPrimitives(view_id, vtx, program, values, textures, &idx, state.state & ~RENDER_STATE_PT_MASK, state.rgba, depth);
 }
 
 void DrawLines(bgfx::ViewId view_id, const Indices &idx, const Vertices &vtx, bgfx::ProgramHandle program, RenderState state, uint32_t depth) {
@@ -3058,20 +3114,20 @@ static void DumpRenderPipelineInfos() {
 	log("");
 	log("    Structure         | sizeof (bytes)");
 	log("    ------------------+---------------");
-	log(format("	PipelineInfo      | %1").arg(sizeof(PipelineInfo)).c_str());
-	log(format("	PipelineProgram   | %1").arg(sizeof(PipelineProgram)).c_str());
-	log(format("	Texture           | %1").arg(sizeof(Texture)).c_str());
-	log(format("	UniformSetValue   | %1").arg(sizeof(UniformSetValue)).c_str());
-	log(format("	UniformSetTexture | %1").arg(sizeof(UniformSetTexture)).c_str());
-	log(format("	ProgramHandle     | %1").arg(sizeof(ProgramHandle)).c_str());
-	log(format("	Material          | %1").arg(sizeof(Material)).c_str());
-	log(format("	DisplayList       | %1").arg(sizeof(DisplayList)).c_str());
-	log(format("	ModelDisplayList  | %1").arg(sizeof(ModelDisplayList)).c_str());
-	log(format("	Model             | %1").arg(sizeof(Model)).c_str());
-	log(format("	ModelInfo         | %1").arg(sizeof(ModelInfo)).c_str());
-	log(format("	ViewState         | %1").arg(sizeof(ViewState)).c_str());
-	log(format("	Indices           | %1").arg(sizeof(Indices)).c_str());
-	log(format("	Vertices          | %1").arg(sizeof(Vertices)).c_str());
+	log(format("	PipelineInfo      | %1").arg(sizeof(PipelineInfo)));
+	log(format("	PipelineProgram   | %1").arg(sizeof(PipelineProgram)));
+	log(format("	Texture           | %1").arg(sizeof(Texture)));
+	log(format("	UniformSetValue   | %1").arg(sizeof(UniformSetValue)));
+	log(format("	UniformSetTexture | %1").arg(sizeof(UniformSetTexture)));
+	log(format("	ProgramHandle     | %1").arg(sizeof(ProgramHandle)));
+	log(format("	Material          | %1").arg(sizeof(Material)));
+	log(format("	DisplayList       | %1").arg(sizeof(DisplayList)));
+	log(format("	ModelDisplayList  | %1").arg(sizeof(ModelDisplayList)));
+	log(format("	Model             | %1").arg(sizeof(Model)));
+	log(format("	ModelInfo         | %1").arg(sizeof(ModelInfo)));
+	log(format("	ViewState         | %1").arg(sizeof(ViewState)));
+	log(format("	Indices           | %1").arg(sizeof(Indices)));
+	log(format("	Vertices          | %1").arg(sizeof(Vertices)));
 	log("");
 }
 
@@ -3231,12 +3287,12 @@ static inline FrameBuffer CreateFrameBuffer(bgfx::TextureHandle color, bgfx::Tex
 	bgfx::TextureHandle texs[] = {color, depth};
 
 	if (own_textures) {
-		bgfx::setName(color, format("FrameBuffer.color (%1)").arg(name).c_str());
-		bgfx::setName(depth, format("FrameBuffer.depth (%1)").arg(name).c_str());
+		bgfx::setName(color, format("FrameBuffer.color (%1)").arg(name));
+		bgfx::setName(depth, format("FrameBuffer.depth (%1)").arg(name));
 	}
 
 	bgfx::FrameBufferHandle handle = bgfx::createFrameBuffer(2, texs, own_textures);
-	bgfx::setName(handle, format("FrameBuffer (%1)").arg(name).c_str());
+	bgfx::setName(handle, format("FrameBuffer (%1)").arg(name));
 
 	return {handle};
 }

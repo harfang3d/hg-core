@@ -385,17 +385,17 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 	Geometry geo;
 
 	if (!ir.is_valid(h)) {
-		warn(fmt::format("Cannot load model '{}', invalid file handle", name));
+		warn(fmt::format("Cannot load geometry '{}', invalid file handle", name));
 		return geo;
 	}
 
 	if (Read<uint32_t>(ir, h) != HarfangMagic) {
-		warn(fmt::format("Cannot load model '{}', invalid magic marker", name));
+		warn(fmt::format("Cannot load geometry '{}', invalid magic marker", name));
 		return geo;
 	}
 
-	if (Read<uint8_t>(ir, h) != ModelMarker) {
-		warn(fmt::format("Cannot load model '{}', invalid model marker", name));
+	if (Read<uint8_t>(ir, h) != GeometryMarker) {
+		warn(fmt::format("Cannot load geometry '{}', invalid geometry marker", name));
 		return geo;
 	}
 
@@ -406,7 +406,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 	*/
 	const uint32_t version = Read<uint32_t>(ir, h);
 	if (version > 2) {
-		warn(fmt::format("Cannot load model '{}', unsupported version", name));
+		warn(fmt::format("Cannot load geometry '{}', unsupported version", name));
 		return geo;
 	}
 
@@ -453,7 +453,7 @@ bool SaveGeometry(const Writer &iw, const Handle &h, const Geometry &geo) {
 		return false;
 
 	Write(iw, h, HarfangMagic);
-	Write(iw, h, ModelMarker);
+	Write(iw, h, GeometryMarker);
 
 	/*
 		version 0: initial
