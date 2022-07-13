@@ -22,6 +22,7 @@ extern void test_rand();
 extern void test_units();
 extern void test_string();
 extern void test_path_tools();
+extern void test_log();
 extern void test_vec2();
 extern void test_vec3();
 extern void test_vec4();
@@ -59,13 +60,6 @@ void test_clock_update() {
 }
 
 //
-void test_log() {
-	log("Calling Log()");
-	warn("Calling Warn()");
-	error("Calling Error()");
-}
-
-//
 TEST_LIST = {
 	{"OS", test_os},
 	{"Math", test_math},
@@ -73,6 +67,7 @@ TEST_LIST = {
 	{"Units", test_units},
 	{"String", test_string},
 	{"Path_tools", test_path_tools},
+	{"Lop", test_log},
 	{"Vec2", test_vec2},
 	{"Vec3", test_vec3},
 	{"Vec4", test_vec4},

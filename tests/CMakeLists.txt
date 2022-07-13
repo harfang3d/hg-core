@@ -5,6 +5,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/units.cpp
 	foundation/string.cpp
 	foundation/path_tools.cpp
+	foundation/log.cpp
 	foundation/vec2.cpp
 	foundation/vec3.cpp
 	foundation/vec4.cpp
