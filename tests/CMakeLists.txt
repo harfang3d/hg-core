@@ -18,6 +18,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/obb.cpp
 	foundation/easing.cpp
 	foundation/quaternion.cpp
+	foundation/frustum.cpp
 	foundation/vector_list.cpp
 	foundation/generational_vector_list.cpp
 )

@@ -35,6 +35,7 @@ extern void test_projection();
 extern void test_obb();
 extern void test_easing();
 extern void test_quaternion();
+extern void test_frustum();
 extern void test_vector_list();
 extern void test_generational_vector_list();
 
@@ -85,6 +86,7 @@ TEST_LIST = {
 	{"OBB", test_obb},
 	{"Easing", test_easing},
     {"Quaternion", test_quaternion},
+	{"Frustum", test_frustum},
 	{"Vector_list", test_vector_list},
 	{"Generational_vector_list", test_generational_vector_list},
 
