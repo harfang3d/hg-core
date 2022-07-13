@@ -36,6 +36,7 @@ extern void test_obb();
 extern void test_easing();
 extern void test_quaternion();
 extern void test_vector_list();
+extern void test_generational_vector_list();
 
 //
 void test_clock_update() {
@@ -85,6 +86,7 @@ TEST_LIST = {
 	{"Easing", test_easing},
     {"Quaternion", test_quaternion},
 	{"Vector_list", test_vector_list},
+	{"Generational_vector_list", test_generational_vector_list},
 
 	{"Clock.Update", test_clock_update},
 

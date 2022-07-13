@@ -5,9 +5,15 @@
 
 #include "foundation/path_tools.h"
 
+#include "foundation/assert.h"
+
 using namespace hg;
 
+static void mute_assert(const std::string&, int, const std::string&, const std::string&, const std::string&) {}
+
 void test_path_tools() {
+	trigger_assert = mute_assert;
+
 	TEST_CHECK(IsPathAbsolute("") == false);
 #if WIN32
 	TEST_CHECK(IsPathAbsolute("C:\\Windows\\System32\\svchost.exe"));
@@ -54,8 +60,7 @@ void test_path_tools() {
 	TEST_CHECK(GetFilePath("image.jpg") == "./");
 	TEST_CHECK(GetFilePath("") == "./");
 #if WIN32
-	// this one triggers an assert.
-	// TEST_CHECK(GetFilePath("/") == "./");
+	TEST_CHECK(GetFilePath("/") == "./");
 #else
 	TEST_CHECK(GetFilePath("/") == "/");
 #endif
