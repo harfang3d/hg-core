@@ -30,7 +30,7 @@ public:
 	static const uint32_t invalid_idx = 0xffffffff;
 
 	vector_list() : storage_capacity_(0), storage_(nullptr), idx_(), size_(0), free_(0) {}
-	explicit vector_list(size_t count) { reserve(count); }
+	explicit vector_list(size_t count) : storage_capacity_(0), storage_(nullptr), idx_(), size_(0), free_(0) { reserve(count); }
 
 	//
 	void reserve(size_t count) {
@@ -235,17 +235,20 @@ public:
 		}
 
 		free(storage_);
+		storage_capacity_ = adjusted_storage_size;
 		storage_ = new_storage;
 	}
 
+	// [todo]
+#if 0
 	void shrink() {
 		size_t i;
 		for (i = capacity(); i > 0; --i)
 			if (!is_free_idx(idx_[i]))
 				break;
-
-		// TODO
+		// [todo]
 	}
+#endif
 
 private:
 	size_t storage_capacity_; //, storage_size_;
