@@ -18,14 +18,14 @@ extern void (*trigger_assert)(const std::string &source, int line, const std::st
 #define __ASSERT__(_EXP_)                                                                                                                                      \
 	do {                                                                                                                                                       \
 		if (!(_EXP_))                                                                                                                                          \
-			hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, nullptr);                                                                             \
+			hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, "");                                                                             \
 	} while (0)
 
 #define __ASSERT_IF__(_CND_, _EXP_)                                                                                                                            \
 	do {                                                                                                                                                       \
 		if (_CND_)                                                                                                                                             \
 			if (!(_EXP_))                                                                                                                                      \
-				hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, nullptr);                                                                         \
+				hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, "");                                                                         \
 	} while (0)
 
 #define __ASSERT_MSG__(_EXP_, _MSG_)                                                                                                                           \

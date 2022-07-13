@@ -22,7 +22,7 @@ inline bool operator<(gen_ref a, gen_ref b) { return a.gen == b.gen ? a.idx < b.
 
 template <typename T> class generational_vector_list : public vector_list<T> {
 public:
-	gen_ref add_ref(T &v) {
+	gen_ref add_ref(const T &v) {
 		gen_ref ref;
 		ref.idx = vector_list<T>::add(v);
 		if (ref.idx >= generations.size())
@@ -88,26 +88,3 @@ private:
 };
 
 } // namespace hg
-
-namespace std {
-
-#if __cplusplus < 200103L
-template <typename T> struct hash {
-	size_t operator()(const T &) { return 0; } // [todo] ?
-};
-#endif
-
-template <> struct hash<hg::gen_ref> {
-	size_t operator()(const hg::gen_ref &ref) const {
-		// FNV
-		uint32_t h = ref.idx, x = ref.gen;
-		for (int i = 0; i < 4; ++i) {
-			h ^= x & 255;
-			x >>= 8;
-			h = (h << 24) + h * 0x193;
-		}
-		return h;
-	}
-};
-
-} // namespace std
