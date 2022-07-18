@@ -41,6 +41,7 @@ extern void test_vector_list();
 extern void test_generational_vector_list();
 extern void test_intrusive_shared_ptr_st();
 extern void test_file();
+extern void test_dir();
 
 	//
 void test_clock_update() {
@@ -88,6 +89,7 @@ TEST_LIST = {
 	{"Generational_vector_list", test_generational_vector_list},
 	{"Intrusive_shared_ptr_st", test_intrusive_shared_ptr_st},
 	{"File", test_file},
+	{"Dir", test_dir},
 
 	{"Clock.Update", test_clock_update},
 

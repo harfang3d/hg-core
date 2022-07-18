@@ -16,7 +16,7 @@ using namespace hg;
 
 static std::string CreateTempFilepath() {
 	std::string out;
-#if WIN32
+#if _WIN32
 	DWORD temp_path_len;
 	TCHAR temp_path[MAX_PATH];
 	
@@ -222,19 +222,3 @@ void test_file() {
 		Unlink(filename_1);
 	}
 }
-/*
-
-bool CopyFile(const std::string &src, const std::string &dst);
-std::string FileToString(const std::string &path, bool silent = false);
-bool StringToFile(const std::string &path, const std::string &str);
-Data FileToData(const std::string &path, bool silent = false);
-struct ScopedFile {
-	ScopedFile(File file) : f(file) {}
-	~ScopedFile() { Close(f); }
-
-	operator const File &() const { return f; }
-	operator bool() const { return IsValid(f); }
-
-	File f;
-};
-*/
