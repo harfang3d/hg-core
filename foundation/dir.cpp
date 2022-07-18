@@ -20,6 +20,7 @@
 #else /* POSIX */
 #include <dirent.h>
 #include <unistd.h>
+#include <errno.h>
 #define _unlink unlink
 #endif
 
@@ -187,7 +188,10 @@ bool RmDir(const std::string &path, bool verbose) {
 		warn(fmt::format("RmDir({}) failed with error: {}", path, OSGetLastError()));
 	return res;
 #else
-	return false;
+	int ret = remove(path.c_str());
+	if(verbose && ret)
+		warn(fmt::format("RmDir({}) failed with error: {}", path, errno));
+	return (ret == 0);
 #endif
 }
 
@@ -239,10 +243,32 @@ bool RmTree(const std::string &path, bool verbose) {
 		FindClose(hFind);
 	}
 
-	return RemoveDirectoryW(wpath.c_str());
 #else
-	return false;
+	DIR *dir = opendir(path.c_str());
+	if (!dir)
+		return false;
+
+	int ret;
+	while (struct dirent *ent = readdir(dir)) {
+		if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
+			continue;
+		std::string ent_path = PathJoin(path, ent->d_name);
+		if (ent->d_type == DT_DIR) {
+			if(!RmTree(ent_path, verbose)) {
+				return false;
+			}
+		} else {
+			ret = remove(ent_path.c_str());
+			if(verbose && ret) {
+				warn(fmt::format("RmTree({}) failed to delete {}: {}", path, ent_path, strerror(errno)));
+				return false;
+			}
+		}
+	}
+
+	closedir(dir);
 #endif
+	return RmDir(path, verbose);
 }
 
 bool IsDir(const std::string &path) {
@@ -255,7 +281,6 @@ bool IsDir(const std::string &path) {
 	if (stat(path.c_str(), &info) != 0)
 		return false;
 #endif
-
 	if (info.st_mode & S_IFDIR)
 		return true;
 	return false;
