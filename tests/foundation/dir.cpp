@@ -192,4 +192,38 @@ void test_dir() {
 
 		TEST_CHECK(RmTree(root) == true);
 	}
+#if !_WIN32
+	{
+		std::string root = PathJoin(base, "hg_core_ut__02");
+		TEST_CHECK(MkTree(root, 01755) == true);
+
+		std::string path_00 = PathJoin(root, "00");
+		TEST_CHECK(MkDir(path_00, 00000) == true);
+		TEST_CHECK(MkDir(PathJoin(path_00, "01"), 00755) == false);
+		TEST_CHECK(MkTree(PathJoin(path_00, "02", "03"), 01755) == false);
+		
+		std::string path_01 = PathJoin(root, "01");
+		TEST_CHECK(MkDir(path_01, 00755) == true);
+
+		std::string lorem_filepath = PathJoin(path_01, "lorem.txt");
+		TEST_CHECK(StringToFile(lorem_filepath, lorem_ipsum) == true);
+
+		std::string path_02 = PathJoin(root, "02");
+		TEST_CHECK(MkDir(path_02, 00755) == true);
+		TEST_CHECK(MkDir(PathJoin(path_02, "03"), 00755) == true);
+
+		std::string path_0103 = PathJoin(path_01, "03");
+		TEST_CHECK(MkDir(path_0103, 00000) == true);
+
+		TEST_CHECK(CopyDir(path_01, path_00) == false);
+		TEST_CHECK(CopyDirRecursive(path_01, path_00) == false);
+		TEST_CHECK(CopyDirRecursive(path_01, path_02) == false);
+
+		TEST_CHECK(RmTree(root) == false);
+
+		TEST_CHECK(chmod(path_00.c_str(), 0755) == 0);
+		TEST_CHECK(chmod(path_0103.c_str(), 0755) == 0);
+		TEST_CHECK(RmTree(root) == true);
+	}
+#endif
 }
