@@ -39,8 +39,9 @@ extern void test_quaternion();
 extern void test_frustum();
 extern void test_vector_list();
 extern void test_generational_vector_list();
+extern void test_intrusive_shared_ptr_st();
 
-//
+	//
 void test_clock_update() {
 	reset_clock();
 
@@ -84,6 +85,7 @@ TEST_LIST = {
 	{"Frustum", test_frustum},
 	{"Vector_list", test_vector_list},
 	{"Generational_vector_list", test_generational_vector_list},
+	{"Intrusive_shared_ptr_st", test_intrusive_shared_ptr_st},
 
 	{"Clock.Update", test_clock_update},
 
