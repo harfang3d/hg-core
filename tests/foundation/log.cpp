@@ -38,6 +38,8 @@ void clear(std::stringstream &buffer) {
 }
 
 void test_log() {
+	set_log_hook(nullptr, nullptr);
+
 	set_log_detailed(false);
 	TEST_CHECK(get_log_detailed() == false);
 
@@ -206,4 +208,6 @@ void test_log() {
 	TEST_CHECK(out.msg == "debug 0001");
 	TEST_CHECK(out.details == "details");
 	TEST_CHECK(out.mask == LL_Debug);
+
+	set_log_hook(nullptr, nullptr);
 }

@@ -23,6 +23,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/vector_list.cpp
 	foundation/generational_vector_list.cpp
 	foundation/intrusive_shared_ptr_st.cpp
+	foundation/file.cpp
 )
 
 add_executable(test_foundation test_foundation.cpp ${TEST_FOUNDATION_SRCS})

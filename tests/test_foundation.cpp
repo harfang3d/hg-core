@@ -40,6 +40,7 @@ extern void test_frustum();
 extern void test_vector_list();
 extern void test_generational_vector_list();
 extern void test_intrusive_shared_ptr_st();
+extern void test_file();
 
 	//
 void test_clock_update() {
@@ -68,7 +69,7 @@ TEST_LIST = {
 	{"Units", test_units},
 	{"String", test_string},
 	{"Path_tools", test_path_tools},
-	{"Lop", test_log},
+	{"Log", test_log},
 	{"Vec2", test_vec2},
 	{"Vec3", test_vec3},
 	{"Vec4", test_vec4},
@@ -86,6 +87,7 @@ TEST_LIST = {
 	{"Vector_list", test_vector_list},
 	{"Generational_vector_list", test_generational_vector_list},
 	{"Intrusive_shared_ptr_st", test_intrusive_shared_ptr_st},
+	{"File", test_file},
 
 	{"Clock.Update", test_clock_update},
 
