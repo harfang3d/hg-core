@@ -15,6 +15,8 @@ void test_rand() {
 
 	uint32_t u0, u1;
 
+	TEST_CHECK(Rand(0) == 0);
+
 	u0 = Rand();
 	TEST_CHECK(u0 <= RAND_MAX);
 	for (int i = 0; i < 256; i++, u0 = u1) {
