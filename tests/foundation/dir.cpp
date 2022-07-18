@@ -43,6 +43,19 @@ static std::string GetTempDirectoryName() {
 	return out;
 }
 
+static void test_entries(DirEntry *expected, int count, std::vector<DirEntry> &entries) {
+	for(size_t j=0; j<entries.size(); j++) {
+		for(int i=0; i<count; i++) {
+			if((entries[j].name == expected[i].name) && (entries[j].type == expected[i].type)) {
+				expected[i].size++;
+			}
+		}
+	}
+	for(int i=0; i<count; i++) {
+		TEST_CHECK(expected[i].size == 1);
+	}
+}
+
 void test_dir() {
 	const std::string lorem_ipsum("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum non\n"
 								  "gravida sapien, quis luctus magna. Nullam ut nunc in lacus pretium luctus at\n"
@@ -123,26 +136,22 @@ void test_dir() {
 
 		std::vector<DirEntry> entries = ListDir(root, DE_All);
 		if (TEST_CHECK(entries.size() == 3)) {
-			TEST_CHECK(entries[0].name == "00");
-			TEST_CHECK(entries[0].type == DE_Dir);
-
-			TEST_CHECK(entries[1].name == "01");
-			TEST_CHECK(entries[2].type == DE_Dir);
-
-			TEST_CHECK(entries[2].name == "02");
-			TEST_CHECK(entries[2].type == DE_Dir);
+			DirEntry expected[3] = {
+				{ DE_Dir, "00", 0, 0},
+				{ DE_Dir, "01", 0, 0},
+				{ DE_Dir, "02", 0, 0}
+			};
+			test_entries(expected, 3, entries);
 		}
 
 		entries = ListDirRecursive(root, DE_File);
 		if (TEST_CHECK(entries.size() == 3)) {
-			TEST_CHECK(entries[0].name == "00/a/lorem.txt");
-			TEST_CHECK(entries[0].type == DE_File);
-
-			TEST_CHECK(entries[1].name == "01/lorem2.txt");
-			TEST_CHECK(entries[2].type == DE_File);
-
-			TEST_CHECK(entries[2].name == "02/h/a/lorem.txt");
-			TEST_CHECK(entries[2].type == DE_File);
+			DirEntry expected[3] = {
+				{ DE_File, "00/a/lorem.txt", 0, 0},
+				{ DE_File, "01/lorem2.txt", 0, 0},
+				{ DE_File, "02/h/a/lorem.txt", 0, 0}
+			};
+			test_entries(expected, 3, entries);
 		}
 		TEST_CHECK(GetDirSize(root) == (3 * lorem_ipsum.size()));
 
