@@ -1,12 +1,5 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
-#include "foundation/file.h"
-#include "foundation/cext.h"
-#include "foundation/dir.h"
-#include "foundation/log.h"
-#include "foundation/rand.h"
-#include "foundation/string.h"
-
 #if _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -16,6 +9,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
+
+#include "foundation/file.h"
+#include "foundation/cext.h"
+#include "foundation/dir.h"
+#include "foundation/log.h"
+#include "foundation/rand.h"
+#include "foundation/string.h"
 
 //#include <cstdio>
 #include <fmt/format.h>
@@ -173,17 +173,16 @@ bool CopyFile(const std::string &src, const std::string &dst) {
 }
 
 //
-Data FileToData(const std::string &path, bool silent) {
-	Data data;
+bool FileToData(const std::string &path, Data &data, bool silent) {
 	File file = Open(path, silent);
 
-	if (IsValid(file)) {
-		data.Resize(GetSize(file));
-		Read(file, data.GetData(), data.GetSize());
-		Close(file);
+	if (!IsValid(file)) {
+		return false;
 	}
-
-	return data;
+	data.Resize(GetSize(file));
+	Read(file, data.GetData(), data.GetSize());
+	Close(file);
+	return true;
 }
 
 //
