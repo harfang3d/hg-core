@@ -11,6 +11,7 @@
 #include "foundation/matrix3.h"
 #include "foundation/matrix4.h"
 #include "foundation/matrix44.h"
+#include "foundation/pack_float.h"
 #include "foundation/path_tools.h"
 #include "foundation/profiler.h"
 #include "foundation/projection.h"
@@ -88,34 +89,46 @@ uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &mo
 */
 
 //
-void VertexLayout::Add(VertexAttribute semantic, sg_vertex_format format) {
-	assert(attrib_count < SG_MAX_VERTEX_ATTRIBUTES);
-	Attribute &attr = attrib[attrib_count];
-	attr.semantic = semantic;
-	attr.format = format;
-	++attrib_count;
-}
-
 static size_t vertex_format_size[_SG_VERTEXFORMAT_NUM] = {0, 4, 8, 12, 16, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 4};
 
-void VertexLayout::End() {
-	for (size_t i = 0; i < VA_Count; ++i)
-		semantic_to_attrib[i] = -1;
+VertexLayout::VertexLayout() { std::fill(attrib, attrib + VA_Count, SG_VERTEXFORMAT_INVALID); }
 
-	stride = 0;
+void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format) { attrib[semantic] = format; }
 
-	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		Attribute &attr = attrib[i];
+size_t VertexLayout::GetOffsets(int offset[VA_Count]) const {
+	size_t stride = 0;
 
-		if (attr.format == SG_VERTEXFORMAT_INVALID)
-			continue;
+	for (int i = 0; i < VA_Count; ++i) {
+		const sg_vertex_format format = sg_vertex_format(attrib[i]);
 
-		semantic_to_attrib[attr.semantic] = i;
-
-		attr.offset = stride;
-		stride += vertex_format_size[attr.format];
+		if (format == SG_VERTEXFORMAT_INVALID) {
+			offset[i] = -1;
+		} else {
+			offset[i] = stride;
+			stride += vertex_format_size[format];
+		}
 	}
+
+	return stride;
 }
+
+size_t VertexLayout::GetStride() const {
+	size_t stride = 0;
+
+	for (int i = 0; i < VA_Count; ++i) {
+		const sg_vertex_format format = sg_vertex_format(attrib[i]);
+
+		if (format != SG_VERTEXFORMAT_INVALID)
+			stride += vertex_format_size[format];
+	}
+
+	return stride;
+}
+
+// void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
+// void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
+
+// sg_vertex_format attrib[VA_Count];
 
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index) {
 	const size_t stride = vertex_layout.GetStride();
@@ -127,63 +140,124 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 	std::fill(va_location, va_location + VA_Count, -1);
 
 	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		const VertexAttribute va = shader_layout.attrib[i];
+		const VertexAttribute va = VertexAttribute(shader_layout.attrib[i]);
 
 		if (va != VA_Count)
 			va_location[va] = i;
 	}
 
-	const size_t attribute_count = vertex_layout.GetAttributeCount();
+	int offset[VA_Count];
+	vertex_layout.GetOffsets(offset);
 
-	for (size_t i = 0; i < attribute_count; ++i) {
-		const VertexLayout::Attribute *attr = vertex_layout.GetAttribute(i);
-		if (attr == nullptr)
-			continue;
-
-		const int location = va_location[attr->semantic];
+	for (size_t i = 0; i < VA_Count; ++i) {
+		const int location = va_location[i];
 		if (location == -1)
-			continue; // shader not consuming this vertex stream
+			continue; // shader not consuming this attribute
 
 		sg_vertex_attr_desc &layout_attr = layout.attrs[location];
 
 		layout_attr.buffer_index = buffer_index;
-		layout_attr.format = attr->format;
-		layout_attr.offset = attr->offset;
+		layout_attr.format = vertex_layout.GetFormat(VertexAttribute(i));
+		layout_attr.offset = offset[i];
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const {
-	assert(semantic_to_attrib[semantic] != -1);
+void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const {
+	const sg_vertex_format format = sg_vertex_format(attrib[semantic]);
 
-	const Attribute &attr = attrib[semantic_to_attrib[semantic]];
-
-	if (attr.format == SG_VERTEXFORMAT_FLOAT || attr.format == SG_VERTEXFORMAT_FLOAT2 || attr.format == SG_VERTEXFORMAT_FLOAT3 ||
-		attr.format == SG_VERTEXFORMAT_FLOAT4) {
-
+	if (format == SG_VERTEXFORMAT_FLOAT || format == SG_VERTEXFORMAT_FLOAT2 || format == SG_VERTEXFORMAT_FLOAT3 || format == SG_VERTEXFORMAT_FLOAT4) {
 		size_t out_count;
-		if (attr.format == SG_VERTEXFORMAT_FLOAT)
+
+		if (format == SG_VERTEXFORMAT_FLOAT)
 			out_count = 1;
-		else if (attr.format == SG_VERTEXFORMAT_FLOAT2)
+		else if (format == SG_VERTEXFORMAT_FLOAT2)
 			out_count = 2;
-		else if (attr.format == SG_VERTEXFORMAT_FLOAT3)
+		else if (format == SG_VERTEXFORMAT_FLOAT3)
 			out_count = 3;
-		else if (attr.format == SG_VERTEXFORMAT_FLOAT4)
+		else if (format == SG_VERTEXFORMAT_FLOAT4)
 			out_count = 4;
 
 		if (in_count > out_count)
 			in_count = out_count;
 
-		float *f_out = reinterpret_cast<float *>(out + attr.offset);
+		float *f_out = reinterpret_cast<float *>(out + offset[semantic]);
 
 		size_t i = 0;
 		for (; i < in_count; ++i)
 			f_out[i] = in[i];
 		for (; i < out_count; ++i) // zero pad missing input
 			f_out[i] = 0.f;
+	} else if (format == SG_VERTEXFORMAT_BYTE4 || format == SG_VERTEXFORMAT_BYTE4N) {
+		int8_t *i_out = reinterpret_cast<int8_t *>(out + offset[semantic]);
+
+		const size_t out_count = 4;
+
+		size_t i = 0;
+		for (; i < in_count; ++i)
+			i_out[i] = format == SG_VERTEXFORMAT_BYTE4N ? pack_float<int8_t>(in[i]) : int8_t(in[i]);
+		for (; i < out_count; ++i) // zero pad missing input
+			i_out[i] = 0;
+	} else if (format == SG_VERTEXFORMAT_UBYTE4 || format == SG_VERTEXFORMAT_UBYTE4N) {
+		uint8_t *u_out = reinterpret_cast<uint8_t *>(out + offset[semantic]);
+
+		const size_t out_count = 4;
+
+		size_t i = 0;
+		for (; i < in_count; ++i)
+			u_out[i] = format == SG_VERTEXFORMAT_UBYTE4N ? pack_float<uint8_t>(in[i]) : uint8_t(in[i]);
+		for (; i < out_count; ++i) // zero pad missing input
+			u_out[i] = 0;
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
+void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const {}
+
+//
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
+	struct shader_vs_params {
+		Mat44 mvp;
+	};
+
+	sg_shader_desc shader_desc;
+	memset(&shader_desc, 0, sizeof(sg_shader_desc));
+
+	shader_desc.vs.source = "#version 330\n"
+							"uniform mat4 mvp;\n"
+							"layout (location=0) in vec4 a_position;\n"
+							"layout (location=1) in vec3 a_normal;\n"
+							"out vec3 i_normal;\n"
+							"void main() {\n"
+							"	gl_Position = mvp * a_position;\n"
+							"	i_normal = a_normal;\n"
+							"}\n";
+
+	shader_desc.vs.uniform_blocks[0].size = sizeof(shader_vs_params);
+	shader_desc.vs.uniform_blocks[0].uniforms[0].name = "mvp";
+	shader_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
+
+	shader_desc.fs.source = "#version 330\n"
+							"in vec3 i_normal;\n"
+							"out vec4 o_color;\n"
+							"void main() {\n"
+							"	float k = normalize(i_normal).z;\n"
+							"	o_color = vec4(k, k, k, 1);\n"
+							"}\n";
+
+	Shader shader;
+
+	shader.shader = sg_make_shader(&shader_desc);
+	shader.layout.attrib[0] = VA_Position;
+	shader.layout.attrib[1] = VA_Normal;
+
+	shader.uniforms.layout = _SG_UNIFORMLAYOUT_DEFAULT;
+	shader.uniforms.uniform[0].name = "mvp";
+	shader.uniforms.uniform[0].type = SG_UNIFORMTYPE_MAT4;
+
+	return shader;
+}
+
+Shader LoadShaderFromFile(const std::string &path, bool silent) { return LoadShader(g_file_reader, g_file_read_provider, path, silent); }
+Shader LoadShaderFromAssets(const std::string &name, bool silent) { return LoadShader(g_assets_reader, g_assets_read_provider, name, silent); }
 
 //
 sg_buffer MakeIndexBuffer(const void *data, size_t size) {

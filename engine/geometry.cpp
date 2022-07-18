@@ -394,7 +394,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 		return geo;
 	}
 
-	if (Read<uint8_t>(ir, h) != GeometryMarker) {
+	if (Read<uint8_t>(ir, h) != /*GeometryMarker*/ModelMarker) {
 		warn(fmt::format("Cannot load geometry '{}', invalid geometry marker", name));
 		return geo;
 	}
@@ -520,29 +520,27 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 VertexLayout ComputeGeometryVertexLayout(const Geometry &geo) {
 	VertexLayout layout;
 
-	layout.Add(VA_Position, SG_VERTEXFORMAT_FLOAT3);
+	layout.Set(VA_Position, SG_VERTEXFORMAT_FLOAT3);
 
 	if (!geo.normal.empty())
-		layout.Add(VA_Normal, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_Normal, SG_VERTEXFORMAT_UBYTE4N);
 
 	if (!geo.tangent.empty()) {
-		layout.Add(VA_Tangent, SG_VERTEXFORMAT_UBYTE4N);
-		layout.Add(VA_Bitangent, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_Tangent, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_Bitangent, SG_VERTEXFORMAT_UBYTE4N);
 	}
 
 	if (!geo.color.empty())
-		layout.Add(VA_Color, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_Color, SG_VERTEXFORMAT_UBYTE4N);
 
 	if (!geo.skin.empty()) {
-		layout.Add(VA_BoneIndices, SG_VERTEXFORMAT_UBYTE4N);
-		layout.Add(VA_BoneWeights, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_BoneIndices, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_BoneWeights, SG_VERTEXFORMAT_UBYTE4N);
 	}
 
 	for (size_t i = 0; i < geo.uv.size() && i < 2; ++i)
 		if (!geo.uv[i].empty())
-			layout.Add(VertexAttribute(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
-
-	layout.End();
+			layout.Set(VertexAttribute(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
 
 	return layout;
 }

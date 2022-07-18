@@ -247,39 +247,26 @@ enum VertexAttribute { VA_Position, VA_Normal, VA_Tangent, VA_Bitangent, VA_Colo
 struct ShaderLayout {
 	ShaderLayout() { std::fill(attrib, attrib + SG_MAX_VERTEX_ATTRIBUTES, VA_Count); }
 
-	VertexAttribute attrib[SG_MAX_VERTEX_ATTRIBUTES];
+	uint8_t attrib[SG_MAX_VERTEX_ATTRIBUTES]; // VertexAttribute
 };
 
 struct VertexLayout {
-	VertexLayout() : attrib_count(0), stride(0) {}
+	VertexLayout();
 
-	struct Attribute {
-		Attribute() : semantic(VA_Count), format(SG_VERTEXFORMAT_INVALID), offset(0) {}
+	void Set(VertexAttribute semantic, sg_vertex_format format);
 
-		VertexAttribute semantic;
-		sg_vertex_format format;
-		size_t offset;
-	};
+	/// Return offsets for each vertex attribute as output parameter and layout stride as return value.
+	size_t GetOffsets(int offset[VA_Count]) const;
+	size_t GetStride() const;
 
-	void Add(VertexAttribute semantic, sg_vertex_format format);
-	void End();
+	bool Has(VertexAttribute attr) const { return attrib[attr] != SG_VERTEXFORMAT_INVALID; }
+	sg_vertex_format GetFormat(VertexAttribute attr) const { return sg_vertex_format(attrib[attr]); }
 
-	bool Has(VertexAttribute semantic) const { return semantic_to_attrib[semantic] != -1; }
-
-	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
-	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
-
-	size_t GetStride() const { return stride; }
-
-	size_t GetAttributeCount() const { return attrib_count; }
-	const Attribute *GetAttribute(size_t idx) const { return idx < SG_MAX_VERTEX_ATTRIBUTES ? &attrib[idx] : nullptr; }
+	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const;
+	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const;
 
 private:
-	Attribute attrib[SG_MAX_VERTEX_ATTRIBUTES];
-	size_t attrib_count;
-
-	size_t stride;
-	int8_t semantic_to_attrib[VA_Count];
+	uint8_t attrib[VA_Count]; // sg_vertex_format
 };
 
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
@@ -311,12 +298,34 @@ static const Vec4 default_pssm_split = Vec4(10.f, 50.f, 100.f, 500.f);
 #if 1
 
 //
-struct ProgramHandle {
-	ProgramHandle() : loaded(false) {}
-	//	bgfx::ProgramHandle handle = BGFX_INVALID_HANDLE;
-	bool loaded;
+struct ShaderUniform {
+	ShaderUniform() : type(SG_UNIFORMTYPE_INVALID) {}
+
+	std::string name;
+	sg_uniform_type type;
 };
 
+struct ShaderUniforms {
+	ShaderUniforms() : layout(_SG_UNIFORMLAYOUT_DEFAULT) {}
+
+	ShaderUniform uniform[SG_MAX_UB_MEMBERS];
+	sg_uniform_layout layout;
+};
+
+struct Shader { // 20B
+	Shader() { shader.id = SG_INVALID_ID; }
+
+	sg_shader shader;
+
+	ShaderLayout layout; // attributes
+	ShaderUniforms uniforms; // uniforms
+};
+
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
+Shader LoadShaderFromFile(const std::string &path, bool silent = false);
+Shader LoadShaderFromAssets(const std::string &name, bool silent = false);
+
+/*
 struct TextureUniform {
 	TextureUniform() : channel(0xff) {}
 	//	bgfx::UniformHandle handle;
@@ -330,7 +339,9 @@ struct Vec4Uniform {
 	Vec4 value;
 	bool is_color;
 };
+*/
 
+#if 0
 struct PipelineProgram {
 	std::vector<PipelineProgramFeature> features; // features imply associated uniforms
 	std::vector<TextureUniform> texture_uniforms; // naked texture uniforms
@@ -357,6 +368,7 @@ bool LoadPipelineProgramUniformsFromFile(
 	const std::string &path, std::vector<TextureUniform> &texs, std::vector<Vec4Uniform> &vecs, PipelineResources &resources, bool silent = false);
 bool LoadPipelineProgramUniformsFromAssets(
 	const std::string &name, std::vector<TextureUniform> &texs, std::vector<Vec4Uniform> &vecs, PipelineResources &resources, bool silent = false);
+#endif
 
 //
 struct DisplayList { // 4B
@@ -441,24 +453,22 @@ struct Material { // 56B
 	uint32_t variant_idx;
 
 	struct Value {
-		Value() : type(UT_Vec4), count(1) {}
+		Value() : type(UT_Vec4), count(1), idx(-1) {}
 
 		UniformType type;
 		std::vector<float> value;
 		uint16_t count;
-
-		// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+		int16_t idx;
 	};
 
 	std::map<std::string, Value> values;
 
 	struct Texture {
-		Texture() : channel(0) {}
+		Texture() : channel(0), idx(-1) {}
 
 		TextureRef texture;
 		uint8_t channel;
-
-		// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+		int8_t idx;
 	};
 
 	std::map<std::string, Texture> textures;
@@ -577,10 +587,10 @@ struct ModelLoad {
 };
 
 struct PipelineResources {
-	PipelineResources() : programs(Destroy), textures(Destroy), materials(Destroy), models(Destroy) {}
+	PipelineResources() : /*programs(Destroy),*/ textures(Destroy), materials(Destroy), models(Destroy) {}
 	~PipelineResources() { DestroyAll(); }
 
-	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
+	//	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
 	ResourceCache<Texture, TextureRef> textures;
 	ResourceCache<Material, MaterialRef> materials;
 	ResourceCache<Model, ModelRef> models;

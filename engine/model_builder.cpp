@@ -118,10 +118,11 @@ void ModelBuilder::AddBoneIdx(uint16_t idx) {
 
 //
 void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level, bool verbose) const {
-	const size_t stride = decl.GetStride();
-
 	Model model;
 	model.lists.reserve(lists.size());
+
+	int offset[VA_Count];
+	const size_t stride = decl.GetOffsets(offset);
 
 	size_t vtx_count = 0;
 	for (size_t i = 0; i < lists.size(); i++) {
@@ -136,27 +137,27 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 
 		for (size_t j = 0; j < list.vtx.size(); j++) {
 			const Vertex &vtx = list.vtx[j];
-			decl.PackVertex(VA_Position, &vtx.pos.x, 3, p_vtx);
+			decl.PackVertex(VA_Position, offset, &vtx.pos.x, 3, p_vtx);
 
 			if (decl.Has(VA_Normal))
-				decl.PackVertex(VA_Normal, &vtx.normal.x, 3, p_vtx);
+				decl.PackVertex(VA_Normal, offset, &vtx.normal.x, 3, p_vtx);
 			if (decl.Has(VA_Tangent))
-				decl.PackVertex(VA_Tangent, &vtx.tangent.x, 3, p_vtx);
+				decl.PackVertex(VA_Tangent, offset, &vtx.tangent.x, 3, p_vtx);
 			if (decl.Has(VA_Bitangent))
-				decl.PackVertex(VA_Bitangent, &vtx.binormal.x, 3, p_vtx);
+				decl.PackVertex(VA_Bitangent, offset, &vtx.binormal.x, 3, p_vtx);
 
 			if (decl.Has(VA_Color))
-				decl.PackVertex(VA_Color, &vtx.color0.r, 4, p_vtx);
+				decl.PackVertex(VA_Color, offset, &vtx.color0.r, 4, p_vtx);
 
 			if (decl.Has(VA_UV0))
-				decl.PackVertex(VA_UV0, &vtx.uv0.x, 2, p_vtx);
+				decl.PackVertex(VA_UV0, offset, &vtx.uv0.x, 2, p_vtx);
 			if (decl.Has(VA_UV1))
-				decl.PackVertex(VA_UV1, &vtx.uv1.x, 2, p_vtx);
+				decl.PackVertex(VA_UV1, offset, &vtx.uv1.x, 2, p_vtx);
 
 			if (decl.Has(VA_BoneIndices))
-				decl.PackVertex(VA_BoneIndices, vtx.index, 4, p_vtx);
+				decl.PackVertex(VA_BoneIndices, offset, vtx.index, 4, p_vtx);
 			if (decl.Has(VA_BoneWeights))
-				decl.PackVertex(VA_BoneWeights, vtx.weight, 4, p_vtx);
+				decl.PackVertex(VA_BoneWeights, offset, vtx.weight, 4, p_vtx);
 
 			minmax.mn = Min(minmax.mn, vtx.pos); // update list minmax
 			minmax.mx = Max(minmax.mx, vtx.pos);

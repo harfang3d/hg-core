@@ -13,6 +13,9 @@ using namespace hg;
 
 //
 int main(int narg, const char **args) {
+	const size_t vertex_layout_size = sizeof(VertexLayout); // 288 -> 9
+	const size_t shader_layout_size = sizeof(ShaderLayout); // 64 -> 16
+
 	if (narg < 3)
 		return -1;
 
