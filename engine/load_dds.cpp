@@ -3,6 +3,7 @@
 #include "engine/load_dds.h"
 
 #include "foundation/log.h"
+#include "foundation/math.h"
 #include "foundation/profiler.h"
 
 #include <fmt/format.h>
@@ -88,6 +89,15 @@ __attribute__((packed))
 ;
 
 //
+static sg_pixel_format FourCCPixelFormat(uint32_t fourcc) {
+	if (fourcc == '2CTE') {
+		return SG_PIXELFORMAT_ETC2_RGB8;
+	}
+
+	return _SG_PIXELFORMAT_NUM;
+}
+
+//
 Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 	ProfilerPerfSection section("LoadDDS", name);
 
@@ -105,7 +115,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 		return tex;
 
 	log(fmt::format("Load DDS '{}'", name));
-	log(fmt::format("    Size: {}x{}", header.dwWidth, header.dwHeight));
+	log(fmt::format("    Size: {}x{} Mips: {}", header.dwWidth, header.dwHeight, header.dwMipMapCount));
 
 	if (header.ddpfPixelFormat.dwFlags & DDPF_RGB) {
 		size_t pitch = header.dwWidth * header.ddpfPixelFormat.dwRGBBitCount / 8;
@@ -143,6 +153,31 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 		}
 	} else if (header.ddpfPixelFormat.dwFlags & DDPF_FOURCC) {
 		log(fmt::format("    FourCC: {}", (const char *)(&header.ddpfPixelFormat.dwFourCC)));
+
+		const size_t size = ir.size(h);
+		const size_t remaining = size - ir.tell(h);
+
+		std::vector<uint8_t> payload(remaining);
+		ir.read(h, payload.data(), remaining);
+
+		sg_image_desc desc;
+		memset(&desc, 0, sizeof(sg_image_desc));
+		desc.width = header.dwWidth;
+		desc.height = header.dwHeight;
+		desc.pixel_format = FourCCPixelFormat(header.ddpfPixelFormat.dwFourCC);
+		desc.min_filter = SG_FILTER_LINEAR;
+		desc.mag_filter = SG_FILTER_LINEAR;
+		desc.num_mipmaps = header.dwMipMapCount;
+
+		uint8_t *mip_data = payload.data();
+		for (int i = 0, w = desc.width, h = desc.height; i < desc.num_mipmaps; ++i, w /= 2, h /= 2) {
+			const size_t mip_size = Max(8, (w * h) / 2);
+			desc.data.subimage[0][i].ptr = mip_data;
+			desc.data.subimage[0][i].size = mip_size;
+			mip_data += mip_size;
+		}
+
+		tex.image = sg_make_image(&desc);
 	} else {
 		warn("    Invalid header!");
 	}
