@@ -38,7 +38,7 @@ static std::string GetTempDirectoryName() {
 #endif
 
 #else
-	out = "/tmp"
+	out = "/tmp";
 #endif
 	return out;
 }
