@@ -15,96 +15,92 @@
 
 using namespace hg;
 
-struct DummyReader {
-	Data buffer;
-
-	static size_t Read(Handle h, void *data, size_t size);
-	static size_t Size(Handle h);
-	static bool Seek(Handle h, ptrdiff_t offset, SeekMode mode);
-	static size_t Tell(Handle h);
-	static bool IsValid(Handle h);
-	static bool IsEOF(Handle h);
-};
-
-size_t DummyReader::Read(Handle h, void* data, size_t size) { 
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0])); 
-	return impl->buffer.Read(data, size);
+static size_t DummyReaderRead(Handle h, void* data, size_t size) { 
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0])); 
+	return buffer->Read(data, size);
 }
 
-size_t DummyReader::Size(Handle h) {
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
-	return impl->buffer.GetSize();
+static size_t DummyReaderSize(Handle h) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return buffer->GetSize();
 }
 
-bool DummyReader::Seek(Handle h, ptrdiff_t offset, SeekMode mode) {
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
+static bool DummyReaderSeek(Handle h, ptrdiff_t offset, SeekMode mode) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
 	if (mode == SM_Start) {
-		if ((offset < 0) || (offset > impl->buffer.GetSize())) {
+		if ((offset < 0) || (offset > buffer->GetSize())) {
 			return false;
 		}
-		impl->buffer.SetCursor(offset);
+		buffer->SetCursor(offset);
 	} else if (mode == SM_Current) {
 		if (offset >= 0) {
-			if ((impl->buffer.GetCursor() + offset) > impl->buffer.GetSize()) {
+			if ((buffer->GetCursor() + offset) > buffer->GetSize()) {
 				return false;
 			}
 		} else if (offset < 0) {
-			if ((impl->buffer.GetCursor() + offset) < 0) {
+			if ((buffer->GetCursor() + offset) < 0) {
 				return false;
 			}
 		}
-		impl->buffer.SetCursor(impl->buffer.GetCursor() + offset);
+		buffer->SetCursor(buffer->GetCursor() + offset);
 	} else {
-		if ((offset < 0) || (offset > impl->buffer.GetSize())) {
+		if ((offset < 0) || (offset > buffer->GetSize())) {
 			return false;
 		}
-		impl->buffer.SetCursor(impl->buffer.GetSize() - offset);
+		buffer->SetCursor(buffer->GetSize() - offset);
 	}
 	return true;
 }
 
-size_t DummyReader::Tell(Handle h) {
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
-	return impl->buffer.GetCursor();
+static size_t DummyReaderTell(Handle h) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return buffer->GetCursor();
 }
 
-bool DummyReader::IsValid(Handle h) {
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
-	return !impl->buffer.Empty();
+static bool DummyReaderIsValid(Handle h) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return !buffer->Empty();
 }
 
-bool DummyReader::IsEOF(Handle h) {
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
-	return (impl->buffer.GetCursor() >= impl->buffer.GetSize());
+static bool DummyReaderIsEOF(Handle h) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return (buffer->GetCursor() >= buffer->GetSize());
 }
 
 static Handle DummyReaderOpen(const std::string& path, bool silent) {
 	Handle h;
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
-	impl = new DummyReader;
+	Data *buffer = new Data;
+	*(reinterpret_cast<Data **>(&h.v[0])) = buffer;
+	if (path == "valid") {
+		Write(*buffer, hg::test::LoremIpsum);
+		Write<uint32_t>(*buffer, 0xc0ffee);
+		Write<uint16_t>(*buffer, 0xcafe);
+		buffer->Rewind();
+	}
 	return h;
 }
 
 static void DummyReaderClose(Handle h) {
-	DummyReader *impl = *(reinterpret_cast<DummyReader **>(&h.v[0]));
-	delete impl;
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	delete buffer;
+	*(reinterpret_cast<Data **>(&h.v[0])) = nullptr;
 }
 
 static bool DummyReaderIsFile(const std::string &path) { return !path.empty(); }
 
 static void test_reader_interface() { 
-	DummyReader dummy;
+	Data buffer;
 
 	Reader reader;
-	reader.read = DummyReader::Read;
-	reader.size = DummyReader::Size;
-	reader.seek = DummyReader::Seek;
-	reader.tell = DummyReader::Tell;
-	reader.is_valid = DummyReader::IsValid;
-	reader.is_eof = DummyReader::IsEOF;
+	reader.read = DummyReaderRead;
+	reader.size = DummyReaderSize;
+	reader.seek = DummyReaderSeek;
+	reader.tell = DummyReaderTell;
+	reader.is_valid = DummyReaderIsValid;
+	reader.is_eof = DummyReaderIsEOF;
 
 	Handle h;
-	*(reinterpret_cast<DummyReader **>(&h.v[0])) = &dummy;
+	*(reinterpret_cast<Data **>(&h.v[0])) = &buffer;
 
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 	h.debug = true;
@@ -113,22 +109,22 @@ static void test_reader_interface() {
 	{
 		TEST_CHECK(Tell(reader, h) == 0);
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint16_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint16_t)) == true);
 #endif
-		TEST_CHECK(Write(dummy.buffer, hg::test::LoremIpsum) == true);
-		dummy.buffer.Rewind();
+		TEST_CHECK(Write(buffer, hg::test::LoremIpsum) == true);
+		buffer.Rewind();
 
 		std::string str;
 		TEST_CHECK(Read(reader, h, str) == true);
 		TEST_CHECK(str == hg::test::LoremIpsum);
-		TEST_CHECK(Tell(reader, h) == dummy.buffer.GetSize());
+		TEST_CHECK(Tell(reader, h) == buffer.GetSize());
 		TEST_CHECK(Seek(reader, h, 0, SM_Start) == true);
 		TEST_CHECK(Tell(reader, h) == 0);
 	}
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
 	{ 
-		dummy.buffer.Reset();
-		TEST_CHECK(Write<uint32_t>(dummy.buffer, 0xc0ffee) == true);
+		buffer.Reset();
+		TEST_CHECK(Write<uint32_t>(buffer, 0xc0ffee) == true);
 
 		uint32_t v;
 		TEST_CHECK(Read<uint32_t>(reader, h, v) == false);
@@ -137,27 +133,27 @@ static void test_reader_interface() {
 	{ 
 		std::string str;
 
-		dummy.buffer.Reset();
+		buffer.Reset();
 
 		TEST_CHECK(Read(reader, h, str) == false);
 
-		dummy.buffer.Reset();
+		buffer.Reset();
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint16_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint16_t)) == true);
 #endif
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, hg::test::LoremIpsum.size()) == true);
-		TEST_CHECK(dummy.buffer.Write(&hg::test::LoremIpsum[0], 10) == 10);
-		dummy.buffer.Rewind();
+		TEST_CHECK(Write<uint16_t>(buffer, hg::test::LoremIpsum.size()) == true);
+		TEST_CHECK(buffer.Write(&hg::test::LoremIpsum[0], 10) == 10);
+		buffer.Rewind();
 
 		TEST_CHECK(Read(reader, h, str) == false);
 
-		dummy.buffer.Reset();
+		buffer.Reset();
 
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint16_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint16_t)) == true);
 #endif
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, 0) == true);
-		dummy.buffer.Rewind();
+		TEST_CHECK(Write<uint16_t>(buffer, 0) == true);
+		buffer.Rewind();
 
 		str = "this should be cleared";
 		TEST_CHECK(Read(reader, h, str) == true);
@@ -165,14 +161,14 @@ static void test_reader_interface() {
 	}
 
 	{
-		dummy.buffer.Reset();
+		buffer.Reset();
 
 		uint32_t v0 = 0xcafe;
 #if defined(ENABLE_BINARY_DEBUG_HANDLE) 
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint32_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint32_t)) == true);
 #endif
-		Write<uint32_t>(dummy.buffer, v0);
-		dummy.buffer.Rewind();
+		Write<uint32_t>(buffer, v0);
+		buffer.Rewind();
 
 		uint32_t v1;
 		TEST_CHECK(Read<uint32_t>(reader, h, v1) == true);
@@ -185,30 +181,30 @@ static void test_reader_interface() {
 		TEST_CHECK(Tell(reader, h) == 0);
 	}
 	{
-		dummy.buffer.Reset();
+		buffer.Reset();
 
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint16_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint16_t)) == true);
 #endif
-		TEST_CHECK(Write(dummy.buffer, hg::test::LoremIpsum) == true);
+		TEST_CHECK(Write(buffer, hg::test::LoremIpsum) == true);
 			
 		size_t after_string = Tell(reader, h);
 
 		uint64_t v0 = 0xfacade;
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint64_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint64_t)) == true);
 #endif
-		TEST_CHECK(Write<uint64_t>(dummy.buffer, v0) == true);
+		TEST_CHECK(Write<uint64_t>(buffer, v0) == true);
 
 		size_t after_facade = Tell(reader, h);
 
 		uint64_t v1 = 0xf00dc0ffee;
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint64_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint64_t)) == true);
 #endif
-		TEST_CHECK(Write<uint64_t>(dummy.buffer, v1) == true);
+		TEST_CHECK(Write<uint64_t>(buffer, v1) == true);
 			
-		dummy.buffer.Rewind();
+		buffer.Rewind();
 
 		TEST_CHECK(Tell(reader, h) == 0);
 
@@ -228,12 +224,12 @@ static void test_reader_interface() {
 		TEST_CHECK(Skip<uint32_t>(reader, h) == false);
 	}
 	{ 
-		dummy.buffer.Reset();
+		buffer.Reset();
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
-		TEST_CHECK(Write<uint16_t>(dummy.buffer, sizeof(uint16_t)) == true);
+		TEST_CHECK(Write<uint16_t>(buffer, sizeof(uint16_t)) == true);
 #endif
-		TEST_CHECK(Write(dummy.buffer, hg::test::LoremIpsum) == true);
-		dummy.buffer.Rewind();
+		TEST_CHECK(Write(buffer, hg::test::LoremIpsum) == true);
+		buffer.Rewind();
 
 		Data d0 = LoadData(reader, h);
 		TEST_CHECK(d0.Empty() == false);
@@ -248,119 +244,147 @@ static void test_reader_interface() {
 		TEST_CHECK(Read(d0, str) == true);
 		TEST_CHECK(str == hg::test::LoremIpsum);
 	}
+
+	{
+		ReadProvider provider;
+		provider.open = DummyReaderOpen;
+		provider.close = DummyReaderClose;
+		provider.is_file = DummyReaderIsFile;
+
+		TEST_CHECK(Exists(reader, provider, "valid") == true);
+		TEST_CHECK(Exists(reader, provider, "invalid") == false);
+
+		{ 
+			ScopedReadHandle hr(provider, "valid", true);
+			std::string str;
+			uint32_t d0;
+			uint16_t w0;
+
+			TEST_CHECK(Read(reader, hr, str) == true);
+			TEST_CHECK(Read<uint32_t>(reader, hr, d0) == true);
+			TEST_CHECK(Read<uint16_t>(reader, hr, w0) == true);
+			TEST_CHECK(str == hg::test::LoremIpsum);
+			TEST_CHECK(d0 == 0xc0ffee);
+			TEST_CHECK(w0 == 0xcafe);
+		}
+	}
 }
 
-/*
-ReadProvider provider;
-provider.open = DummyReaderOpen;
-provider.close = DummyReaderClose;
-provider.is_file = DummyReaderIsFile;
-*/
-
-/*
-struct Writer {
-	size_t (*write)(Handle h, const void *data, size_t size);
-	bool (*seek)(Handle h, ptrdiff_t offset, SeekMode mode);
-	size_t (*tell)(Handle h);
-	bool (*is_valid)(Handle hnd);
-};
-
-template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) {
-	if (h.debug) {
-		uint16_t _check = sizeof(T);
-		if (i.write(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t))
+static size_t DummyWriterWrite(Handle h, const void* data, size_t size) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return buffer->Write(data, size);
+}
+static bool DummyWriterSeek(Handle h, ptrdiff_t offset, SeekMode mode) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	if (mode == SM_Start) {
+		if (offset < 0) {
 			return false;
-	}
-	return i.write(h, &v, sizeof(T)) == sizeof(T);
-}
-#else
-template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) { return i.write(h, &v, sizeof(T)) == sizeof(T); }
-#endif
-
-//
-bool Write(const Writer &i, const Handle &h, const std::string &v);
-
-//
-template <typename T> T Read(const Reader &i, const Handle &h) {
-	T v;
-	bool r = Read(i, h, v);
-	__ASSERT__(r == true);
-	return v;
-}
-
-//
-struct ReadProvider {
-	Handle (*open)(const std::string &path, bool silent);
-	void (*close)(Handle hnd);
-	bool (*is_file)(const std::string &path);
-};
-
-bool Exists(const Reader &ir, const ReadProvider &i, const std::string &path);
-
-struct WriteProvider {
-	Handle (*open)(const std::string &path);
-	void (*close)(Handle hnd);
-};
-
-//
-struct ScopedReadHandle {
-#ifdef ENABLE_BINARY_DEBUG_HANDLE
-	ScopedReadHandle(ReadProvider i, const std::string &path, bool silent = false, bool debug = false) : i_(i), h_(i.open(path, silent)) { h_.debug = debug; }
-#else
-	ScopedReadHandle(ReadProvider i, const std::string &path, bool silent = false) : i_(i), h_(i.open(path, silent)) {}
-#endif
-	~ScopedReadHandle() { i_.close(h_); }
-
-	operator const Handle &() const { return h_; }
-
-private:
-	Handle h_;
-	ReadProvider i_;
-};
-
-struct ScopedWriteHandle {
-#ifdef ENABLE_BINARY_DEBUG_HANDLE
-	ScopedWriteHandle(WriteProvider i, const std::string &path, bool debug = false) : i_(i), h_(i.open(path)) { h_.debug = debug; }
-#else
-	ScopedWriteHandle(WriteProvider i, const std::string &path) : i_(i), h_(i.open(path)) {}
-#endif
-	~ScopedWriteHandle() { i_.close(h_); }
-
-	operator const Handle &() const { return h_; }
-
-private:
-	Handle h_;
-	WriteProvider i_;
-};
-
-//
-template <typename T> struct DeferredWrite {
-	DeferredWrite(const Writer &iw_, const Handle &h_) : iw(iw_), h(h_) {
-		cursor = Tell(iw, h);
-
-#ifdef ENABLE_BINARY_DEBUG_HANDLE
-		if (h.debug)
-			Seek(iw, h, sizeof(uint16_t), SM_Current); // leave space for debug size marker
-#endif
-		Seek(iw, h, sizeof(T), SM_Current); // leave space for deferred write
-	}
-
-	bool Commit(const T &v) {
-		const size_t seek_ = Tell(iw, h);
-
-		if (!Seek(iw, h, cursor, SM_Start) || !Write(iw, h, v) || !Seek(iw, h, seek_, SM_Start))
+		}
+		buffer->SetCursor(offset);
+	} else if (mode == SM_Current) {
+		if (offset < 0) {
+			if ((buffer->GetCursor() + offset) < 0) {
+				return false;
+			}
+		}
+		buffer->SetCursor(buffer->GetCursor() + offset);
+	} else {
+		if (offset > buffer->GetSize()) {
 			return false;
-
-		return true;
+		}
+		buffer->SetCursor(buffer->GetSize() - offset);
 	}
+	return true;
+}
+static size_t DummyWriterTell(Handle h) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return buffer->GetCursor();
+}
+static bool DummyWriterIsValid(Handle h) { 
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	return (buffer != nullptr);
+}
 
-	size_t cursor;
+static Handle DummyWriterOpen(const std::string& path) {
+	Handle h;
+	Data *buffer = nullptr;
+	if (path == "valid") {
+		buffer = new Data;
+	}
+	*(reinterpret_cast<Data **>(&h.v[0])) = buffer;
+	return h;
+}
 
-	const Writer &iw;
-	const Handle &h;
-};
-*/
+static void DummyWriterClose(Handle h) {
+	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
+	if (buffer) {
+		delete buffer;
+		*(reinterpret_cast<Data **>(&h.v[0])) = nullptr;
+	}
+}
+
+static void test_writer_interface() {
+	Data buffer;
+
+	Writer writer;
+	writer.write = DummyWriterWrite;
+	writer.seek = DummyWriterSeek;
+	writer.tell = DummyWriterTell;
+	writer.is_valid = DummyWriterIsValid;
+
+	Reader reader;
+	reader.read = DummyReaderRead;
+	reader.size = DummyReaderSize;
+	reader.seek = DummyReaderSeek;
+	reader.tell = DummyReaderTell;
+	reader.is_valid = DummyReaderIsValid;
+	reader.is_eof = DummyReaderIsEOF;
+
+	Handle h;
+	*(reinterpret_cast<Data **>(&h.v[0])) = &buffer;
+
+#ifdef ENABLE_BINARY_DEBUG_HANDLE
+	h.debug = true;
+#endif
+
+	uint64_t v0, v1;
+	v0 = 0x1cec0ffee;
+		
+	TEST_CHECK(Tell(writer, h) == 0);
+		
+	DeferredWrite<uint64_t> dw(writer, h);
+		
+	size_t before_string = Tell(writer, h);
+	TEST_CHECK(Write(writer, h, hg::test::LoremIpsum) == true);
+
+	TEST_CHECK(dw.Commit(v0) == true);
+
+	TEST_CHECK(Seek(writer, h, before_string, SM_Start) == true);
+	TEST_CHECK(Tell(writer, h) == before_string);
+
+	std::string str;
+	TEST_CHECK(Read(reader, h, str) == true);
+	TEST_CHECK(str == hg::test::LoremIpsum);
+
+	TEST_CHECK(Seek(writer, h, buffer.GetSize(), SM_End) == true);
+	TEST_CHECK(Tell(writer, h) == 0);
+
+	TEST_CHECK(Read<uint64_t>(reader, h, v1) == true);
+	TEST_CHECK(v1 == v0);
+
+	TEST_CHECK(Tell(writer, h) == before_string);
+
+	WriteProvider provider;
+	provider.open = DummyWriterOpen;
+	provider.close = DummyWriterClose;
+
+	{ 
+		ScopedWriteHandle hw(provider, "valid");
+		TEST_CHECK(Write<uint32_t>(writer, hw, 0xbeef) == true);
+	}
+}
 
 void test_rw_interface() { 
 	test_reader_interface();	
+	test_writer_interface();
 }
