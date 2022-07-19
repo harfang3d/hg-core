@@ -27,7 +27,7 @@ jobs:
       - name: prepare
         run: mkdir -p build
       - name: configure
-        run: cmake .. -DCMAKE_BUILD_TYPE=Release -DHG_ENABLE_COVERAGE:BOOl=ON
+        run: cmake .. -DCMAKE_BUILD_TYPE=Debug -DHG_ENABLE_COVERAGE:BOOL=ON
         working-directory: build
       - name: build
         run: cmake --build . --target foundation_coverage
