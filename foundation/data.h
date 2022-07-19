@@ -16,7 +16,6 @@ public:
 #if __cplusplus >= 201103L
 	Data(Data &&data) { *this = data; }
 #endif
-
 	Data(const void *data, size_t size);
 	Data(void *data, size_t size);
 
@@ -43,10 +42,10 @@ public:
 	void Reset() { size_ = cursor = 0; }
 	bool Empty() const { return size_ == 0; }
 
-	void Reserve(size_t size);
-	void Resize(size_t size);
+	bool Reserve(size_t size);
+	bool Resize(size_t size);
 
-	void Skip(size_t count);
+	bool Skip(size_t count);
 
 	size_t Write(const void *data, size_t size);
 	size_t Read(void *data, size_t size) const;

@@ -18,8 +18,8 @@ Data &Data::operator=(const Data &data) {
 	Free();
 
 	if (data.has_ownership) {
-		Reserve(data.size_);
-		Write(data.data_, data.size_);
+		if (Reserve(data.size_))
+			Write(data.data_, data.size_);
 	} else {
 		data_ = data.data_;
 		size_ = data.size_;
@@ -48,11 +48,13 @@ Data &Data::operator=(Data &&data) {
 }
 #endif
 
-void Data::Reserve(size_t size) {
+bool Data::Reserve(size_t size) {
 	const size_t new_capacity = (size / 8192 + 1) * 8192; // grow in 8KB increments
 
 	if (new_capacity > capacity_) {
-		uint8_t* _data_ = new uint8_t[new_capacity];
+		uint8_t *_data_ = new uint8_t[new_capacity];
+		if (_data_ == nullptr)
+			return false;
 
 		if (data_)
 			std::copy(data_, data_ + size_, _data_);
@@ -64,27 +66,36 @@ void Data::Reserve(size_t size) {
 		data_ = _data_;
 		capacity_ = new_capacity;
 	}
+
+	return true;
 }
 
-void Data::Resize(size_t size) {
-	Reserve(size);
+bool Data::Resize(size_t size) {
+	if (!Reserve(size))
+		return false;
 
 	size_ = size;
 
 	if (size_ < cursor)
 		cursor = size_;
+
+	return true;
 }
 
-void Data::Skip(size_t count) {
-	Reserve(cursor + count);
+bool Data::Skip(size_t count) {
+	if (!Reserve(cursor + count))
+		return false;
 
 	cursor += count;
 	if (cursor > size_)
 		size_ = cursor;
+
+	return true;
 }
 
 size_t Data::Write(const void *data, size_t size) {
-	Reserve(cursor + size);
+	if (!Reserve(cursor + size))
+		return 0;
 
 	std::copy(reinterpret_cast<const uint8_t *>(data), reinterpret_cast<const uint8_t *>(data) + size, data_ + cursor);
 
@@ -146,7 +157,11 @@ bool LoadDataFromFile(const std::string &path, Data &data) {
 		return false;
 
 	const size_t size = GetSize(file);
-	data.Reserve(size);
+	if (!data.Reserve(size)) {
+		Close(file);
+		return false;
+	}
+
 	Read(file, data.GetCursorPtr(), size);
 	data.Skip(size);
 

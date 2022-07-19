@@ -34,11 +34,8 @@ static FILE *_Open(const std::string &path, const std::string &mode, bool silent
 
 	const errno_t err = _wfopen_s(&file, wpath.data(), wmode.data());
 
-	if (!silent && err != 0) {
-		char errmsg[256];
-		strerror_s(errmsg, 255, err);
-		warn(fmt::format("Failed to open file '{}' mode '{}', error code {} ({})", path, mode, err, errmsg));
-	}
+	if (!silent && err != 0)
+		warn(fmt::format("Failed to open file '{}' mode '{}', error code {} ({})", path, mode, err, strerror(err)));
 #else
 	file = fopen(path.c_str(), mode.c_str());
 #endif
