@@ -15,7 +15,11 @@ bool LoadJson(const Reader &ir, const Handle &h, rapidjson::Document &doc) {
 	if (!ir.is_valid(h))
 		return false;
 
-	doc.Parse(LoadString(ir, h));
+	std::string str;
+	if (!Read(ir, h, str))
+		return false;
+
+	doc.Parse(str);
 	return true;
 }
 

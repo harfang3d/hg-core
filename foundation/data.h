@@ -14,7 +14,7 @@ public:
 	explicit Data(size_t size);
 	Data(const Data &data);
 #if __cplusplus >= 201103L
-	Data(Data &&data) { *this = data; }
+	Data(Data &&data) : Data() { *this = data; }
 #endif
 	Data(const void *data, size_t size);
 	Data(void *data, size_t size);

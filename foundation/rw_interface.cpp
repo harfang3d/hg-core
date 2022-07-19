@@ -66,11 +66,4 @@ Data LoadData(const Reader &i, const Handle &h) {
 	return data;
 }
 
-std::string LoadString(const Reader &i, const Handle &h) {
-	const size_t size = i.size(h);
-	std::string str(size, 0);
-	i.read(h, &str[0], size);
-	return str;
-}
-
 } // namespace hg

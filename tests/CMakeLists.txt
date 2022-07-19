@@ -26,6 +26,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/file.cpp
 	foundation/dir.cpp
 	foundation/data.cpp
+	foundation/rw_interface.cpp
 )
 
 add_executable(test_foundation test_foundation.cpp utils.cpp ${TEST_FOUNDATION_SRCS})

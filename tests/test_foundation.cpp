@@ -43,6 +43,7 @@ extern void test_intrusive_shared_ptr_st();
 extern void test_file();
 extern void test_dir();
 extern void test_data();
+extern void test_rw_interface();
 
 	//
 void test_clock_update() {
@@ -92,6 +93,7 @@ TEST_LIST = {
 	{"File", test_file},
 	{"Dir", test_dir},
 	{"Data", test_data},
+	{"RW_interface", test_rw_interface}, 
 
 	{"Clock.Update", test_clock_update},
 
