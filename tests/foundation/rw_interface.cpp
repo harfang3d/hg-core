@@ -55,7 +55,7 @@ bool DummyReader::Seek(Handle h, ptrdiff_t offset, SeekMode mode) {
 		}
 		impl->buffer.SetCursor(impl->buffer.GetCursor() + offset);
 	} else {
-		if ((offset < 0) || (offset >= impl->buffer.GetSize())) {
+		if ((offset < 0) || (offset > impl->buffer.GetSize())) {
 			return false;
 		}
 		impl->buffer.SetCursor(impl->buffer.GetSize() - offset);
@@ -106,7 +106,9 @@ static void test_reader_interface() {
 	Handle h;
 	*(reinterpret_cast<DummyReader **>(&h.v[0])) = &dummy;
 
+#ifdef ENABLE_BINARY_DEBUG_HANDLE
 	h.debug = true;
+#endif
 
 	{
 		TEST_CHECK(Tell(reader, h) == 0);

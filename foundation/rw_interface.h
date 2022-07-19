@@ -41,6 +41,10 @@ struct Writer {
 };
 
 //
+bool Seek(const Reader &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
+bool Seek(const Writer &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
+
+//
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 template <typename T> bool Read(const Reader &i, const Handle &h, T &v) {
 	if (h.debug) {
@@ -83,10 +87,6 @@ bool Write(const Writer &i, const Handle &h, const std::string &v);
 //
 size_t Tell(const Reader &i, const Handle &h);
 size_t Tell(const Writer &i, const Handle &h);
-
-//
-bool Seek(const Reader &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
-bool Seek(const Writer &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
 
 //
 template <typename T> T Read(const Reader &i, const Handle &h) {
