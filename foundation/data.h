@@ -13,13 +13,17 @@ public:
 	~Data();
 	explicit Data(size_t size);
 	Data(const Data &data);
-	//	Data(Data &&data) { *this = data; }
+#if __cplusplus >= 201103L
+	Data(Data &&data) { *this = data; }
+#endif
 
 	Data(const void *data, size_t size);
 	Data(void *data, size_t size);
 
 	Data &operator=(const Data &data);
-//	Data &operator=(Data &&data);
+#if __cplusplus >= 201103L
+	Data &operator=(Data &&data);
+#endif
 
 	uint8_t *GetData() { return data_; }
 	const uint8_t *GetData() const { return data_; }

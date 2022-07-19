@@ -30,7 +30,7 @@ Data &Data::operator=(const Data &data) {
 	return *this;
 }
 
-/*
+#if __cplusplus >= 201103L
 Data &Data::operator=(Data &&data) {
 	Free();
 
@@ -46,7 +46,7 @@ Data &Data::operator=(Data &&data) {
 
 	return *this;
 }
-*/
+#endif
 
 void Data::Reserve(size_t size) {
 	const size_t new_capacity = (size / 8192 + 1) * 8192; // grow in 8KB increments
