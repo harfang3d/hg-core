@@ -243,8 +243,8 @@ void test_data() {
 #if _WIN32
 		TEST_CHECK(SaveDataToFile("ZZ:\\bla.bin", d0) == false);
 #else
-		in fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR);
-		TEST_CHECK(fd >= 9);
+		int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR);
+		TEST_CHECK(fd >= 0);
 		close(fd);
 
 		TEST_CHECK(chmod(filename.c_str(), 0444) == 0);
