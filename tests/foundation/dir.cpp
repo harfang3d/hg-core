@@ -11,37 +11,9 @@
 #include "foundation/path_tools.h"
 #include "foundation/file.h"
 
+#include "../utils.h"
+
 using namespace hg;
-
-static std::string GetTempDirectoryName() {
-	std::string out;
-#if _WIN32
-	DWORD temp_path_len;
-	TCHAR temp_path[MAX_PATH];
-
-	DWORD temp_filename_len;
-	TCHAR temp_filename[MAX_PATH];
-
-	temp_path_len = GetTempPath(MAX_PATH, temp_path);
-	if ((temp_path_len == 0) || (temp_path_len >= MAX_PATH)) {
-		temp_path[0] = '\0';
-		temp_path_len = 0;
-	}
-
-#ifdef UNICODE
-	size_t len;
-	wcstombs_s(&len, NULL, 0, &temp_path[0], temp_path_len);
-	out.resize(len);
-	wcstombs_s(&len, out.data(), len, &temp_path[0], temp_path_len);
-#else
-	out = temp_path;
-#endif
-
-#else
-	out = "/tmp";
-#endif
-	return out;
-}
 
 static void test_entries(DirEntry *expected, int count, std::vector<DirEntry> &entries) {
 	for(size_t j=0; j<entries.size(); j++) {
@@ -57,16 +29,7 @@ static void test_entries(DirEntry *expected, int count, std::vector<DirEntry> &e
 }
 
 void test_dir() {
-	const std::string lorem_ipsum("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum non\n"
-								  "gravida sapien, quis luctus magna. Nullam ut nunc in lacus pretium luctus at\n"
-								  "nec nibh. Praesent fermentum vehicula pretium. Cras in magna non diam sagittis\n"
-								  "malesuada. Duis a nulla tempor, bibendum libero non, pellentesque magna.\n"
-								  "Pellentesque dignissim odio eget sem semper, non luctus sapien pellentesque.\n"
-								  "Cras condimentum pellentesque orci, ut vulputate sem convallis et. Nulla in\n"
-								  "enim non nibh dignissim lobortis. Phasellus efficitur enim sit amet vulputate\n"
-								  "pulvinar.\n");
-
-	std::string base = GetTempDirectoryName();
+	std::string base = hg::test::GetTempDirectoryName();
 
 	TEST_CHECK(IsDir(base) == true);
 
@@ -111,7 +74,7 @@ void test_dir() {
 		path = PathJoin(root, "00", "a");
 		lorem_filepath = PathJoin(path, "lorem.txt");
 		TEST_CHECK(MkTree(path, 01755, true) == true);
-		TEST_CHECK(StringToFile(lorem_filepath, lorem_ipsum) == true);
+		TEST_CHECK(StringToFile(lorem_filepath, hg::test::LoremIpsum) == true);
 		TEST_CHECK(IsDir(lorem_filepath) == false);
 
 		TEST_CHECK(MkTree(PathJoin(root, "00", "b"), 01755, true) == true);
@@ -153,13 +116,13 @@ void test_dir() {
 			};
 			test_entries(expected, 3, entries);
 		}
-		TEST_CHECK(GetDirSize(root) == (3 * lorem_ipsum.size()));
+		TEST_CHECK(GetDirSize(root) == (3 * hg::test::LoremIpsum.size()));
 
 		path = PathJoin(root, "00");
 		TEST_CHECK(RmTree(path) == true);
 		TEST_CHECK(Exists(path) == false);
 
-		TEST_CHECK(GetDirSize(root) == (2 * lorem_ipsum.size()));
+		TEST_CHECK(GetDirSize(root) == (2 * hg::test::LoremIpsum.size()));
 
 		entries = ListDir(path);
 		TEST_CHECK(entries.empty() == true);
@@ -175,7 +138,7 @@ void test_dir() {
 		std::string dst = PathJoin(root, "02");
 		TEST_CHECK(MkDir(PathJoin(src, "c")) == false);
 		TEST_CHECK(MkTree(src) == true);
-		TEST_CHECK(StringToFile(PathJoin(src, "lorem.txt"), lorem_ipsum) == true);
+		TEST_CHECK(StringToFile(PathJoin(src, "lorem.txt"), hg::test::LoremIpsum) == true);
 
 		TEST_CHECK(CopyDir(src, dst) == false);
 
@@ -187,7 +150,7 @@ void test_dir() {
 		if (TEST_CHECK(entries.size() == 1)) {
 			TEST_CHECK(entries[0].name == "lorem.txt");
 			TEST_CHECK(entries[0].type == DE_File);
-			TEST_CHECK(entries[0].size = lorem_ipsum.size());
+			TEST_CHECK(entries[0].size = hg::test::LoremIpsum.size());
 		}
 
 		TEST_CHECK(RmTree(root) == true);
@@ -206,7 +169,7 @@ void test_dir() {
 		TEST_CHECK(MkDir(path_01, 00755) == true);
 
 		std::string lorem_filepath = PathJoin(path_01, "lorem.txt");
-		TEST_CHECK(StringToFile(lorem_filepath, lorem_ipsum) == true);
+		TEST_CHECK(StringToFile(lorem_filepath, hg::test::LoremIpsum) == true);
 
 		std::string path_02 = PathJoin(root, "02");
 		TEST_CHECK(MkDir(path_02, 00755) == true);

@@ -5,13 +5,12 @@
 
 namespace hg {
 
-Data::Data()
-	: data_(nullptr)
-	, size_(0)
-	, capacity_(0)
-	, has_ownership(false)
-	, cursor(0)
-{}
+Data::Data() : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {}
+Data::Data(size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) { Resize(size); }
+Data::Data(const Data &data) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) { *this = data; }
+
+Data::Data(const void *data, size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) { Write(data, size); }
+Data::Data(void *data, size_t size) : data_(reinterpret_cast<uint8_t *>(data)), size_(size), capacity_(0), has_ownership(false), cursor(0) {}
 
 Data::~Data() { Free(); }
 
@@ -99,10 +98,10 @@ size_t Data::Write(const void *data, size_t size) {
 size_t Data::Read(void *data, size_t size) const {
 	if (cursor + size > size_)
 		size = size_ - cursor;
-
-	std::copy(data_ + cursor, data_ + cursor + size, reinterpret_cast<uint8_t *>(data));
-	cursor += size;
-
+	if (size) {
+		std::copy(data_ + cursor, data_ + cursor + size, reinterpret_cast<uint8_t *>(data));
+		cursor += size;
+	}
 	return size;
 }
 
@@ -125,7 +124,7 @@ bool Read(Data &data, std::string &str) {
 		return false;
 
 	std::vector<char> s_(size_t(size) + 1);
-	if (!data.Read(s_.data(), size))
+	if (data.Read(s_.data(), size) != size)
 		return false;
 
 	if (size)

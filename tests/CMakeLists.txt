@@ -25,9 +25,10 @@ set(TEST_FOUNDATION_SRCS
 	foundation/intrusive_shared_ptr_st.cpp
 	foundation/file.cpp
 	foundation/dir.cpp
+	foundation/data.cpp
 )
 
-add_executable(test_foundation test_foundation.cpp ${TEST_FOUNDATION_SRCS})
+add_executable(test_foundation test_foundation.cpp utils.cpp ${TEST_FOUNDATION_SRCS})
 target_link_libraries(test_foundation PUBLIC foundation)
 target_include_directories(test_foundation PUBLIC extern/acutest)
 

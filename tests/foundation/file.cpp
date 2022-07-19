@@ -12,48 +12,15 @@
 #include "foundation/path_tools.h"
 #include "foundation/data.h"
 
+#include "../utils.h"
+
 using namespace hg;
-
-static std::string CreateTempFilepath() {
-	std::string out;
-#if _WIN32
-	DWORD temp_path_len;
-	TCHAR temp_path[MAX_PATH];
-	
-	DWORD temp_filename_len;
-	TCHAR temp_filename[MAX_PATH];
-
-	temp_path_len = GetTempPath(MAX_PATH, temp_path);
-	if ((temp_path_len == 0) || (temp_path_len >= MAX_PATH)) {
-		temp_path[0] = '\0';
-		temp_path_len = 0;
-	}
-
-	temp_filename_len = GetTempFileName(temp_path, TEXT("hg_core"), 0, temp_filename);
-	if (temp_filename_len == 0) {
-		return "dummy.txt";
-	}
-
-#ifdef UNICODE
-	size_t len;
-	wcstombs_s(&len, NULL, 0, &temp_filename[0], temp_filename_len);
-	out.resize(len);
-	wcstombs_s(&len, out.data(), len, &temp_filename[0], temp_filename_len);
-#else
-	out = temp_filename;
-#endif
-
-#else
-	out = tmpnam(NULL);
-#endif
-	return out;
-}
 
 static const char g_dummy_data[37] = "abcdefghijklmnopqrstuvwxyz0123456789";
 
  void CreateDummyFile(std::string &filename, size_t &size) { 
 	
-	filename = CreateTempFilepath();
+	filename = hg::test::CreateTempFilepath();
 	FILE *f = fopen(filename.c_str(), "wb");
 	if (f) {
 		size = fwrite(g_dummy_data, 1, 37, f);
@@ -142,7 +109,7 @@ void test_file() {
 	}
 
 	{
-		std::string filename = CreateTempFilepath();
+		std::string filename = hg::test::CreateTempFilepath();
 		
 		File f = OpenWriteText(filename);
 		TEST_CHECK(Write(f, g_dummy_data, 36) == 36);
@@ -192,7 +159,7 @@ void test_file() {
 	}
 
 	{
-		std::string filename = CreateTempFilepath();
+		std::string filename = hg::test::CreateTempFilepath();
 
 		std::string input(g_dummy_data);
 
@@ -208,8 +175,8 @@ void test_file() {
 	}
 
 	{
-		std::string filename_0 = CreateTempFilepath();
-		std::string filename_1 = CreateTempFilepath();
+		std::string filename_0 = hg::test::CreateTempFilepath();
+		std::string filename_1 = hg::test::CreateTempFilepath();
 
 		TEST_CHECK(filename_0 != filename_1);
 
