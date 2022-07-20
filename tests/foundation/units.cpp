@@ -90,6 +90,7 @@ void test_units() {
 	TEST_CHECK(FormatDistance(Km(12.345)) == "12.3km");
 	TEST_CHECK(FormatDistance(Cm(-0.1f)) == "-1.0mm");
 
+	TEST_CHECK(FormatTime(time_from_ms(20)) == "20 ms");
 	TEST_CHECK(FormatTime(time_from_sec(1) + time_from_ms(100)) == "1 sec 100 ms");
 	TEST_CHECK(FormatTime(time_from_min(30) + time_from_sec(26) + time_from_ms(3)) == "30 min 26 sec 3 ms");
 	TEST_CHECK(FormatTime(time_from_hour(2) + time_from_min(15) + time_from_sec(30) + time_from_ms(222)) == "2 hour 15 min 30 sec 222 ms");

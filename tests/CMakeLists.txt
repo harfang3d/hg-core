@@ -1,4 +1,5 @@
 set(TEST_FOUNDATION_SRCS
+	foundation/cext.cpp
 	foundation/os.cpp
 	foundation/math.cpp
 	foundation/rand.cpp
@@ -39,6 +40,7 @@ target_include_directories(test_foundation PUBLIC extern/acutest)
 if(HG_ENABLE_COVERAGE)
 	 set(COVERAGE_EXCLUDES
 		"foundation/assert.*" 
+		"foundation/profiler.*" 
 		"foundation/extern/*" 
 		"engine/*" 
 		"app_glfw/*" 

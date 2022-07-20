@@ -2,6 +2,7 @@
 #include "acutest.h"
 
 //
+extern void test_cext();
 extern void test_os();
 extern void test_math();
 extern void test_rand();
@@ -33,9 +34,11 @@ extern void test_rw_interface();
 extern void test_data_rw_interface();
 extern void test_file_rw_interface();
 extern void test_clock();
+extern void test_profiler();
 
 //
 TEST_LIST = {
+	{"CEXT", test_cext},
 	{"OS", test_os},
 	{"Math", test_math},
 	{"Rand", test_rand},
