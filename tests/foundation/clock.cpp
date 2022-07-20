@@ -32,7 +32,7 @@ void test_clock() {
 	skip_clock();
 
 	TEST_CHECK(get_clock_scale() == 1.f);
-	
+
 	set_clock_scale(10);
 	TEST_CHECK(get_clock_scale() == 10.f);
 
@@ -41,4 +41,18 @@ void test_clock() {
 	tick_clock();
 
 	TEST_CHECK(time_to_us(get_clock_dt()) >= 150000);
+	{
+		time_ns t0 = wall_clock();
+		sleep_for(time_from_ms(50));
+		time_ns t1 = wall_clock();
+		time_ns dt = t1 - t0;
+		TEST_CHECK(time_to_ms(t1 - t0) >= 50.f);
+	}
+	{
+		time_ns t0 = wall_clock();
+		sleep_for(time_from_ms(0));
+		time_ns t1 = wall_clock();
+		time_ns dt = t1 - t0;
+		TEST_CHECK(time_to_ms(t1 - t0) < 0.001f);
+	}
 }
