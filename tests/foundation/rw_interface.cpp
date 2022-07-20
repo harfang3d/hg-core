@@ -262,10 +262,9 @@ static void test_reader_interface() {
 
 			TEST_CHECK(Read(reader, hr, str) == true);
 			TEST_CHECK(Read<uint32_t>(reader, hr, d0) == true);
-			TEST_CHECK(Read<uint16_t>(reader, hr, w0) == true);
+			TEST_CHECK(Read<uint16_t>(reader, hr) == 0xcafe);
 			TEST_CHECK(str == hg::test::LoremIpsum);
 			TEST_CHECK(d0 == 0xc0ffee);
-			TEST_CHECK(w0 == 0xcafe);
 		}
 	}
 }

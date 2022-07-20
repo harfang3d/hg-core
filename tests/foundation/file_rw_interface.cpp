@@ -38,6 +38,10 @@ void test_file_rw_interface() {
 			TEST_CHECK(Write<uint16_t>(g_file_writer, h, u16) == true);
 
 			TEST_CHECK(c0ffee_writer.Commit(u32) == true);
+
+			g_file_write_provider.close(h);
+			DeferredWrite<uint8_t> fail(g_file_writer, h);
+			TEST_CHECK(fail.Commit(0xcd) == false);
 		}
 
 		TEST_CHECK(Exists(g_file_reader, g_file_read_provider, filename) == true);

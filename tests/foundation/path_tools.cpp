@@ -6,6 +6,9 @@
 #include "foundation/path_tools.h"
 
 #include "foundation/assert.h"
+#include "foundation/dir.h"
+
+#include "../utils.h"
 
 using namespace hg;
 
@@ -124,4 +127,19 @@ void test_path_tools() {
 	TEST_CHECK(SwapFileExtension("config", "json") == "config.json");
 	TEST_CHECK(SwapFileExtension("~/.config", "xml") == "~/.xml");
 	TEST_CHECK(SwapFileExtension("/usr/bin/top", "") == "/usr/bin/top");
+
+	std::string tmp = CleanPath(hg::test::GetTempDirectoryName());
+	std::string cwd = CleanPath(GetCurrentWorkingDirectory());
+	std::string usr = CleanPath(GetUserFolder());
+
+	TEST_CHECK(IsDir(tmp) == true);
+	TEST_CHECK(IsDir(cwd) == true);
+	TEST_CHECK(IsDir(usr) == true);
+
+	TEST_CHECK(SetCurrentWorkingDirectory(tmp) == true);
+	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == tmp);
+	TEST_CHECK(SetCurrentWorkingDirectory(usr) == true);
+	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == usr);
+	TEST_CHECK(SetCurrentWorkingDirectory(cwd) == true);
+	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == cwd);
 }
