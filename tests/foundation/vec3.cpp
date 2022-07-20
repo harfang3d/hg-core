@@ -367,6 +367,12 @@ void test_vec3() {
 	}
 
 	{
-		// Vec3 BaseToEuler(const Vec3 &u, const Vec3 &v);
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Right), Vec3::Zero, 0.00001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Down), Vec3(0, 0, 3.f * HalfPi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Up), Vec3(0, 0, HalfPi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Down), Vec3(0, 0, 3.f * HalfPi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Left), Vec3(0, 0, Pi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Left, Vec3::Back), Vec3(0, -HalfPi, Pi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Right, Vec3::Back), Vec3(0, HalfPi, 0), 0.000001f));
 	}
 }

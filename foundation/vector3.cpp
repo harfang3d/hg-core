@@ -1,5 +1,7 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
+#include <math.h>
+
 #include "foundation/vector3.h"
 #include "foundation/assert.h"
 #include "foundation/math.h"
@@ -139,7 +141,7 @@ Vec3 BaseToEuler(const Vec3 &u, const Vec3 &v) {
 		euler.z = ACos(vc);
 
 	if (Dot(Cross(bv, vn), u) <= 0.f)
-		euler.z = (Pi + Pi) - euler.z;
+		euler.z = fmod((Pi + Pi) - euler.z, TwoPi);
 
 	return euler;
 }
