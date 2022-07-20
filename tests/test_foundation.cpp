@@ -1,19 +1,5 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
-#include <math.h>
-#include <utf8.h>
-
 #include "acutest.h"
-
-#include "foundation/string.h"
-
-#include "foundation/time.h"
-#include "foundation/clock.h"
-#include "foundation/log.h"
-
-#include <fmt/format.h>
-#include <map>
-
-using namespace hg;
 
 //
 extern void test_os();
@@ -46,25 +32,7 @@ extern void test_data();
 extern void test_rw_interface();
 extern void test_data_rw_interface();
 extern void test_file_rw_interface();
-
-	//
-void test_clock_update() {
-	reset_clock();
-
-	TEST_CHECK(get_clock() == 0);
-	TEST_CHECK(get_clock_dt() == 1);
-
-	tick_clock();
-	sleep_for(time_from_ms(16));
-	tick_clock();
-
-	TEST_CHECK(time_to_us(get_clock_dt()) >= 15000);
-
-	for (int n = 0; n < 16; ++n) {
-		sleep_for(time_from_ms(16));
-		tick_clock();
-	}
-}
+extern void test_clock();
 
 //
 TEST_LIST = {
@@ -98,8 +66,7 @@ TEST_LIST = {
 	{"RW_interface", test_rw_interface}, 
 	{"Data_RW_interface", test_data_rw_interface},
 	{"File_RW_interface", test_file_rw_interface},
-
-	{"Clock.Update", test_clock_update},
+	{"Clock", test_clock},
 
 	{NULL, NULL},
 };
