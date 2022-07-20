@@ -44,6 +44,7 @@ extern void test_file();
 extern void test_dir();
 extern void test_data();
 extern void test_rw_interface();
+extern void test_data_rw_interface();
 
 	//
 void test_clock_update() {
@@ -94,10 +95,9 @@ TEST_LIST = {
 	{"Dir", test_dir},
 	{"Data", test_data},
 	{"RW_interface", test_rw_interface}, 
+	{"Data_RW_interface", test_data_rw_interface},
 
 	{"Clock.Update", test_clock_update},
-
-//	{"Log", test_log},
 
 	{NULL, NULL},
 };

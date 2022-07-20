@@ -44,10 +44,10 @@ static bool DummyReaderSeek(Handle h, ptrdiff_t offset, SeekMode mode) {
 		}
 		buffer->SetCursor(buffer->GetCursor() + offset);
 	} else {
-		if ((offset < 0) || (offset > buffer->GetSize())) {
+		if ((offset > 0) || (offset < -buffer->GetSize())) {
 			return false;
 		}
-		buffer->SetCursor(buffer->GetSize() - offset);
+		buffer->SetCursor(buffer->GetSize() + offset);
 	}
 	return true;
 }
@@ -174,7 +174,7 @@ static void test_reader_interface() {
 		TEST_CHECK(Read<uint32_t>(reader, h, v1) == true);
 		TEST_CHECK(v0 == v1);
 
-		TEST_CHECK(Seek(reader, h, sizeof(uint32_t), SM_End) == true);
+		TEST_CHECK(Seek(reader, h, -sizeof(uint32_t), SM_End) == true);
 #if defined(ENABLE_BINARY_DEBUG_HANDLE)
 		TEST_CHECK(Seek(reader, h, -sizeof(uint16_t), SM_Current) == true);
 #endif
@@ -289,10 +289,10 @@ static bool DummyWriterSeek(Handle h, ptrdiff_t offset, SeekMode mode) {
 		}
 		buffer->SetCursor(buffer->GetCursor() + offset);
 	} else {
-		if (offset > buffer->GetSize()) {
+		if (offset < -buffer->GetSize()) {
 			return false;
 		}
-		buffer->SetCursor(buffer->GetSize() - offset);
+		buffer->SetCursor(buffer->GetSize() + offset);
 	}
 	return true;
 }
@@ -366,7 +366,7 @@ static void test_writer_interface() {
 	TEST_CHECK(Read(reader, h, str) == true);
 	TEST_CHECK(str == hg::test::LoremIpsum);
 
-	TEST_CHECK(Seek(writer, h, buffer.GetSize(), SM_End) == true);
+	TEST_CHECK(Seek(writer, h, -buffer.GetSize(), SM_End) == true);
 	TEST_CHECK(Tell(writer, h) == 0);
 
 	TEST_CHECK(Read<uint64_t>(reader, h, v1) == true);
