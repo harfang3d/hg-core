@@ -188,4 +188,19 @@ void test_file() {
 		Unlink(filename_0);
 		Unlink(filename_1);
 	}
+
+	{ 
+		ScopedFile file(Open("invalid.bin"));
+		TEST_CHECK((file ==true) == false);
+		TEST_CHECK(file == false);
+	}
+
+	{ 
+		ScopedFile file(OpenWrite("dummy.bin"));
+		TEST_CHECK(file == true);
+		TEST_CHECK(Write(file, hg::test::LoremIpsum) == true);
+	}
+	TEST_CHECK(IsFile("dummy.bin"));
+
+	Unlink("dummy.bin");
 }

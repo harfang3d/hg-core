@@ -48,5 +48,6 @@ if(HG_ENABLE_COVERAGE)
 	 )
 	setup_target_for_coverage_lcov(
 		NAME foundation_coverage
+		BASE_DIR "${PROJECT_SOURCE_DIR}"
 		EXECUTABLE test_foundation)
 endif()
