@@ -14,7 +14,7 @@ using namespace hg;
 
 //
 void SubmitSceneToPipeline(const Scene &scene) {
-	
+
 }
 
 
@@ -40,7 +40,6 @@ int main(int narg, const char **args) {
 	PrintProfilerFrame(EndProfilerFrame());
 
 	Vec3 pos(0, 2, -5), rot(0, 0, 0);
-
 
 	while (!glfwWindowShouldClose(win)) {
 		const Mat44 proj = ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
@@ -80,6 +79,8 @@ int main(int narg, const char **args) {
 		glfwSwapBuffers(win);
 		glfwPollEvents();
 	}
+
+	PrintProfilerFrame(EndProfilerFrame());
 
 	RenderShutdown();
 	return 0;

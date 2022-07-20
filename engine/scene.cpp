@@ -10,6 +10,7 @@
 #include "foundation/file_rw_interface.h"
 #include "foundation/log.h"
 #include "foundation/pack_float.h"
+#include "foundation/profiler.h"
 #include "foundation/string.h"
 
 #include <fmt/format.h>
@@ -293,22 +294,30 @@ void Scene::ComputeTransformWorldMatrix(uint32_t idx) {
 
 //
 void Scene::ReadyWorldMatrices() {
+	ProfilerPerfSection section("ReadyWorldMatrices");
+
 	transform_worlds.resize(transforms.capacity()); // EJ vector_list can have holes, so size() does not necessarily includes the highest index in use
 	transform_worlds_updated.resize(transforms.capacity());
 	std::fill(transform_worlds_updated.begin(), transform_worlds_updated.end(), false);
 }
 
 void Scene::ComputeWorldMatrices() {
+	ProfilerPerfSection section("ComputeWorldMatrices");
+
 	for (uint32_t i = transforms.first(); i != generational_vector_list<Transform_>::invalid_idx; i = transforms.next(i))
 		ComputeTransformWorldMatrix(i);
 }
 
 void Scene::StorePreviousWorldMatrices() {
+	ProfilerPerfSection section("StorePreviousWorldMatrices");
+
 	std::swap(transform_worlds, previous_transform_worlds);
 	std::swap(transform_worlds_updated, previous_transform_worlds_updated);
 }
 
 void Scene::FixupPreviousWorldMatrices() {
+	ProfilerPerfSection section("FixupPreviousWorldMatrices");
+
 	previous_transform_worlds.resize(transform_worlds.size());
 	previous_transform_worlds_updated.resize(transform_worlds_updated.size(), false);
 
@@ -320,6 +329,8 @@ void Scene::FixupPreviousWorldMatrices() {
 
 //
 void Scene::Update(time_ns dt) {
+	ProfilerPerfSection section("Scene.Update");
+
 	StorePreviousWorldMatrices();
 	ReadyWorldMatrices();
 

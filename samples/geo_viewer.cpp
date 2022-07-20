@@ -58,7 +58,7 @@ sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, co
 struct UniformData { // stored in material, links to Shader.uniforms
 	UniformData() { std::fill(offset, offset + SG_MAX_UB_MEMBERS, 0); }
 
-	size_t offset[SG_MAX_UB_MEMBERS];
+	uint16_t offset[SG_MAX_UB_MEMBERS];
 	std::vector<int8_t> data;
 };
 
@@ -70,7 +70,9 @@ int GetUniformDataIndex(const std::string &name, const Shader &shader) {
 }
 
 template <typename T> T GetUniformDataValue(const UniformData &data, const int index) { return *reinterpret_cast<T *>(&data.data[data.offset[index]]); }
-template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) { *reinterpret_cast<T *>(&data.data[data.offset[index]]) = value; }
+template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
+	*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
+}
 
 const void *GetUniformDataPtr(const UniformData &data) { return data.data.data(); }
 size_t GetUniformDataSize(const UniformData &data) { return data.data.size(); }
@@ -81,7 +83,7 @@ void SetupShaderUniformData(const Shader &shader, UniformData &data) {
 	for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
 		const sg_uniform_type type = shader.uniforms.uniform[i].type;
 
-		data.offset[i] = offset;
+		data.offset[i] = numeric_cast<uint16_t>(offset);
 
 		if (type == SG_UNIFORMTYPE_FLOAT)
 			offset += 4;
@@ -118,7 +120,66 @@ void SetupRenderMaterial(RenderMaterial &render_mat, const VertexLayout &vtx_lay
 }
 
 //
+class LString {
+	LString();
+	LString(const char *s);
+	LString(const LString &s);
+	LString(const std::string &s);
+	~LString();
+
+	void clear();
+
+	const char *c_str() const { return str; }
+
+	void operator=(const char *s);
+	void operator=(const std::string &s);
+
+private:
+	void set(const char *s);
+
+	char *str;
+};
+
+LString::LString() { str = nullptr; }
+LString::LString(const char *s) { set(s); }
+LString::LString(const LString &s) { set(s.c_str()); }
+LString::LString(const std::string &s) { set(s.c_str()); }
+
+LString::~LString() { clear(); }
+
+void LString::operator=(const char *s) {
+	clear();
+	set(s);
+}
+
+void LString::operator=(const std::string &s) {
+	clear();
+	set(s.c_str());
+}
+
+void LString::clear() { delete[] str; }
+
+void LString::set(const char *s) {
+	if (s) {
+		const size_t len = strlen(s);
+		str = new char[len + 1];
+		strncpy(str, s, len);
+	}
+}
+
+
+
+
+//
+
+
+
+
+//
 int main(int narg, const char **args) {
+	const size_t string_size = sizeof(std::string);
+	const size_t lstring_size = sizeof(LString);
+
 	const size_t shader_size = sizeof(Shader);
 	const size_t uniform_buffer_data_size = sizeof(UniformData);
 
