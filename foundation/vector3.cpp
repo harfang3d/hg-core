@@ -88,6 +88,7 @@ Vec3 Reflect(const Vec3 &v, const Vec3 &n) {
 	return v - n * (2.f * Dot(v, n) / Len2(n));
 }
 
+// Note: this is a crude approximation of the Snell refraction.
 Vec3 Refract(const Vec3 &v, const Vec3 &n, float k_in, float k_out) {
 	const float k = k_in / k_out;
 	return v * k + n * (k - 1.f);
