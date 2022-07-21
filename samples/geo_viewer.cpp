@@ -12,49 +12,12 @@
 #include "engine/geometry.h"
 #include "engine/render_pipeline.h"
 
-#include "engine/scene.h"
 #include "engine/assets.h"
+#include "engine/scene.h"
 
-#define SOKOL_GFX_IMPL
-#define SOKOL_GLCORE33
-#include <sokol_gfx.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+#include "app_glfw/app_glfw.h"
 
 using namespace hg;
-
-//----------------------------------------------
-bool RenderInit(GLFWwindow *win) {
-	sg_desc desc;
-	memset(&desc, 0, sizeof(sg_desc));
-	sg_setup(&desc);
-
-	return true;
-}
-
-GLFWwindow *RenderInit(int width, int height, const std::string &title) {
-	glfwInit();
-
-#if defined(SOKOL_GLCORE33) || defined(SOKOL_GLES2) || defined(SOKOL_GLES3) // any GL
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	GLFWwindow *win = glfwCreateWindow(640, 480, title.c_str(), 0, 0);
-	glfwMakeContextCurrent(win);
-	glfwSwapInterval(1);
-#else
-#error "Unsupported graphic API"
-#endif
-
-	RenderInit(win);
-	return win;
-}
-
-void RenderShutdown() {
-	sg_shutdown();
-	glfwTerminate();
-}
 
 //----------------------------------------------
 static bool key_up = false, key_down = false, key_left = false, key_right = false;
@@ -75,8 +38,6 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 }
 
 //
-
-//
 sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, const ShaderLayout &shader_layout) {
 	sg_pipeline_desc pipeline_desc;
 
@@ -94,8 +55,135 @@ sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, co
 }
 
 //
+struct UniformData { // stored in material, links to Shader.uniforms
+	UniformData() { std::fill(offset, offset + SG_MAX_UB_MEMBERS, 0); }
+
+	uint16_t offset[SG_MAX_UB_MEMBERS];
+	std::vector<int8_t> data;
+};
+
+int GetUniformDataIndex(const std::string &name, const Shader &shader) {
+	for (int i = 0; i < SG_MAX_UB_MEMBERS; ++i)
+		if (shader.uniforms.uniform[i].name == name)
+			return i;
+	return -1;
+}
+
+template <typename T> T GetUniformDataValue(const UniformData &data, const int index) { return *reinterpret_cast<T *>(&data.data[data.offset[index]]); }
+template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
+	*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
+}
+
+const void *GetUniformDataPtr(const UniformData &data) { return data.data.data(); }
+size_t GetUniformDataSize(const UniformData &data) { return data.data.size(); }
+
+void SetupShaderUniformData(const Shader &shader, UniformData &data) {
+	size_t offset = 0;
+
+	for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+		const sg_uniform_type type = shader.uniforms.uniform[i].type;
+
+		data.offset[i] = numeric_cast<uint16_t>(offset);
+
+		if (type == SG_UNIFORMTYPE_FLOAT)
+			offset += 4;
+		else if (type == SG_UNIFORMTYPE_FLOAT2)
+			offset += 4 * 2;
+		else if (type == SG_UNIFORMTYPE_FLOAT3)
+			offset += 4 * 3;
+		else if (type == SG_UNIFORMTYPE_FLOAT4)
+			offset += 4 * 4;
+		else if (type == SG_UNIFORMTYPE_INT)
+			offset += 4;
+		else if (type == SG_UNIFORMTYPE_INT2)
+			offset += 4 * 2;
+		else if (type == SG_UNIFORMTYPE_INT3)
+			offset += 4 * 3;
+		else if (type == SG_UNIFORMTYPE_INT4)
+			offset += 4 * 4;
+		else if (type == SG_UNIFORMTYPE_MAT4)
+			offset += 4 * 4 * 4; // float 4x4
+	}
+
+	data.data.resize(offset);
+}
+
+//
+struct RenderMaterial {
+	UniformData data;
+	sg_pipeline pipeline;
+};
+
+void SetupRenderMaterial(RenderMaterial &render_mat, const VertexLayout &vtx_layout, const Shader &shader) {
+	render_mat.pipeline = MakePipeline(vtx_layout, shader.shader, shader.layout);
+	SetupShaderUniformData(shader, render_mat.data);
+}
+
+//
+class LString {
+	LString();
+	LString(const char *s);
+	LString(const LString &s);
+	LString(const std::string &s);
+	~LString();
+
+	void clear();
+
+	const char *c_str() const { return str; }
+
+	void operator=(const char *s);
+	void operator=(const std::string &s);
+
+private:
+	void set(const char *s);
+
+	char *str;
+};
+
+LString::LString() { str = nullptr; }
+LString::LString(const char *s) { set(s); }
+LString::LString(const LString &s) { set(s.c_str()); }
+LString::LString(const std::string &s) { set(s.c_str()); }
+
+LString::~LString() { clear(); }
+
+void LString::operator=(const char *s) {
+	clear();
+	set(s);
+}
+
+void LString::operator=(const std::string &s) {
+	clear();
+	set(s.c_str());
+}
+
+void LString::clear() { delete[] str; }
+
+void LString::set(const char *s) {
+	if (s) {
+		const size_t len = strlen(s);
+		str = new char[len + 1];
+		strncpy(str, s, len);
+	}
+}
+
+
+
+
+//
+
+
+
+
+//
 int main(int narg, const char **args) {
-	GLFWwindow *win = RenderInit(640, 480, "Sokol Triangle GLFW");
+	const size_t string_size = sizeof(std::string);
+	const size_t lstring_size = sizeof(LString);
+
+	const size_t shader_size = sizeof(Shader);
+	const size_t uniform_buffer_data_size = sizeof(UniformData);
+
+	GLFWwindow *win = RenderInit(640, 480, "Harfang Core - Geometry Viewer");
 
 	glfwSetKeyCallback(win, key_callback);
 
@@ -104,58 +192,22 @@ int main(int narg, const char **args) {
 	sg_buffer vbuf = MakeVertexBuffer(vertices, sizeof(vertices));
 
 	// a shader
-	sg_shader_desc shader_desc;
-
-	struct shader_vs_params {
-		Mat44 mvp;
-	};
-
-	memset(&shader_desc, 0, sizeof(sg_shader_desc));
-
-	shader_desc.vs.source = "#version 330\n"
-							"uniform mat4 mvp;\n"
-							"layout (location=0) in vec4 a_position;\n"
-							"layout (location=1) in vec3 a_normal;\n"
-							"out vec3 i_normal;\n"
-							"void main() {\n"
-							"	gl_Position = mvp * a_position;\n"
-							"	i_normal = a_normal;\n"
-							"}\n";
-
-	shader_desc.vs.uniform_blocks[0].size = sizeof(shader_vs_params);
-	shader_desc.vs.uniform_blocks[0].uniforms[0].name = "mvp";
-	shader_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
-
-	shader_desc.fs.source = "#version 330\n"
-							"in vec3 i_normal;\n"
-							"out vec4 o_color;\n"
-							"void main() {\n"
-							"	float k = normalize(i_normal).z;\n"
-							"	o_color = vec4(k, k, k, 1);\n"
-							"}\n";
-
-	sg_shader shd = sg_make_shader(&shader_desc);
-
-	ShaderLayout shd_layout;
-	shd_layout.attrib[0] = VA_Position;
-	shd_layout.attrib[1] = VA_Normal;
+	Shader shader = LoadShaderFromFile("dummy");
 
 	// a pipeline state object (default render states are fine for triangle)
-/*
-	VertexLayout mdl_layout;
-	mdl_layout.Add(VA_Normal, SG_VERTEXFORMAT_FLOAT3);
-	mdl_layout.Add(VA_Position, SG_VERTEXFORMAT_FLOAT3);
-	mdl_layout.End();
-*/
-
 	const Geometry geo = LoadGeometryFromFile(args[1]);
-
-	// Model mdl = CreateSphereModel(layout, 1.f, 32, 16);
-	const VertexLayout mdl_layout = ComputeGeometryVertexLayout(geo);
-	Model mdl = GeometryToModel(geo, mdl_layout);
+#if 0
+	VertexLayout vtx_layout;
+	vtx_layout.Set(VA_Normal, SG_VERTEXFORMAT_FLOAT3);
+	vtx_layout.Set(VA_Position, SG_VERTEXFORMAT_FLOAT3);
+#else
+	const VertexLayout vtx_layout = ComputeGeometryVertexLayout(geo);
+#endif
+	Model mdl = GeometryToModel(geo, vtx_layout);
+	// Model mdl = CreateSphereModel(vtx_layout, 1.f, 32, 16);
 
 	//
-	sg_pipeline pip = MakePipeline(mdl_layout, shd, shd_layout);
+	sg_pipeline pip = MakePipeline(vtx_layout, shader.shader, shader.layout);
 
 	// resource bindings
 	sg_bindings bind;
@@ -171,7 +223,10 @@ int main(int narg, const char **args) {
 	sg_pass_action pass_action = {0};
 
 	// draw loop
-	shader_vs_params vs_params;
+	UniformData uniform_data;
+	SetupShaderUniformData(shader, uniform_data);
+
+	const int mvp_idx = GetUniformDataIndex("mvp", shader);
 
 	//
 	double old_xpos = 0, old_ypos = 0;
@@ -192,7 +247,7 @@ int main(int narg, const char **args) {
 		const Mat44 proj = /* ScaleMat4(Vec3(1, -1, 1)) **/ ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
 		const Mat4 view = InverseFast(TransformationMat4(pos, rot));
 
-		vs_params.mvp = Transpose(proj * view);
+		SetUniformDataValue(uniform_data, mvp_idx, Transpose(proj * view));
 
 		//
 		int cur_width, cur_height;
@@ -204,8 +259,8 @@ int main(int narg, const char **args) {
 		sg_apply_bindings(bind);
 		{
 			sg_range range;
-			range.ptr = &vs_params;
-			range.size = sizeof(vs_params);
+			range.ptr = GetUniformDataPtr(uniform_data);
+			range.size = GetUniformDataSize(uniform_data);
 			sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, range);
 		}
 		sg_draw(0, list.element_count, 1);

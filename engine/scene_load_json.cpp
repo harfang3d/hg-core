@@ -191,7 +191,7 @@ void LoadComponent(Scene::Object_ *data_, const rapidjson::Value &js, const Read
 
 	if (!name.empty())
 		if (name[0] != '#')
-			data_->model = SkipLoadOrQueueModelLoad(deps_ir, deps_ip, name.c_str(), resources, queue_model_loads, do_not_load_resources);
+			data_->model = SkipLoadOrQueueModelLoad(deps_ir, deps_ip, name, resources, queue_model_loads, do_not_load_resources);
 
 	rapidjson::Value::ConstMemberIterator i_mats = js.FindMember("materials");
 	if (i_mats != js.MemberEnd()) {

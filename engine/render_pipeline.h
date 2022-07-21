@@ -35,21 +35,102 @@ class Data;
 
 static const int max_skinned_model_matrix_count = 32; // make sure this stays in sync with bgfx_shader.sh
 
-/*
-using bgfxMatrix3 = std::array<float, 9>;
-using bgfxMatrix4 = std::array<float, 16>;
+// from BGFX
+#define RENDER_STATE_WRITE_R uint64_t(0x0000000000000001) // Enable R write.
+#define RENDER_STATE_WRITE_G uint64_t(0x0000000000000002) // Enable G write.
+#define RENDER_STATE_WRITE_B uint64_t(0x0000000000000004) // Enable B write.
+#define RENDER_STATE_WRITE_A uint64_t(0x0000000000000008) // Enable alpha write.
+#define RENDER_STATE_WRITE_Z uint64_t(0x0000004000000000) // Enable depth write.
 
-bgfxMatrix3 to_bgfx(const Mat3 &m);
-bgfxMatrix4 to_bgfx(const Mat4 &m);
-bgfxMatrix4 to_bgfx(const Mat44 &m);
+#define RENDER_STATE_WRITE_RGB (RENDER_STATE_WRITE_R | RENDER_STATE_WRITE_G | RENDER_STATE_WRITE_B)
+#define RENDER_STATE_WRITE_MASK (RENDER_STATE_WRITE_RGB | RENDER_STATE_WRITE_A | RENDER_STATE_WRITE_Z)
 
-#define bgfx_Destroy(V)                                                                                                                                        \
-	{                                                                                                                                                          \
-		if (bgfx::isValid(V))                                                                                                                                  \
-			bgfx::destroy(V);                                                                                                                                  \
-		V = BGFX_INVALID_HANDLE;                                                                                                                               \
-	}
-*/
+#define RENDER_STATE_DEPTH_TEST_LESS uint64_t(0x0000000000000010) // Enable depth test, less.
+#define RENDER_STATE_DEPTH_TEST_LEQUAL uint64_t(0x0000000000000020) // Enable depth test, less or equal.
+#define RENDER_STATE_DEPTH_TEST_EQUAL uint64_t(0x0000000000000030) // Enable depth test, equal.
+#define RENDER_STATE_DEPTH_TEST_GEQUAL uint64_t(0x0000000000000040) // Enable depth test, greater or equal.
+#define RENDER_STATE_DEPTH_TEST_GREATER uint64_t(0x0000000000000050) // Enable depth test, greater.
+#define RENDER_STATE_DEPTH_TEST_NOTEQUAL uint64_t(0x0000000000000060) // Enable depth test, not equal.
+#define RENDER_STATE_DEPTH_TEST_NEVER uint64_t(0x0000000000000070) // Enable depth test, never.
+#define RENDER_STATE_DEPTH_TEST_ALWAYS uint64_t(0x0000000000000080) // Enable depth test, always.
+#define RENDER_STATE_DEPTH_TEST_SHIFT 4 // Depth test state bit shift
+#define RENDER_STATE_DEPTH_TEST_MASK uint64_t(0x00000000000000f0) // Depth test state bit mask
+
+#define RENDER_STATE_BLEND_ZERO uint64_t(0x0000000000001000) // 0, 0, 0, 0
+#define RENDER_STATE_BLEND_ONE uint64_t(0x0000000000002000) // 1, 1, 1, 1
+#define RENDER_STATE_BLEND_SRC_COLOR uint64_t(0x0000000000003000) // Rs, Gs, Bs, As
+#define RENDER_STATE_BLEND_INV_SRC_COLOR uint64_t(0x0000000000004000) // 1-Rs, 1-Gs, 1-Bs, 1-As
+#define RENDER_STATE_BLEND_SRC_ALPHA uint64_t(0x0000000000005000) // As, As, As, As
+#define RENDER_STATE_BLEND_INV_SRC_ALPHA uint64_t(0x0000000000006000) // 1-As, 1-As, 1-As, 1-As
+#define RENDER_STATE_BLEND_DST_ALPHA uint64_t(0x0000000000007000) // Ad, Ad, Ad, Ad
+#define RENDER_STATE_BLEND_INV_DST_ALPHA uint64_t(0x0000000000008000) // 1-Ad, 1-Ad, 1-Ad ,1-Ad
+#define RENDER_STATE_BLEND_DST_COLOR uint64_t(0x0000000000009000) // Rd, Gd, Bd, Ad
+#define RENDER_STATE_BLEND_INV_DST_COLOR uint64_t(0x000000000000a000) // 1-Rd, 1-Gd, 1-Bd, 1-Ad
+#define RENDER_STATE_BLEND_SRC_ALPHA_SAT uint64_t(0x000000000000b000) // f, f, f, 1; f = min(As, 1-Ad)
+#define RENDER_STATE_BLEND_FACTOR uint64_t(0x000000000000c000) // Blend factor
+#define RENDER_STATE_BLEND_INV_FACTOR uint64_t(0x000000000000d000) // 1-Blend factor
+#define RENDER_STATE_BLEND_SHIFT 12 // Blend state bit shift
+#define RENDER_STATE_BLEND_MASK uint64_t(0x000000000ffff000) // Blend state bit mask
+
+#define RENDER_STATE_BLEND_EQUATION_ADD uint64_t(0x0000000000000000) // Blend add: src + dst.
+#define RENDER_STATE_BLEND_EQUATION_SUB uint64_t(0x0000000010000000) // Blend subtract: src - dst.
+#define RENDER_STATE_BLEND_EQUATION_REVSUB uint64_t(0x0000000020000000) // Blend reverse subtract: dst - src.
+#define RENDER_STATE_BLEND_EQUATION_MIN uint64_t(0x0000000030000000) // Blend min: min(src, dst).
+#define RENDER_STATE_BLEND_EQUATION_MAX uint64_t(0x0000000040000000) // Blend max: max(src, dst).
+#define RENDER_STATE_BLEND_EQUATION_SHIFT 28 // Blend equation bit shift
+#define RENDER_STATE_BLEND_EQUATION_MASK uint64_t(0x00000003f0000000) // Blend equation bit mask
+
+#define RENDER_STATE_CULL_CW uint64_t(0x0000001000000000) // Cull clockwise triangles.
+#define RENDER_STATE_CULL_CCW uint64_t(0x0000002000000000) // Cull counter-clockwise triangles.
+#define RENDER_STATE_CULL_SHIFT 36 // Culling mode bit shift
+#define RENDER_STATE_CULL_MASK uint64_t(0x0000003000000000) // Culling mode bit mask
+
+#define RENDER_STATE_ALPHA_REF_SHIFT 40 // Alpha reference bit shift
+#define RENDER_STATE_ALPHA_REF_MASK uint64_t(0x0000ff0000000000) // Alpha reference bit mask
+#define RENDER_STATE_ALPHA_REF(v) (((uint64_t)(v) << RENDER_STATE_ALPHA_REF_SHIFT) & RENDER_STATE_ALPHA_REF_MASK)
+
+#define RENDER_STATE_PT_TRISTRIP uint64_t(0x0001000000000000) // Tristrip.
+#define RENDER_STATE_PT_LINES uint64_t(0x0002000000000000) // Lines.
+#define RENDER_STATE_PT_LINESTRIP uint64_t(0x0003000000000000) // Line strip.
+#define RENDER_STATE_PT_POINTS uint64_t(0x0004000000000000) // Points.
+#define RENDER_STATE_PT_SHIFT 48 // Primitive type bit shift
+#define RENDER_STATE_PT_MASK uint64_t(0x0007000000000000) // Primitive type bit mask
+
+#define RENDER_STATE_POINT_SIZE_SHIFT 52 // Point size bit shift
+#define RENDER_STATE_POINT_SIZE_MASK uint64_t(0x00f0000000000000) // Point size bit mask
+#define RENDER_STATE_POINT_SIZE(v) (((uint64_t)(v) << RENDER_STATE_POINT_SIZE_SHIFT) & RENDER_STATE_POINT_SIZE_MASK)
+
+#define RENDER_STATE_MSAA uint64_t(0x0100000000000000) // Enable MSAA rasterization.
+#define RENDER_STATE_LINEAA uint64_t(0x0200000000000000) // Enable line AA rasterization.
+#define RENDER_STATE_CONSERVATIVE_RASTER uint64_t(0x0400000000000000) // Enable conservative rasterization.
+#define RENDER_STATE_NONE uint64_t(0x0000000000000000) // No state.
+#define RENDER_STATE_FRONT_CCW uint64_t(0x0000008000000000) // Front counter-clockwise (default is clockwise).
+#define RENDER_STATE_BLEND_INDEPENDENT uint64_t(0x0000000400000000) // Enable blend independent.
+#define RENDER_STATE_BLEND_ALPHA_TO_COVERAGE uint64_t(0x0000000800000000) // Enable alpha to coverage.
+
+#define RENDER_STATE_DEFAULT                                                                                                                                   \
+	(RENDER_STATE_WRITE_RGB | RENDER_STATE_WRITE_A | RENDER_STATE_WRITE_Z | RENDER_STATE_DEPTH_TEST_LESS | RENDER_STATE_CULL_CW | RENDER_STATE_MSAA)
+
+#define RENDER_STATE_MASK uint64_t(0xffffffffffffffff) // State bit mask
+
+enum UniformType {
+	UT_Sampler, // Sampler
+	UT_End, // Reserved, do not use
+
+	UT_Vec4, // 4 floats vector
+	UT_Mat3, // 3x3 matrix
+	UT_Mat4, // 4x4 matrix
+
+	UT_Count
+};
+
+//
+struct RenderState {
+	RenderState() : state(RENDER_STATE_DEFAULT), rgba(0) {}
+
+	uint64_t state;
+	uint32_t rgba;
+};
 
 //
 struct ViewState {
@@ -166,39 +247,26 @@ enum VertexAttribute { VA_Position, VA_Normal, VA_Tangent, VA_Bitangent, VA_Colo
 struct ShaderLayout {
 	ShaderLayout() { std::fill(attrib, attrib + SG_MAX_VERTEX_ATTRIBUTES, VA_Count); }
 
-	VertexAttribute attrib[SG_MAX_VERTEX_ATTRIBUTES];
+	uint8_t attrib[SG_MAX_VERTEX_ATTRIBUTES]; // VertexAttribute
 };
 
 struct VertexLayout {
-	VertexLayout() : attrib_count(0), stride(0) {}
+	VertexLayout();
 
-	struct Attribute {
-		Attribute() : semantic(VA_Count), format(SG_VERTEXFORMAT_INVALID), offset(0) {}
+	void Set(VertexAttribute semantic, sg_vertex_format format);
 
-		VertexAttribute semantic;
-		sg_vertex_format format;
-		size_t offset;
-	};
+	/// Return offsets for each vertex attribute as output parameter and layout stride as return value.
+	size_t GetOffsets(int offset[VA_Count]) const;
+	size_t GetStride() const;
 
-	void Add(VertexAttribute semantic, sg_vertex_format format);
-	void End();
+	bool Has(VertexAttribute attr) const { return attrib[attr] != SG_VERTEXFORMAT_INVALID; }
+	sg_vertex_format GetFormat(VertexAttribute attr) const { return sg_vertex_format(attrib[attr]); }
 
-	bool Has(VertexAttribute semantic) const { return semantic_to_attrib[semantic] != -1; }
-
-	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
-	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
-
-	size_t GetStride() const { return stride; }
-
-	size_t GetAttributeCount() const { return attrib_count; }
-	const Attribute *GetAttribute(size_t idx) const { return idx < SG_MAX_VERTEX_ATTRIBUTES ? &attrib[idx] : nullptr; }
+	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const;
+	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const;
 
 private:
-	Attribute attrib[SG_MAX_VERTEX_ATTRIBUTES];
-	size_t attrib_count;
-
-	size_t stride;
-	int8_t semantic_to_attrib[VA_Count];
+	uint8_t attrib[VA_Count]; // sg_vertex_format
 };
 
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
@@ -230,12 +298,34 @@ static const Vec4 default_pssm_split = Vec4(10.f, 50.f, 100.f, 500.f);
 #if 1
 
 //
-struct ProgramHandle {
-	ProgramHandle() : loaded(false) {}
-	//	bgfx::ProgramHandle handle = BGFX_INVALID_HANDLE;
-	bool loaded;
+struct ShaderUniform {
+	ShaderUniform() : type(SG_UNIFORMTYPE_INVALID) {}
+
+	std::string name;
+	sg_uniform_type type;
 };
 
+struct ShaderUniforms {
+	ShaderUniforms() : layout(_SG_UNIFORMLAYOUT_DEFAULT) {}
+
+	ShaderUniform uniform[SG_MAX_UB_MEMBERS];
+	sg_uniform_layout layout;
+};
+
+struct Shader { // 20B
+	Shader() { shader.id = SG_INVALID_ID; }
+
+	sg_shader shader;
+
+	ShaderLayout layout; // attributes
+	ShaderUniforms uniforms; // uniforms
+};
+
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
+Shader LoadShaderFromFile(const std::string &path, bool silent = false);
+Shader LoadShaderFromAssets(const std::string &name, bool silent = false);
+
+/*
 struct TextureUniform {
 	TextureUniform() : channel(0xff) {}
 	//	bgfx::UniformHandle handle;
@@ -249,7 +339,9 @@ struct Vec4Uniform {
 	Vec4 value;
 	bool is_color;
 };
+*/
 
+#if 0
 struct PipelineProgram {
 	std::vector<PipelineProgramFeature> features; // features imply associated uniforms
 	std::vector<TextureUniform> texture_uniforms; // naked texture uniforms
@@ -276,6 +368,7 @@ bool LoadPipelineProgramUniformsFromFile(
 	const std::string &path, std::vector<TextureUniform> &texs, std::vector<Vec4Uniform> &vecs, PipelineResources &resources, bool silent = false);
 bool LoadPipelineProgramUniformsFromAssets(
 	const std::string &name, std::vector<TextureUniform> &texs, std::vector<Vec4Uniform> &vecs, PipelineResources &resources, bool silent = false);
+#endif
 
 //
 struct DisplayList { // 4B
@@ -300,15 +393,14 @@ uint64_t LoadTextureFlagsFromAssets(const std::string &name, bool silent = false
 
 struct TextureInfo {};
 
-Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, uint64_t flags, TextureInfo *info = nullptr, bool silent = false);
-Texture LoadTextureFromFile(const std::string &path, uint64_t flags, TextureInfo *info = nullptr, bool silent = false);
-Texture LoadTextureFromAssets(const std::string &name, uint64_t flags, TextureInfo *info = nullptr, bool silent = false);
+Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
+Texture LoadTextureFromFile(const std::string &path, bool silent = false);
+Texture LoadTextureFromAssets(const std::string &name, bool silent = false);
 
 void Destroy(Texture &texture);
 
 struct Texture { // 8B
-	// uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE;
-	// bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
+	sg_image image;
 };
 
 // inline Texture MakeTexture(bgfx::TextureHandle handle, uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE) { return {flags, handle}; }
@@ -347,12 +439,6 @@ struct UniformSetTexture { // burn it with fire, complete insanity
 UniformSetTexture MakeUniformSetTexture(const std::string &name, const Texture &texture, uint8_t stage);
 
 //
-struct RenderState {
-	// uint64_t state{BGFX_STATE_DEFAULT};
-	// uint32_t rgba{0};
-};
-
-//
 static const int MF_EnableSkinning = 0x01;
 static const int MF_DiffuseUV1 = 0x02;
 static const int MF_SpecularUV1 = 0x04;
@@ -367,24 +453,22 @@ struct Material { // 56B
 	uint32_t variant_idx;
 
 	struct Value {
-		Value() : count(1) {}
+		Value() : type(UT_Vec4), count(1), idx(-1) {}
 
-		// bgfx::UniformType::Enum type{bgfx::UniformType::Vec4};
+		UniformType type;
 		std::vector<float> value;
 		uint16_t count;
-
-		// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+		int16_t idx;
 	};
 
 	std::map<std::string, Value> values;
 
 	struct Texture {
-		Texture() : channel(0) {}
+		Texture() : channel(0), idx(-1) {}
 
 		TextureRef texture;
 		uint8_t channel;
-
-		// bgfx::UniformHandle uniform = BGFX_INVALID_HANDLE;
+		int8_t idx;
 	};
 
 	std::map<std::string, Texture> textures;
@@ -470,20 +554,18 @@ VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
 
 //
 struct Model { // 96B (+heap)
+	uint32_t tri_count;
+	VertexLayout vtx_layout;
+
 	std::vector<MinMax> bounds; // minmax/list
 	std::vector<DisplayList> lists;
 	std::vector<uint16_t> mats; // material/list
 	std::vector<Mat4> bind_pose; // bind pose matrices
 };
 
-struct ModelInfo {
-	VertexLayout vs_decl;
-	uint32_t tri_count;
-};
-
-Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, ModelInfo *info = nullptr, bool silent = false);
-Model LoadModelFromFile(const std::string &path, ModelInfo *info = nullptr, bool silent = false);
-Model LoadModelFromAssets(const std::string &name, ModelInfo *info = nullptr, bool silent = false);
+Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool silent = false);
+Model LoadModelFromFile(const std::string &path, bool silent = false);
+Model LoadModelFromAssets(const std::string &name, bool silent = false);
 
 size_t GetModelMaterialCount(const Model &model);
 
@@ -505,19 +587,16 @@ struct ModelLoad {
 };
 
 struct PipelineResources {
-	PipelineResources() : programs(Destroy), textures(Destroy), materials(Destroy), models(Destroy) {}
+	PipelineResources() : /*programs(Destroy),*/ textures(Destroy), materials(Destroy), models(Destroy) {}
 	~PipelineResources() { DestroyAll(); }
 
-	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
+	//	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
 	ResourceCache<Texture, TextureRef> textures;
 	ResourceCache<Material, MaterialRef> materials;
 	ResourceCache<Model, ModelRef> models;
 
 	std::deque<TextureLoad> texture_loads;
-	std::map<gen_ref, TextureInfo> texture_infos;
-
 	std::deque<ModelLoad> model_loads;
-	std::map<gen_ref, ModelInfo> model_infos;
 
 	void DestroyAll();
 };
@@ -566,6 +645,7 @@ ModelRef LoadModel(const Reader &ir, const ReadProvider &ip, const std::string &
 ModelRef LoadModelFromFile(const std::string &path, PipelineResources &resources, bool silent = false);
 ModelRef LoadModelFromAssets(const std::string &path, PipelineResources &resources, bool silent = false);
 
+/*
 struct TextureMeta {
 	TextureMeta() : flags(0) {}
 	uint64_t flags;
@@ -574,10 +654,11 @@ struct TextureMeta {
 TextureMeta LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
 TextureMeta LoadTextureMetaFromFile(const std::string &path, bool silent = false);
 TextureMeta LoadTextureMetaFromAssets(const std::string &name, bool silent = false);
+*/
 
-TextureRef LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &path, uint64_t flags, PipelineResources &resources, bool silent = false);
-TextureRef LoadTextureFromFile(const std::string &path, uint64_t flags, PipelineResources &resources, bool silent = false);
-TextureRef LoadTextureFromAssets(const std::string &path, uint64_t flags, PipelineResources &resources, bool silent = false);
+TextureRef LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &path, PipelineResources &resources, bool silent = false);
+TextureRef LoadTextureFromFile(const std::string &path, PipelineResources &resources, bool silent = false);
+TextureRef LoadTextureFromAssets(const std::string &path, PipelineResources &resources, bool silent = false);
 
 /// Capture a texture content to a Picture. Return the frame counter at which the capture will be complete.
 /// A Picture object can be accessed by the CPU.

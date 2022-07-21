@@ -10,6 +10,7 @@
 #include "foundation/file_rw_interface.h"
 #include "foundation/log.h"
 #include "foundation/pack_float.h"
+#include "foundation/profiler.h"
 #include "foundation/string.h"
 
 #include <fmt/format.h>
@@ -293,22 +294,30 @@ void Scene::ComputeTransformWorldMatrix(uint32_t idx) {
 
 //
 void Scene::ReadyWorldMatrices() {
+	ProfilerPerfSection section("ReadyWorldMatrices");
+
 	transform_worlds.resize(transforms.capacity()); // EJ vector_list can have holes, so size() does not necessarily includes the highest index in use
 	transform_worlds_updated.resize(transforms.capacity());
 	std::fill(transform_worlds_updated.begin(), transform_worlds_updated.end(), false);
 }
 
 void Scene::ComputeWorldMatrices() {
+	ProfilerPerfSection section("ComputeWorldMatrices");
+
 	for (uint32_t i = transforms.first(); i != generational_vector_list<Transform_>::invalid_idx; i = transforms.next(i))
 		ComputeTransformWorldMatrix(i);
 }
 
 void Scene::StorePreviousWorldMatrices() {
+	ProfilerPerfSection section("StorePreviousWorldMatrices");
+
 	std::swap(transform_worlds, previous_transform_worlds);
 	std::swap(transform_worlds_updated, previous_transform_worlds_updated);
 }
 
 void Scene::FixupPreviousWorldMatrices() {
+	ProfilerPerfSection section("FixupPreviousWorldMatrices");
+
 	previous_transform_worlds.resize(transform_worlds.size());
 	previous_transform_worlds_updated.resize(transform_worlds_updated.size(), false);
 
@@ -320,6 +329,8 @@ void Scene::FixupPreviousWorldMatrices() {
 
 //
 void Scene::Update(time_ns dt) {
+	ProfilerPerfSection section("Scene.Update");
+
 	StorePreviousWorldMatrices();
 	ReadyWorldMatrices();
 
@@ -1444,7 +1455,7 @@ bool Scene::NodeSetupInstance(
 
 		{
 			const Instance_ &i_ = instances[i->second.idx];
-			if (!LoadScene(ir, ScopedReadHandle(ip, i_.name.c_str(), flags & LSSF_Silent), i_.name.c_str(), *this, ir, ip, resources, pipeline, ctx, flags))
+			if (!LoadScene(ir, ScopedReadHandle(ip, i_.name, flags & LSSF_Silent), i_.name, *this, ir, ip, resources, pipeline, ctx, flags))
 				return false;
 		}
 
@@ -1994,7 +2005,7 @@ bool LoadSceneBinaryFromFile(
 }
 
 bool LoadSceneBinaryFromAssets(
-	const char *name, Scene &scene, PipelineResources &resources, const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
+	const std::string &name, Scene &scene, PipelineResources &resources, const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 	ScopedReadHandle handle(g_assets_read_provider, name, debug);
 #else
@@ -2003,8 +2014,8 @@ bool LoadSceneBinaryFromAssets(
 	return scene.Load_binary(g_assets_reader, handle, name, g_assets_reader, g_assets_read_provider, resources, pipeline, ctx, flags);
 }
 
-bool LoadSceneBinaryFromData(const Data &data, const char *name, Scene &scene, const Reader &deps_ir, const ReadProvider &deps_ip, PipelineResources &resources,
-	const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
+bool LoadSceneBinaryFromData(const Data &data, const std::string &name, Scene &scene, const Reader &deps_ir, const ReadProvider &deps_ip,
+	PipelineResources &resources, const PipelineInfo &pipeline, LoadSceneContext &ctx, uint32_t flags, bool debug) {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 	DataReadHandle handle(data, debug);
 #else

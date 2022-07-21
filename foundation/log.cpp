@@ -1,7 +1,7 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
-#include "foundation/cext.h"
 #include "foundation/log.h"
+#include "foundation/cext.h"
 #include "foundation/time.h"
 
 #include <cstring>
@@ -19,12 +19,14 @@ void set_log_detailed(bool is_detailed) { log_is_detailed = is_detailed; }
 int get_log_level() { return log_level; }
 bool get_log_detailed() { return log_is_detailed; }
 
+static time_ns origin = time_now();
+
 //
 static void default_log_hook(const std::string &msg, int mask, const std::string &details, void *user) {
 	if (!(mask & log_level))
 		return; // skip masked entries
 
-	const time_ns now = time_now();
+	const time_ns now = time_now() - origin;
 	const std::string timestamp = fmt::format("{}:{:3d}:{:3d}:{:3d}", now / 1000000000, (now / 1000000) % 1000, (now / 1000) % 1000, now % 1000);
 
 	std::ostringstream m;

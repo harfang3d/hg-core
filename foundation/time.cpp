@@ -2,8 +2,8 @@
 
 #include "foundation/time.h"
 
-#include <limits>
 #include <climits>
+#include <limits>
 
 #if _WIN32
 #include <windows.h>
@@ -17,17 +17,18 @@ namespace hg {
 time_ns time_undefined = LONG_MIN;
 
 #if _WIN32
-time_ns time_now() { 
+time_ns time_now() {
 	LARGE_INTEGER counter, frequency;
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&counter);
-	int64_t s  = counter.QuadPart / frequency.QuadPart;
+	int64_t s = counter.QuadPart / frequency.QuadPart;
 	int64_t ns = 1000000000LL * (counter.QuadPart - s * frequency.QuadPart) / frequency.QuadPart;
 	return s * 1000000000LL + ns;
 }
+
 time_ns wall_clock() { return time_now(); }
 
-void sleep_for(const time_ns &t) { 
+void sleep_for(const time_ns &t) {
 	int64_t ms = time_to_ms(t);
 	int64_t remainder = t - time_from_ms(ms);
 
@@ -55,13 +56,14 @@ time_ns time_now() {
 	int64_t seconds = tv.tv_sec * 1000000000LL;
 	return seconds + tv.tv_nsec;
 }
-time_ns wall_clock() { 
-	struct timespec tv; 
-#	if defined(_gnu_linux_) || defined(__linux__)
+
+time_ns wall_clock() {
+	struct timespec tv;
+#if defined(_gnu_linux_) || defined(__linux__)
 	clock_gettime(CLOCK_TAI, &tv);
-#	else
+#else
 	clock_gettime(CLOCK_REALTIME, &tv);
-#	endif
+#endif
 	int64_t seconds = tv.tv_sec * 1000000000LL;
 	return seconds + tv.tv_nsec;
 }
@@ -75,7 +77,7 @@ void sleep_for(const time_ns &t) {
 	struct timespec ts;
 	ts.tv_sec = seconds;
 	ts.tv_nsec = t - time_from_sec(seconds);
-	
+
 	while ((nanosleep(&ts, &ts) == -1) && (errno == EINTR)) {
 		// sleep was interrupted by a signal.
 	}
