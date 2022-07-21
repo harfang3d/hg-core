@@ -91,7 +91,7 @@ uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &mo
 //
 static size_t vertex_format_size[_SG_VERTEXFORMAT_NUM] = {0, 4, 8, 12, 16, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 4};
 
-VertexLayout::VertexLayout() { std::fill(attrib, attrib + VA_Count, SG_VERTEXFORMAT_INVALID); }
+VertexLayout::VertexLayout() { std::fill_n(attrib, VA_Count, SG_VERTEXFORMAT_INVALID); }
 
 void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format) { attrib[semantic] = format; }
 
@@ -123,43 +123,6 @@ size_t VertexLayout::GetStride() const {
 	}
 
 	return stride;
-}
-
-// void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
-// void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
-
-// sg_vertex_format attrib[VA_Count];
-
-void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index) {
-	const size_t stride = vertex_layout.GetStride();
-	assert(stride != 0);
-
-	layout.buffers[buffer_index].stride = stride;
-
-	int va_location[VA_Count]; // VertexAttribute -> shader location LUT
-	std::fill(va_location, va_location + VA_Count, -1);
-
-	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
-		const VertexAttribute va = VertexAttribute(shader_layout.attrib[i]);
-
-		if (va != VA_Count)
-			va_location[va] = i;
-	}
-
-	int offset[VA_Count];
-	vertex_layout.GetOffsets(offset);
-
-	for (size_t i = 0; i < VA_Count; ++i) {
-		const int location = va_location[i];
-		if (location == -1)
-			continue; // shader not consuming this attribute
-
-		sg_vertex_attr_desc &layout_attr = layout.attrs[location];
-
-		layout_attr.buffer_index = buffer_index;
-		layout_attr.format = vertex_layout.GetFormat(VertexAttribute(i));
-		layout_attr.offset = offset[i];
-	}
 }
 
 void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const {
@@ -211,6 +174,40 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Coun
 }
 
 void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const {}
+
+// sg_vertex_format attrib[VA_Count];
+
+void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index) {
+	const size_t stride = vertex_layout.GetStride();
+	assert(stride != 0);
+
+	layout.buffers[buffer_index].stride = stride;
+
+	int va_location[VA_Count]; // VertexAttribute -> shader location LUT
+	std::fill(va_location, va_location + VA_Count, -1);
+
+	for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+		const VertexAttribute va = VertexAttribute(shader_layout.attrib[i]);
+
+		if (va != VA_Count)
+			va_location[va] = i;
+	}
+
+	int offset[VA_Count];
+	vertex_layout.GetOffsets(offset);
+
+	for (size_t i = 0; i < VA_Count; ++i) {
+		const int location = va_location[i];
+		if (location == -1)
+			continue; // shader not consuming this attribute
+
+		sg_vertex_attr_desc &layout_attr = layout.attrs[location];
+
+		layout_attr.buffer_index = buffer_index;
+		layout_attr.format = vertex_layout.GetFormat(VertexAttribute(i));
+		layout_attr.offset = offset[i];
+	}
+}
 
 //
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {

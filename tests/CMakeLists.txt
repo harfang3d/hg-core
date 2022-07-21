@@ -32,23 +32,27 @@ set(TEST_FOUNDATION_SRCS
 	foundation/clock.cpp
 )
 
-add_executable(test_foundation test_foundation.cpp utils.cpp ${TEST_FOUNDATION_SRCS})
-target_link_libraries(test_foundation PUBLIC foundation)
-target_include_directories(test_foundation PUBLIC extern/acutest)
+set(TEST_ENGINE_SRCS
+	engine/vertex_layout.cpp
+)
+
+add_executable(tests tests.cpp utils.cpp utils.h ${TEST_FOUNDATION_SRCS} ${TEST_ENGINE_SRCS})
+target_link_libraries(tests PUBLIC engine foundation)
+target_include_directories(tests PUBLIC extern/acutest)
 
 if(HG_ENABLE_COVERAGE)
 	 set(COVERAGE_EXCLUDES
 		"foundation/assert.*" 
 		"foundation/profiler.*" 
 		"foundation/extern/*" 
-		"engine/*" 
+		"engine/extern/*" 
 		"app_glfw/*" 
 		"samples/*" 
 		"tests/*" 
 		"/usr/*"
 	 )
 	setup_target_for_coverage_lcov(
-		NAME foundation_coverage
+		NAME coverage
 		BASE_DIR "${PROJECT_SOURCE_DIR}"
-		EXECUTABLE test_foundation)
+		EXECUTABLE tests)
 endif()

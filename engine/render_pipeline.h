@@ -269,6 +269,15 @@ private:
 	uint8_t attrib[VA_Count]; // sg_vertex_format
 };
 
+//
+VertexLayout VertexLayoutPosFloatNormFloat();
+VertexLayout VertexLayoutPosFloatNormUInt8();
+VertexLayout VertexLayoutPosFloatColorFloat();
+VertexLayout VertexLayoutPosFloatColorUInt8();
+VertexLayout VertexLayoutPosFloatTexCoord0UInt8();
+VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
+
+//
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
 
 //
@@ -543,14 +552,6 @@ void SetMaterialAlphaCut(Material &m, bool enable);
 RenderState ComputeRenderState(BlendMode blend, bool write_z, bool write_r = true, bool write_g = true, bool write_b = true, bool write_a = true);
 RenderState ComputeRenderState(BlendMode blend, DepthTest test = DT_Less, FaceCulling culling = FC_Clockwise, bool write_z = true, bool write_r = true,
 	bool write_g = true, bool write_b = true, bool write_a = true);
-
-//
-VertexLayout VertexLayoutPosFloatNormFloat();
-VertexLayout VertexLayoutPosFloatNormUInt8();
-VertexLayout VertexLayoutPosFloatColorFloat();
-VertexLayout VertexLayoutPosFloatColorUInt8();
-VertexLayout VertexLayoutPosFloatTexCoord0UInt8();
-VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
 
 //
 struct Model { // 96B (+heap)
