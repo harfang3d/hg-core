@@ -5,6 +5,8 @@
 #define SOKOL_GLCORE33
 #include <sokol_gfx.h>
 
+#include <cstring>
+
 namespace hg {
 
 bool RenderInit(GLFWwindow *win) {
