@@ -337,9 +337,42 @@ void test_vec3() {
 		TEST_CHECK(v.z == u.z);
 	}
 	TEST_CHECK(MakeVec3(Vec4(1.0f, -1.0f, 2.0f, 3.0f)) == Vec3(1.0f, -1.0f, 2.0f));
-// Vec3 Refract(const Vec3 &v, const Vec3 &n, float k_in = 1.f, float k_out = 1.f);
-// Vec3 Quantize(const Vec3 &v, float qx, float qy, float qz);
-// Vec3 Quantize(const Vec3 &v, float q);
-// Vec3 BaseToEuler(const Vec3 &u);
-// Vec3 BaseToEuler(const Vec3 &u, const Vec3 &v);
+
+	{ 
+		const Vec3 u(1.f,-1.f, 0.f);
+		const Vec3 n(0.f, 1.f, 0.f);
+		TEST_CHECK(AlmostEqual(Refract(u, n, 1.f, 1.f), u, 0.000001f));
+		TEST_CHECK(AlmostEqual(Refract(u, n, 1.f, 1.5f), Vec3(1.f/1.5, -1.f, 0.f), 0.000001f));
+	}
+
+	{
+		TEST_CHECK(AlmostEqual(Quantize(Vec3(25.5f, 7.2f, -44.3f), 10.f), Vec3(20.f, 0.f, -40.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(Quantize(Vec3(1.8f, 0.6f, 2.345f), 0.5f, 0, 0.1f), Vec3(1.5f, 0.6f, 2.3f), 0.000001f));
+		TEST_CHECK(AlmostEqual(Quantize(Vec3(1.1f, 0.6f, 2.3f), 0, 1.f, 2.f), Vec3(1.1f, 0.f, 2.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(Quantize(Vec3(-3.33333f, 41.125f, 0.004f), 0), Vec3(-3.33333f, 41.125f, 0.004f), 0.000001f));
+	}
+
+	{ 
+		TEST_CHECK(Hash(Vec3::Up) != Hash(Vec3::Down));
+		TEST_CHECK(Hash(Vec3::Left) != Hash(Vec3::Right));
+		TEST_CHECK(Hash(Vec3::Front) != Hash(Vec3::Back));
+	}
+	
+	{
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front), Vec3::Zero, 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Back), Vec3(0, Pi, 0), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Up), Vec3(-HalfPi, 0, 0), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Right), Vec3(0, HalfPi, 0), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3(-1.f, 0.f, -1.f)), Vec3(0, -3.f*Pi/4.f, 0), 0.000001f));
+	}
+
+	{
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Right), Vec3::Zero, 0.00001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Down), Vec3(0, 0, 3.f * HalfPi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Up), Vec3(0, 0, HalfPi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Down), Vec3(0, 0, 3.f * HalfPi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Front, Vec3::Left), Vec3(0, 0, Pi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Left, Vec3::Back), Vec3(0, -HalfPi, Pi), 0.000001f));
+		TEST_CHECK(AlmostEqual(BaseToEuler(Vec3::Right, Vec3::Back), Vec3(0, HalfPi, 0), 0.000001f));
+	}
 }

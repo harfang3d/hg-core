@@ -50,7 +50,7 @@ Mat44 Compute2DProjectionMatrix(float znear, float zfar, float res_x, float res_
 }
 
 //
-float ExtractZoomFactorFromProjectionMatrix(const Mat44 &m) { return m.m[1][1]; }
+float ExtractZoomFactorFromProjectionMatrix(const Mat44 &m, const Vec2 &aspect_ratio) { return m.m[1][1] * aspect_ratio.y; }
 
 void ExtractZRangeFromPerspectiveProjectionMatrix(const Mat44 &m, float &znear, float &zfar) {
 	const NDCInfos &ndc_infos = GetNDCInfos();

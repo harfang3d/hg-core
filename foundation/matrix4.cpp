@@ -255,7 +255,7 @@ void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation, Vec3 *scale) {
 bool Inverse(const Mat4 &m, Mat4 &I) {
 	float inv[12], det;
 
-	inv[0] = m.m[1][1] * m.m[2][2] - m.m[1][1] - m.m[2][1] * m.m[1][2];
+	inv[0] = m.m[1][1] * m.m[2][2] - m.m[2][1] * m.m[1][2];
 	inv[4] = -m.m[1][0] * m.m[2][2] + m.m[2][0] * m.m[1][2];
 	inv[8] = m.m[1][0] * m.m[2][1] - m.m[2][0] * m.m[1][1];
 	inv[1] = -m.m[0][1] * m.m[2][2] + m.m[2][1] * m.m[0][2];

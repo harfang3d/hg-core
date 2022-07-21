@@ -25,8 +25,6 @@ template <typename T> struct intrusive_shared_ptr_st {
 
 	inline operator bool() const { return t_ != nullptr; }
 
-	inline T &operator[](const size_t i) const { return t_[i]; }
-
 	inline void reset() {
 		release();
 		t_ = nullptr;

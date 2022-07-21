@@ -10,6 +10,10 @@
 #include <cstddef>
 #include <string>
 
+#if _WIN32
+#undef CopyFile
+#endif
+
 namespace hg {
 
 struct File {
@@ -71,7 +75,7 @@ std::string FileToString(const std::string &path, bool silent = false);
 /// Write a string as a file on the local filesystem.
 bool StringToFile(const std::string &path, const std::string &str);
 
-Data FileToData(const std::string &path, bool silent = false);
+bool FileToData(const std::string &path, Data &data, bool silent = false);
 
 //
 struct ScopedFile {

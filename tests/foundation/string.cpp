@@ -62,11 +62,13 @@ void test_string() {
 	TEST_CHECK(lstrip("     Baorisa hieroglyphica") == "Baorisa hieroglyphica");
 	TEST_CHECK(lstrip("\t\t    \tStigmodera cancellata", " \t") == "Stigmodera cancellata");
 	TEST_CHECK(lstrip(" - Stigmodera cancellata", " ") != "Stigmodera cancellata");
+	TEST_CHECK(lstrip("  ____    __ _", " _") == std::string());
 
 	TEST_CHECK(rstrip("Selenocosmia crassipes") == "Selenocosmia crassipes");
 	TEST_CHECK(rstrip("Agrias claudina    ") == "Agrias claudina");
 	TEST_CHECK(rstrip("Mormolyce phyllodes...;;-;..-_-", "_.-;") == "Mormolyce phyllodes");
 	TEST_CHECK(rstrip("Phymateus viridipes\n\n ", " \t") != "Stigmodera cancellata");
+	TEST_CHECK(rstrip("@ ++ @ @@ ", " @+") == std::string());
 
 	TEST_CHECK(strip("Ornithoptera euphorion") == "Ornithoptera euphorion");
 	TEST_CHECK(strip("    Phyllium bioculatum        ") == "Phyllium bioculatum");
@@ -103,6 +105,7 @@ void test_string() {
 	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies + 4, " Dragonfly\n") ==
 			   "Yellow-legged Dragonfly\nClub-tailed Dragonfly\nGreen club-tailed Dragonfly\nGreen-eyed hook-tailed");
 	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies + 1, " // ") == "Yellow-legged");
+	TEST_CHECK(join(club_tailed_dragonflies, club_tailed_dragonflies, "-", "Plane") == std::string());
 
 	const char *path[] = {
 		"e:",
@@ -143,7 +146,9 @@ void test_string() {
 	const std::string blueberry_jam_utf8_invalid = "\x42\x6C\xC3\xA5\x62\xC3\xa0\xa1\xA6\x72\x73\x79\xf0\x28\x8c\x28\x6C\x74\x65\x74\xC3\xB8\x79";
 	const std::u32string blueberry_jam_utf32_invalid_cp(blueberry_jam_utf32_invalid_cp_raw);
 		
+#ifdef __MSYS__
 	TEST_EXCEPTION(utf32_to_utf8(blueberry_jam_utf32_invalid_cp), utf8::invalid_code_point);
+#endif
 	TEST_EXCEPTION(utf8_to_utf32(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
 	TEST_EXCEPTION(utf8_to_wchar(blueberry_jam_utf8_invalid), utf8::invalid_utf8);
 
@@ -262,5 +267,6 @@ void test_string() {
 	
 	TEST_CHECK(pad_left("Valanga irregularis", 11, '|') == "Valanga irregularis");
 	TEST_CHECK(pad_right("Goliathus regius", 23, ':') == "Goliathus regius:::::::");
-	TEST_CHECK(pad_right("Macrodontia cervicornis", 27) == "Macrodontia cervicornis    ");	
+	TEST_CHECK(pad_right("Macrodontia cervicornis", 27) == "Macrodontia cervicornis    ");
+	TEST_CHECK(pad_right("Bocydium globulare", -2) == "Bocydium globulare");
 }

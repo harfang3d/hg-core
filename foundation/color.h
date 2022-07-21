@@ -104,6 +104,7 @@ Color operator-(const Color &a, const Color &b);
 Color operator-(const Color &a, const float v);
 Color operator*(const Color &a, const Color &b);
 Color operator*(const Color &a, const float v);
+Color operator*(const float v, const Color &a);
 Color operator/(const Color &a, const Color &b);
 Color operator/(const Color &a, const float v);
 

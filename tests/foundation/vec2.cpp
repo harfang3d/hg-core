@@ -340,4 +340,12 @@ void test_vec2() {
 		TEST_CHECK(u.x == -121);
 		TEST_CHECK(u.y == 909);
 	}
+    {
+		Vec2 u(-3.0444f, 102.001f);
+		Vec2 v(-3.0443f, 102.00105f);
+		Vec2 w(-3.04f, 102.0015f);
+		TEST_CHECK(TestEqual(u, v, 0.0001f));
+		TEST_CHECK(TestEqual(u, w, 0.0001f) == false);
+		TEST_CHECK(TestEqual(u, w, 0.005f));
+	}
 }

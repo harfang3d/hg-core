@@ -41,6 +41,10 @@ struct Writer {
 };
 
 //
+bool Seek(const Reader &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
+bool Seek(const Writer &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
+
+//
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 template <typename T> bool Read(const Reader &i, const Handle &h, T &v) {
 	if (h.debug) {
@@ -60,9 +64,20 @@ template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) {
 	}
 	return i.write(h, &v, sizeof(T)) == sizeof(T);
 }
+
+template <typename T> bool Skip(const Reader &i, const Handle &h) {
+	if (h.debug) {
+		uint16_t _check;
+		if (i.read(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t))
+			return false;
+		assert(_check == sizeof(T));
+	}
+	return i.seek(h, sizeof(T), SM_Current);
+}
 #else
 template <typename T> bool Read(const Reader &i, const Handle &h, T &v) { return i.read(h, &v, sizeof(T)) == sizeof(T); }
 template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) { return i.write(h, &v, sizeof(T)) == sizeof(T); }
+template <typename T> bool Skip(const Reader &i, const Handle &h) { return Seek(i, h, sizeof(T), SM_Current); }
 #endif
 
 //
@@ -74,18 +89,12 @@ size_t Tell(const Reader &i, const Handle &h);
 size_t Tell(const Writer &i, const Handle &h);
 
 //
-bool Seek(const Reader &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
-bool Seek(const Writer &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
-
-//
 template <typename T> T Read(const Reader &i, const Handle &h) {
 	T v;
 	bool r = Read(i, h, v);
 	__ASSERT__(r == true);
 	return v;
 }
-
-template <typename T> bool Skip(const Reader &i, const Handle &h) { return Seek(i, h, sizeof(T), SM_Current); }
 
 bool SkipString(const Reader &i, const Handle &h);
 
@@ -138,7 +147,6 @@ private:
 class Data;
 
 Data LoadData(const Reader &i, const Handle &h);
-std::string LoadString(const Reader &i, const Handle &h);
 
 //
 template <typename T> struct DeferredWrite {

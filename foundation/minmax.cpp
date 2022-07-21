@@ -225,24 +225,10 @@ bool ClassifySegment(const MinMax &mm, const Vec3 &p1, const Vec3 &p2, Vec3 &itr
 	return false;
 }
 
-MinMax operator*(const MinMax &mm, const Mat4 &m) {
-	MinMax out(GetT(m), GetT(m));
-
-	// find extreme points by considering product of min and max with each component of M
-	for (uint32_t j = 0; j < 3; ++j) {
-		for (uint32_t i = 0; i < 3; ++i) {
-			float a = m.m[j][i] * mm.mn[i], b = m.m[j][i] * mm.mx[i];
-
-			if (a < b) {
-				out.mn[j] += a;
-				out.mx[j] += b;
-			} else {
-				out.mn[j] += b;
-				out.mx[j] += a;
-			}
-		}
-	}
-	return out;
+MinMax operator*(const Mat4 &m, const MinMax &mm) {
+	Vec3 p0 = m * mm.mn;
+	Vec3 p1 = m * mm.mx;
+	return MinMax(Min(p0, p1), Max(p0, p1));
 }
 
 void GetMinMaxVertices(const MinMax &minmax, Vec3 out[8]) {

@@ -11,16 +11,13 @@ class Data {
 public:
 	Data();
 	~Data();
-
-	explicit Data(size_t size) { Resize(size); }
-
-	Data(const Data &data) { *this = data; }
+	explicit Data(size_t size);
+	Data(const Data &data);
 #if __cplusplus >= 201103L
-	Data(Data &&data) { *this = data; }
+	Data(Data &&data) : Data() { *this = data; }
 #endif
-
-	Data(const void *data, size_t size) { Write(data, size); }
-	Data(void *data, size_t size) : data_(reinterpret_cast<uint8_t *>(data)), size_(size) {}
+	Data(const void *data, size_t size);
+	Data(void *data, size_t size);
 
 	Data &operator=(const Data &data);
 #if __cplusplus >= 201103L

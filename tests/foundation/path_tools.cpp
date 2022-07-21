@@ -5,9 +5,18 @@
 
 #include "foundation/path_tools.h"
 
+#include "foundation/assert.h"
+#include "foundation/dir.h"
+
+#include "../utils.h"
+
 using namespace hg;
 
+static void mute_assert(const std::string&, int, const std::string&, const std::string&, const std::string&) {}
+
 void test_path_tools() {
+	trigger_assert = mute_assert;
+
 	TEST_CHECK(IsPathAbsolute("") == false);
 #if WIN32
 	TEST_CHECK(IsPathAbsolute("C:\\Windows\\System32\\svchost.exe"));
@@ -36,6 +45,7 @@ void test_path_tools() {
 	TEST_CHECK(CleanPath("/home/user0001/../../home/../home/user0000/.config/app/hg.cfg") == "/home/user0000/.config/app/hg.cfg");
 	TEST_CHECK(CleanPath("") == "");
 	TEST_CHECK(CleanPath("Lorem ipsum dolor sit amet, consectetur") == "Lorem ipsum dolor sit amet, consectetur");
+	TEST_CHECK(CleanPath("/home/user0001/./.") == "/home/user0001");
 
 	TEST_CHECK(CleanFileName("<movie>\"1080p\"cyber city render\\final?\\.mp4") == "_movie__1080p_cyber city render_final__.mp4");
 	TEST_CHECK(CleanFileName("render_pass_0000-pbr-no-shadows.png") == "render_pass_0000-pbr-no-shadows.png");
@@ -52,7 +62,11 @@ void test_path_tools() {
 	TEST_CHECK(GetFilePath("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
 	TEST_CHECK(GetFilePath("image.jpg") == "./");
 	TEST_CHECK(GetFilePath("") == "./");
-	
+#if WIN32
+	TEST_CHECK(GetFilePath("/") == "./");
+#else
+	TEST_CHECK(GetFilePath("/") == "/");
+#endif
 	TEST_CHECK(CutFileName("/usr/local/bin/deltree.exe") == "/usr/local/bin/");
 	TEST_CHECK(CutFileName("/proc/sys/Device/00000032") == "/proc/sys/Device/");
 	TEST_CHECK(CutFileName("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
@@ -98,6 +112,8 @@ void test_path_tools() {
 #else
 	TEST_CHECK(PathJoin("/usr/local/bin/dummy", "../../../bin/bash") == "/usr/bin/bash");
 #endif
+	TEST_CHECK(PathJoin("dir0/dir1/dir2", "../dir3/dir4", "../foo") == "dir0/dir1/dir3/foo");
+
 	std::vector<std::string> elements(6);
 	elements[0] = "001";
 	elements[1] = "002";
@@ -111,4 +127,19 @@ void test_path_tools() {
 	TEST_CHECK(SwapFileExtension("config", "json") == "config.json");
 	TEST_CHECK(SwapFileExtension("~/.config", "xml") == "~/.xml");
 	TEST_CHECK(SwapFileExtension("/usr/bin/top", "") == "/usr/bin/top");
+
+	std::string tmp = CleanPath(hg::test::GetTempDirectoryName());
+	std::string cwd = CleanPath(GetCurrentWorkingDirectory());
+	std::string usr = CleanPath(GetUserFolder());
+
+	TEST_CHECK(IsDir(tmp) == true);
+	TEST_CHECK(IsDir(cwd) == true);
+	TEST_CHECK(IsDir(usr) == true);
+
+	TEST_CHECK(SetCurrentWorkingDirectory(tmp) == true);
+	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == tmp);
+	TEST_CHECK(SetCurrentWorkingDirectory(usr) == true);
+	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == usr);
+	TEST_CHECK(SetCurrentWorkingDirectory(cwd) == true);
+	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == cwd);
 }

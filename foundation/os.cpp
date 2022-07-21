@@ -6,6 +6,9 @@
 #if _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#else
+#include <errno.h>
+#include <string.h>
 #endif
 
 namespace hg {
@@ -27,7 +30,7 @@ std::string OSGetLastError() {
 	return err;
 }
 #else
-std::string OSGetLastError() { return ""; }
+std::string OSGetLastError() { return std::string(strerror(errno)); }
 #endif
 
 } // namespace hg

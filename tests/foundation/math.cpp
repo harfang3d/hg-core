@@ -6,6 +6,8 @@
 
 #include "foundation/math.h"
 
+#include "foundation/rotation_order.h"
+
 using namespace hg;
 
 void test_math() {
@@ -226,4 +228,16 @@ void test_math() {
 	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.75f), 1.0f));
 	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.125f),-1.5f));
 	TEST_CHECK(TestEqual(LinearInterpolateArray(5, tab, 0.875f), 1.5f));
+
+    TEST_CHECK(ReverseRotationOrder(RO_ZYX) == RO_XYZ);
+    TEST_CHECK(ReverseRotationOrder(RO_YZX) == RO_XZY);
+    TEST_CHECK(ReverseRotationOrder(RO_ZXY) == RO_YXZ);
+    TEST_CHECK(ReverseRotationOrder(RO_XZY) == RO_YZX);
+    TEST_CHECK(ReverseRotationOrder(RO_YXZ) == RO_ZXY);
+    TEST_CHECK(ReverseRotationOrder(RO_XYZ) == RO_ZYX);
+    TEST_CHECK(ReverseRotationOrder(RO_XY) == RO_Default);
+
+    TEST_CHECK(TestEqual(Pow(2.f, -1.f), 0.5f));
+    TEST_CHECK(TestEqual(Pow(3.f, 2.f), 9.f));
+    TEST_CHECK(TestEqual(Pow(25.f, 0.5f), 5.f));
 }

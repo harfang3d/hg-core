@@ -116,7 +116,7 @@ std::string lstrip(const std::string &str, const std::string &pattern) {
 	const size_t str_begin = str.find_first_not_of(pattern);
 
 	if (str_begin == std::string::npos)
-		return str;
+		return std::string();
 
 	return str.substr(str_begin, str.length() - str_begin);
 }
@@ -125,7 +125,7 @@ std::string rstrip(const std::string &str, const std::string &pattern) {
 	const size_t str_end = str.find_last_not_of(pattern);
 
 	if (str_end == std::string::npos)
-		return str;
+		return std::string();
 
 	return str.substr(0, str_end + 1);
 }

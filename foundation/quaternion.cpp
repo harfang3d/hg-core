@@ -4,36 +4,35 @@
 #include "foundation/math.h"
 #include "foundation/matrix3.h"
 #include "foundation/vector3.h"
+#include "foundation/vector4.h"
 
 namespace hg {
 
 const Quaternion Quaternion::Identity(0, 0, 0, 1);
 
 Quaternion Slerp(const Quaternion &a, const Quaternion &b, float t) {
-	float d = Dot(a, b);
-
+	float cs = Dot(a, b);
 	bool bFlip = false;
 
-	if (d < 0.f) {
-		d = -d;
+	if (cs < 0.f) {
+		cs = -cs;
 		bFlip = true;
 	}
 
-	float inv_d;
-	if (1.f - d < 0.000001f) {
-		inv_d = 1.f - t;
+	float s;
+	if (cs > (1.f - 0.000001f)) {
+		s = 1.f - t;
 	} else {
-		float theta = ACos(d);
-		float s = 1.f / Sin(theta);
-
-		inv_d = Sin((1.f - t) * theta) * s;
-		t = Sin(t * theta) * s;
+		float theta = ACos(cs);
+		float sn = Sin(theta);
+		s = Sin((1.f - t) * theta) / sn;
+		t = Sin(t * theta) / sn;
 	}
 
 	if (bFlip)
 		t = -t;
 
-	return Quaternion(inv_d * a.x + t * b.x, inv_d * a.y + t * b.y, inv_d * a.z + t * b.z, inv_d * a.w + t * b.w);
+	return Quaternion(s * a.x + t * b.x, s * a.y + t * b.y, s * a.z + t * b.z, s * a.w + t * b.w);
 }
 
 //
@@ -168,5 +167,13 @@ Mat3 ToMatrix3(const Quaternion &q) {
 
 Vec3 ToEuler(const Quaternion &q, RotationOrder rorder) { return ToEuler(ToMatrix3(q), rorder); }
 Quaternion QuaternionFromEuler(const Vec3 &v, RotationOrder order) { return QuaternionFromEuler(v.x, v.y, v.z, order); }
+
+Vec3 Rotate(const Quaternion &q, const Vec3 &v) {
+	Vec3 u(q.x, q.y, q.z);
+	float s = q.w;
+	return 2.f * Dot(u, v) * u + (s * s - Dot(u, u)) * v + 2.f * s * Cross(u, v);
+}
+
+Vec4 Rotate(const Quaternion &q, const Vec4 &v) { return Vec4(Rotate(q, Vec3(v)), v.w); }
 
 } // namespace hg
