@@ -10,6 +10,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 option(HG_ENABLE_COVERAGE "enable code coverage" OFF)
 
+set(HG_ENGINE_BACKEND SOKOL_GLCORE33 CACHE STRING "Graphics backend (default: SOKOL_GLCORE33)")
+set_property(CACHE HG_ENGINE_BACKEND PROPERTY STRINGS SOKOL_GLCORE33 SOKOL_GLES2 SOKOL_GLES3 SOKOL_D3D11 SOKOL_METAL SOKOL_WGPU SOKOL_DUMMY_BACKEND)
+
 if(HG_ENABLE_COVERAGE)
 	include(CodeCoverage)
 	append_coverage_compiler_flags()
@@ -24,6 +27,23 @@ if(WIN32)
 endif()
 
 add_compile_definitions(__STDC_WANT_LIB_EXT1__=1)
+
+if(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLCORE33")
+	find_package(OpenGL REQUIRED)
+	add_library(hg::gfx_backend ALIAS OpenGL::GL)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLES2")
+	find_package(OpenGLES3 REQUIRED)
+	add_library(hg::gfx_backend ALIAS OpenGL::GLES3)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLES3")
+	find_package(OpenGLES2 REQUIRED)
+	add_library(hg::gfx_backend ALIAS OpenGL::GLES2)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_D3D11")
+	# [todo]
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_METAL")
+	# [todo]
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_WGPU")
+	# [todo]
+endif()
 
 # add_compile_options(-pedantic)
 add_subdirectory(foundation)

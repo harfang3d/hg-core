@@ -43,11 +43,25 @@ find_path(EGL_INCLUDE_DIRS NAMES EGL/egl.h
 )
 
 set(EGL_NAMES ${EGL_NAMES} egl EGL)
-find_library(EGL_LIBRARIES NAMES ${EGL_NAMES}
+find_library(EGL_LIBRARY NAMES ${EGL_NAMES}
     HINTS ${PC_EGL_LIBDIR} ${PC_EGL_LIBRARY_DIRS}
 )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(EGL DEFAULT_MSG EGL_INCLUDE_DIRS EGL_LIBRARIES)
+if(IS_ABSOLUTE "${EGL_LIBRARY}")
+    add_library(OpenGL::EGL UNKNOWN IMPORTED)
+    set_target_properties(OpenGL::EGL PROPERTIES IMPORTED_LOCATION
+                        "${EGL_LIBRARY}")
+else()
+    add_library(OpenGL::EGL INTERFACE IMPORTED)
+    set_target_properties(OpenGL::EGL PROPERTIES IMPORTED_LIBNAME
+                        "${EGL_LIBRARY}")
+endif()
 
-mark_as_advanced(EGL_INCLUDE_DIRS EGL_LIBRARIES)
+# Note that EGL's include directory is different from OpenGL/GLX's!
+set_target_properties(OpenGL::EGL PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+                    "${EGL_INCLUDE_DIRS}")
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(EGL DEFAULT_MSG EGL_INCLUDE_DIRS EGL_LIBRARY FOUND_VAR EGL_FOUND)
+
+mark_as_advanced(EGL_INCLUDE_DIRS EGL_LIBRARY)
