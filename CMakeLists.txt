@@ -28,6 +28,8 @@ endif()
 
 add_compile_definitions(__STDC_WANT_LIB_EXT1__=1)
 
+add_library(dummy_backend INTERFACE)
+
 if(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLCORE33")
 	find_package(OpenGL REQUIRED)
 	add_library(hg::gfx_backend ALIAS OpenGL::GL)
@@ -39,10 +41,15 @@ elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLES3")
 	add_library(hg::gfx_backend ALIAS OpenGL::GLES2)
 elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_D3D11")
 	# [todo]
+	add_library(hg::gfx_backend ALIAS dummy_backend)
 elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_METAL")
 	# [todo]
+	add_library(hg::gfx_backend ALIAS dummy_backend)
 elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_WGPU")
 	# [todo]
+	add_library(hg::gfx_backend ALIAS dummy_backend)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_DUMMY_BACKEND")
+	add_library(hg::gfx_backend ALIAS dummy_backend)
 endif()
 
 # add_compile_options(-pedantic)
