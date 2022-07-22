@@ -207,7 +207,7 @@ int main(int narg, const char **args) {
 	// Model mdl = CreateSphereModel(vtx_layout, 1.f, 32, 16);
 
 	//
-	sg_pipeline pip = MakePipeline(vtx_layout, shader.shader, shader.layout);
+	sg_pipeline pip = MakePipeline(mdl.vtx_layout, shader.shader, shader.layout);
 
 	// resource bindings
 	sg_bindings bind;

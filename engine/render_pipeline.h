@@ -557,8 +557,8 @@ struct Model { // 96B (+heap)
 	uint32_t tri_count;
 	VertexLayout vtx_layout;
 
-	std::vector<MinMax> bounds; // minmax/list
 	std::vector<DisplayList> lists;
+	std::vector<MinMax> bounds; // minmax/list
 	std::vector<uint16_t> mats; // material/list
 	std::vector<Mat4> bind_pose; // bind pose matrices
 };

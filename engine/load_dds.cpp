@@ -160,24 +160,28 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 		std::vector<uint8_t> payload(remaining);
 		ir.read(h, payload.data(), remaining);
 
-		sg_image_desc desc;
-		memset(&desc, 0, sizeof(sg_image_desc));
-		desc.width = header.dwWidth;
-		desc.height = header.dwHeight;
-		desc.pixel_format = FourCCPixelFormat(header.ddpfPixelFormat.dwFourCC);
-		desc.min_filter = SG_FILTER_LINEAR;
-		desc.mag_filter = SG_FILTER_LINEAR;
-		desc.num_mipmaps = header.dwMipMapCount;
+		const sg_pixel_format fmt = FourCCPixelFormat(header.ddpfPixelFormat.dwFourCC);
 
-		uint8_t *mip_data = payload.data();
-		for (int i = 0, w = desc.width, h = desc.height; i < desc.num_mipmaps; ++i, w /= 2, h /= 2) {
-			const size_t mip_size = Max(8, (w * h) / 2);
-			desc.data.subimage[0][i].ptr = mip_data;
-			desc.data.subimage[0][i].size = mip_size;
-			mip_data += mip_size;
+		if (fmt != _SG_PIXELFORMAT_NUM) {
+			sg_image_desc desc;
+			memset(&desc, 0, sizeof(sg_image_desc));
+			desc.width = header.dwWidth;
+			desc.height = header.dwHeight;
+			desc.pixel_format = fmt;
+			desc.min_filter = SG_FILTER_LINEAR;
+			desc.mag_filter = SG_FILTER_LINEAR;
+			desc.num_mipmaps = header.dwMipMapCount;
+
+			uint8_t *mip_data = payload.data();
+			for (int i = 0, w = desc.width, h = desc.height; i < desc.num_mipmaps; ++i, w /= 2, h /= 2) {
+				const size_t mip_size = Max(8, (w * h) / 2);
+				desc.data.subimage[0][i].ptr = mip_data;
+				desc.data.subimage[0][i].size = mip_size;
+				mip_data += mip_size;
+			}
+
+			tex.image = sg_make_image(&desc);
 		}
-
-		tex.image = sg_make_image(&desc);
 	} else {
 		warn("    Invalid header!");
 	}
