@@ -36,6 +36,7 @@ extern void test_clock();
 
 // engine tests
 extern void test_vertex_layout();
+extern void test_anim();
 
 //
 TEST_LIST = {
@@ -72,6 +73,7 @@ TEST_LIST = {
 	{"foundation.clock", test_clock},
 
 	{"engine.vertex_layout", test_vertex_layout},
+	{"engine.anim", test_anim},
 
 	{NULL, NULL},
 };
