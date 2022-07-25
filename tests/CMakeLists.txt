@@ -35,6 +35,7 @@ set(TEST_FOUNDATION_SRCS
 set(TEST_ENGINE_SRCS
 	engine/vertex_layout.cpp
 	engine/anim.cpp
+	engine/node.cpp
 )
 
 add_executable(tests tests.cpp utils.cpp utils.h ${TEST_FOUNDATION_SRCS} ${TEST_ENGINE_SRCS})

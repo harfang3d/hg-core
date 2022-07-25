@@ -126,7 +126,7 @@ Vec3 Scene::GetTransformScale(ComponentRef ref) const {
 		return c->TRS.scl;
 
 	warn("Invalid transform component");
-	return Vec3::Zero;
+	return Vec3::One;
 }
 
 void Scene::SetTransformScale(ComponentRef ref, const Vec3 &v) {
@@ -141,7 +141,7 @@ Vec3 Transform::GetScale() const {
 		return scene_ref->scene->GetTransformScale(ref);
 
 	warn("Orphaned transform component");
-	return Vec3::Zero;
+	return Vec3::One;
 }
 
 void Transform::SetScale(const Vec3 &v) {
