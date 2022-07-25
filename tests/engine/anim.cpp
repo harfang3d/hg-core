@@ -7,6 +7,8 @@
 
 #include "engine/anim.h"
 
+#include "foundation/math.h"
+#include "foundation/unit.h"
 #include "foundation/time.h"
 
 using namespace hg;
@@ -255,6 +257,21 @@ static void test_anim_vec3_track() {
 	TEST_CHECK(vec3_track.keys[0].t == time_from_ms(220));
 	TEST_CHECK(vec3_track.keys[1].t == time_from_ms(440));
 	TEST_CHECK(vec3_track.keys[2].t == time_from_ms(660));
+
+	vec3_track.keys.clear();
+
+	SetKey(vec3_track, time_from_ms(0), Vec3(0.f, 1.f, 0.f));
+	SetKey(vec3_track, time_from_ms(50), Vec3(0.2f, 0.8f,-0.2f));
+	SetKey(vec3_track, time_from_ms(100), Vec3(0.4f, 0.6f,-0.4f));
+	SetKey(vec3_track, time_from_ms(150), Vec3(0.6f, 0.4f,-0.6f));
+	SetKey(vec3_track, time_from_ms(200), Vec3(0.8f, 0.2f,-0.8f));
+	SetKey(vec3_track, time_from_ms(250), Vec3(1.0f, 0.0f,-1.0f));
+
+	size_t removed = SimplifyAnimTrackT<AnimTrackHermiteT<Vec3> >(vec3_track, 0.1f);
+	TEST_CHECK(removed == 4);
+
+	TEST_CHECK(vec3_track.keys[0].t == time_from_ms(0));
+	TEST_CHECK(vec3_track.keys[1].t == time_from_ms(250));
 }
 
 static void test_anim_float_track() {
@@ -284,18 +301,57 @@ static void test_anim_float_track() {
 	TEST_CHECK((track.keys[0].t == time_from_ms(100)) && (track.keys[0].v == 0.f));
 }
 
+void test_misc() {
+	Vec3 axis = Normalize(Vec3::One);
+	Quaternion q0 = QuaternionFromAxisAngle(Deg(300.f), axis);
+	Quaternion q1 = QuaternionFromAxisAngle(Deg(-60.f), axis);
+	Quaternion q2 = QuaternionFromAxisAngle(Deg(30.f), axis);
+	Quaternion q3 = QuaternionFromAxisAngle(Deg(170.f), Vec3::Back);
+
+	TEST_CHECK(CompareKeyValue(q0, q1, 0.00001f) == true);
+	TEST_CHECK(CompareKeyValue(q1, q2, 0.00001f) == false);
+	TEST_CHECK(CompareKeyValue(q2, q3, 0.00001f) == false);
+	
+	TEST_CHECK(CompareKeyValue(Color::Orange, Color::Yellow, 0.00001f) == false);
+	TEST_CHECK(CompareKeyValue(Color(0.7f, 0.2f, 0.1f), Color(0.69f, 0.18f, 0.11f), 0.02f) == true);	
+}
+
 void test_anim() {
 	test_anim_bool_track();
 	test_anim_string_track();
+	test_anim_int_track();
 	test_anim_vec3_track();
 	test_anim_float_track();
-	 
+	test_misc();
+
+	Anim anim;
+	anim.t_start = time_from_ms(50);
+	anim.t_end   = time_from_ms(1200);
+	// [todo] anim.flags seems unused atm.
+
+	TEST_CHECK(AnimHasKeys(anim) == false);
+
+	anim.bool_tracks.resize(2);
+	anim.float_tracks.resize(1);
+
+	SetKey(anim.bool_tracks[0], time_from_ms(50), false);
+	SetKey(anim.bool_tracks[0], time_from_ms(100), true);
+	SetKey(anim.bool_tracks[0], time_from_ms(1000), false);
+	
+	SetKey(anim.float_tracks[0], time_from_ms(50), 0.f);
+	SetKey(anim.float_tracks[0], time_from_ms(100), 0.2f);
+	SetKey(anim.float_tracks[0], time_from_ms(400), 1.f);
+	SetKey(anim.float_tracks[0], time_from_ms(1000), 0.2f);
+	SetKey(anim.float_tracks[0], time_from_ms(1200), 0.f);
+
+	TEST_CHECK(AnimHasKeys(anim) == true);
+
+	DeleteEmptyAnimTracks(anim);
+	TEST_CHECK(anim.bool_tracks.size() == 1);
+
 	// [todo]
-	// Anim anim;
+	// InstanceAnimKey 
 	// void ResampleAnim(Anim & anim, time_ns old_start, time_ns old_end, time_ns new_start, time_ns new_end, time_ns frame_duration);
 	// void ReverseAnim(Anim & anim, time_ns t_start, time_ns t_end);
 	// void QuantizeAnim(Anim & anim, time_ns t_step);
-	// void MigrateLegacyAnimTracks(Anim &anim);
-	// bool AnimHasKeys(const Anim &anim);
-	// void DeleteEmptyAnimTracks(Anim & anim);
 }
