@@ -602,10 +602,298 @@ static void test_light() {
 	set_log_hook(nullptr, nullptr);
 }
 
+static void test_rigid_body() {
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+
+	{
+		RigidBody body;
+		TEST_CHECK(body.IsValid() == false);
+
+		mask = 0;
+
+		body.SetType(RBT_Kinematic);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		body.SetLinearDamping(0.1f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		body.SetAngularDamping(0.4f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		body.SetRestitution(0.2f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		body.SetFriction(0.01f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		body.SetRollingFriction(0.02f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		mask = 0;
+
+		TEST_CHECK(body.GetType() == RBT_Dynamic);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(body.GetLinearDamping() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(body.GetAngularDamping() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(body.GetRestitution() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(body.GetFriction() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(body.GetRollingFriction() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+	}
+	{ 
+		Scene scene;
+
+		RigidBody body = scene.CreateRigidBody();
+		TEST_CHECK(body.IsValid() == true);
+
+		mask = 0;
+
+		body.SetType(RBT_Kinematic);
+		TEST_CHECK(mask == 0);
+
+		body.SetLinearDamping(0.1f);
+		TEST_CHECK(mask == 0);
+
+		body.SetAngularDamping(0.4f);
+		TEST_CHECK(mask == 0);
+
+		body.SetRestitution(0.2f);
+		TEST_CHECK(mask == 0);
+
+		body.SetFriction(0.7f);
+		TEST_CHECK(mask == 0);
+
+		body.SetRollingFriction(0.3f);
+		TEST_CHECK(mask == 0);
+
+		mask = 0;
+
+		TEST_CHECK(body.GetType() == RBT_Kinematic);
+		TEST_CHECK(mask == 0);
+
+		float v = body.GetLinearDamping();
+		TEST_CHECK(TestEqual(body.GetLinearDamping(), 0.1f, 1.f/255.f) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(body.GetAngularDamping(), 0.4f, 1.f / 255.f) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(body.GetRestitution(), 0.2f, 1.f / 255.f) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(body.GetFriction(), 0.7f, 1.f / 255.f) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(body.GetRollingFriction(), 0.3f, 1.f / 255.f) == true);
+		TEST_CHECK(mask == 0);
+
+		RigidBody r0 = body;
+		RigidBody r1 = scene.CreateRigidBody();
+		TEST_CHECK(body == r0);
+		TEST_CHECK((r1 == r0) == false);
+		TEST_CHECK((body == r1) == false);
+	}
+
+	set_log_hook(nullptr, nullptr);
+}
+
+static void test_collision() {
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+
+	{
+		Collision c0;
+		TEST_CHECK(c0.IsValid() == false);
+
+		mask = 0;
+
+		Vec3 pos(5.f, 7.f, -1.f);
+		Vec3 rot(Deg3(30.f, 60.f, -45.f));
+
+		c0.SetType(CT_Capsule);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetLocalTransform(TransformationMat4(pos, rot));
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetPosition(pos);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetRotation(rot);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		
+		c0.SetMass(10.f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetRadius(3.f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetHeight(5.f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetSize(Vec3(2.f, 9.f, 7.f));
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetCollisionResource("dummy collision");
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+#if 0
+		c0.SetRestitution(0.5f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		c0.SetFriction(0.25f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+#endif
+
+		mask = 0;
+
+		TEST_CHECK(c0.GetType() == CT_Sphere);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		
+		TEST_CHECK(c0.GetLocalTransform() == Mat4::Identity);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetPosition() == Vec3::Zero);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetRotation() == Vec3::Zero);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetMass() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetRadius() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetHeight() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetSize() == Vec3::Zero);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetCollisionResource().empty() == true);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		
+#if 0
+		TEST_CHECK(c0.GetRestitution() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(c0.GetFriction() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+#endif
+	}
+
+	{
+		Scene scene;
+		Collision c0 = scene.CreateCollision();
+
+		mask = 0;
+
+		Vec3 pos(5.f, 7.f, -1.f);
+		Vec3 rot(Deg3(30.f, 60.f, -45.f));
+
+		c0.SetType(CT_Capsule);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(c0.GetType() == CT_Capsule);
+		TEST_CHECK(mask == 0);
+
+		Mat4 m0 = TransformationMat4(Vec3(-1.f, 0.1f, 3.f), Deg3(-90.f, 45.f, 120.f));
+		c0.SetLocalTransform(m0);
+		TEST_CHECK(mask == 0);
+
+		Mat4 m1 = c0.GetLocalTransform();
+		TEST_CHECK(mask == 0);
+		TEST_CHECK(AlmostEqual(GetColumn(m1, 0), GetColumn(m0, 0), 0.00001f) == true);
+		TEST_CHECK(AlmostEqual(GetColumn(m1, 1), GetColumn(m0, 1), 0.00001f) == true);
+		TEST_CHECK(AlmostEqual(GetColumn(m1, 2), GetColumn(m0, 2), 0.00001f) == true);
+		TEST_CHECK(AlmostEqual(GetColumn(m1, 3), GetColumn(m0, 3), 0.00001f) == true);
+
+		c0.SetPosition(pos);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(AlmostEqual(c0.GetPosition(), pos, 0.000001f) == true);
+		TEST_CHECK(mask == 0);
+
+		c0.SetRotation(rot);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(AlmostEqual(c0.GetRotation(), rot, 0.000001f) == true);
+		TEST_CHECK(mask == 0);
+
+		c0.SetMass(10.f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(c0.GetMass() == 10.f);
+		TEST_CHECK(mask == 0);
+
+		c0.SetRadius(3.f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(c0.GetRadius() == 3.f);
+		TEST_CHECK(mask == 0);
+
+		c0.SetHeight(5.f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(c0.GetHeight() == 5.f);
+		TEST_CHECK(mask == 0);
+
+		Vec3 size(2.f, 9.f, 7.f);
+		c0.SetSize(size);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(AlmostEqual(c0.GetSize(), size, 0.000001f) == true);
+		TEST_CHECK(mask == 0);
+
+		c0.SetCollisionResource("dummy collision");
+		TEST_CHECK(mask == 0);
+				
+		TEST_CHECK(c0.GetCollisionResource() == "dummy collision");
+		TEST_CHECK(mask == 0);
+#if 0
+		c0.SetRestitution(0.5f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(c0.GetRestitution() == 0.5f);
+		TEST_CHECK(mask == 0);
+
+		c0.SetFriction(0.25f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(c0.GetFriction() == 0.25f);
+		TEST_CHECK(mask == 0);
+#endif
+
+		Collision c1 = c0;
+		Collision c2 = scene.CreateCollision();
+		TEST_CHECK(c1 == c0);
+		TEST_CHECK((c1 == c2) == false);
+		TEST_CHECK((c2 == c0) == false);
+	}
+	set_log_hook(nullptr, nullptr);
+}
+
 void test_node() {
 	test_transform();
 	test_camera();
 	test_object();
 	test_light();
+	test_rigid_body();
+	test_collision();
 	// [todo]
 }

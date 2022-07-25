@@ -227,11 +227,13 @@ struct Collision { // 16B on 64 bit
 	std::string GetCollisionResource() const;
 	void SetCollisionResource(const std::string &name);
 
+#if 0
+	// [todo] unimplemented
 	float GetRestitution() const;
 	void SetRestitution(float restitution);
 	float GetFriction() const;
 	void SetFriction(float friction);
-
+#endif
 	intrusive_shared_ptr_st<SceneRef> scene_ref;
 	ComponentRef ref;
 };
