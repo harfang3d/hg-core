@@ -91,38 +91,16 @@ uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &mo
 //
 static size_t vertex_format_size[_SG_VERTEXFORMAT_NUM] = {0, 4, 8, 12, 16, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 4};
 
-VertexLayout::VertexLayout() { std::fill(attrib, attrib + VA_Count, SG_VERTEXFORMAT_INVALID); }
-
-void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format) { attrib[semantic] = format; }
-
-size_t VertexLayout::GetOffsets(int offset[VA_Count]) const {
-	size_t stride = 0;
-
-	for (int i = 0; i < VA_Count; ++i) {
-		const sg_vertex_format format = sg_vertex_format(attrib[i]);
-
-		if (format == SG_VERTEXFORMAT_INVALID) {
-			offset[i] = -1;
-		} else {
-			offset[i] = stride;
-			stride += vertex_format_size[format];
-		}
-	}
-
-	return stride;
+VertexLayout::VertexLayout() {
+	Attrib attr;
+	attr.format = SG_VERTEXFORMAT_INVALID;
+	attr.offset = 0;
+	std::fill(attrib, attrib + VA_Count, attr);
 }
 
-size_t VertexLayout::GetStride() const {
-	size_t stride = 0;
-
-	for (int i = 0; i < VA_Count; ++i) {
-		const sg_vertex_format format = sg_vertex_format(attrib[i]);
-
-		if (format != SG_VERTEXFORMAT_INVALID)
-			stride += vertex_format_size[format];
-	}
-
-	return stride;
+void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format, size_t offset) {
+	attrib[semantic].format = uint8_t(format);
+	attrib[semantic].offset = numeric_cast<uint8_t>(offset);
 }
 
 // void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
@@ -146,9 +124,6 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 			va_location[va] = i;
 	}
 
-	int offset[VA_Count];
-	vertex_layout.GetOffsets(offset);
-
 	for (size_t i = 0; i < VA_Count; ++i) {
 		const int location = va_location[i];
 		if (location == -1)
@@ -158,12 +133,12 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 
 		layout_attr.buffer_index = buffer_index;
 		layout_attr.format = vertex_layout.GetFormat(VertexAttribute(i));
-		layout_attr.offset = offset[i];
+		layout_attr.offset = vertex_layout.GetOffset(VertexAttribute(i));
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const {
-	const sg_vertex_format format = sg_vertex_format(attrib[semantic]);
+void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const {
+	const sg_vertex_format format = sg_vertex_format(attrib[semantic].format);
 
 	if (format == SG_VERTEXFORMAT_FLOAT || format == SG_VERTEXFORMAT_FLOAT2 || format == SG_VERTEXFORMAT_FLOAT3 || format == SG_VERTEXFORMAT_FLOAT4) {
 		size_t out_count;
@@ -180,7 +155,7 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Coun
 		if (in_count > out_count)
 			in_count = out_count;
 
-		float *f_out = reinterpret_cast<float *>(out + offset[semantic]);
+		float *f_out = reinterpret_cast<float *>(out + attrib[semantic].offset);
 
 		size_t i = 0;
 		for (; i < in_count; ++i)
@@ -188,7 +163,7 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Coun
 		for (; i < out_count; ++i) // zero pad missing input
 			f_out[i] = 0.f;
 	} else if (format == SG_VERTEXFORMAT_BYTE4 || format == SG_VERTEXFORMAT_BYTE4N) {
-		int8_t *i_out = reinterpret_cast<int8_t *>(out + offset[semantic]);
+		int8_t *i_out = reinterpret_cast<int8_t *>(out + attrib[semantic].offset);
 
 		const size_t out_count = 4;
 
@@ -198,7 +173,7 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Coun
 		for (; i < out_count; ++i) // zero pad missing input
 			i_out[i] = 0;
 	} else if (format == SG_VERTEXFORMAT_UBYTE4 || format == SG_VERTEXFORMAT_UBYTE4N) {
-		uint8_t *u_out = reinterpret_cast<uint8_t *>(out + offset[semantic]);
+		uint8_t *u_out = reinterpret_cast<uint8_t *>(out + attrib[semantic].offset);
 
 		const size_t out_count = 4;
 
@@ -210,7 +185,7 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Coun
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const {}
+void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
 
 //
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
@@ -295,12 +270,15 @@ Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, 
 
 	std::string name;
 	Read(ir, h, name); // shader name
-	/*
-		if (do_not_load_resources)
-			mat.program = resources.programs.Add(name, PipelineProgram());
-		else
-			mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, name, resources, pipeline, silent);
-	*/
+
+	if (do_not_load_resources) {
+		mat.program = resources.programs.Add(name, PipelineProgram());
+	} else {
+		PipelineProgram pp;
+		pp.shader = LoadShader(deps_ir, deps_ip, name, silent);
+		mat.program = resources.programs.Add(name, pp);
+	}
+
 	const uint16_t value_count = Read<uint16_t>(ir, h);
 
 	for (size_t i = 0; i < value_count; ++i) {
@@ -458,12 +436,89 @@ enum legacy_Attrib {
 	lA_Count
 };
 
+enum legacy_AttribType { lAT_Uint8, lAT_Uint10, lAT_Int16, lAT_Half, lAT_Float, lAT_Count };
+
 struct legacy_VertexLayout {
 	uint32_t m_hash; // hash
 	uint16_t m_stride; // stride
 	uint16_t m_offset[lA_Count]; // attribute offsets
 	uint16_t m_attributes[lA_Count]; // used attributes
 };
+
+static VertexAttribute legacy_Attrib_to_VertexAttribute(legacy_Attrib legacy_attr) {
+	if (legacy_attr == lA_Position)
+		return VA_Position;
+	if (legacy_attr == lA_Normal)
+		return VA_Normal;
+	if (legacy_attr == lA_Tangent)
+		return VA_Tangent;
+	if (legacy_attr == lA_Bitangent)
+		return VA_Bitangent;
+	if (legacy_attr == lA_Color0)
+		return VA_Color;
+	if (legacy_attr == lA_Indices)
+		return VA_BoneIndices;
+	if (legacy_attr == lA_Weight)
+		return VA_BoneWeights;
+	if (legacy_attr == lA_TexCoord0)
+		return VA_UV0;
+	if (legacy_attr == lA_TexCoord1)
+		return VA_UV1;
+	return VA_Count;
+}
+
+static void legacy_VertexLayoutToVertexLayout(const legacy_VertexLayout &legacy_layout, VertexLayout &layout) {
+	for (int i = 0; i < lA_Count; ++i) {
+		const VertexAttribute va = legacy_Attrib_to_VertexAttribute(legacy_Attrib(i));
+
+		if (va != VA_Count) {
+			const uint16_t attr = legacy_layout.m_attributes[i];
+
+			if (legacy_layout.m_attributes[i] == 0xffff)
+				continue;
+
+			const int num = (attr & 3) + 1;
+			const int type = (attr >> 3) & 7;
+			const bool is_signed = ((attr >> 8) & 1) ? true : false;
+			const bool is_normalized = ((attr >> 7) & 1) ? true : false;
+
+			//
+			sg_vertex_format sg_type = SG_VERTEXFORMAT_INVALID;
+
+			if (type == lAT_Float) {
+				if (num == 1)
+					sg_type = SG_VERTEXFORMAT_FLOAT;
+				else if (num == 2)
+					sg_type = SG_VERTEXFORMAT_FLOAT2;
+				else if (num == 3)
+					sg_type = SG_VERTEXFORMAT_FLOAT3;
+				else if (num == 4)
+					sg_type = SG_VERTEXFORMAT_FLOAT4;
+			} else if (type == lAT_Uint8) {
+				if (is_normalized) {
+					if (is_signed) {
+						if ((num == 3) || (num == 4))
+							sg_type = SG_VERTEXFORMAT_BYTE4N;
+					} else {
+						if ((num == 3) || (num == 4))
+							sg_type = SG_VERTEXFORMAT_UBYTE4N;
+					}
+				} else {
+					if (is_signed) {
+						if (num == 4)
+							sg_type = SG_VERTEXFORMAT_BYTE4;
+					} else {
+						if (num == 4)
+							sg_type = SG_VERTEXFORMAT_UBYTE4;
+					}
+				}
+			}
+
+			if (sg_type != SG_VERTEXFORMAT_INVALID)
+				layout.Set(va, sg_type, legacy_layout.m_offset[i]);
+		}
+	}
+}
 
 //
 Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool silent) {
@@ -497,13 +552,13 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 		return Model();
 	}
 
-	Model model;
-
 	legacy_VertexLayout vs_decl;
 	ir.read(h, &vs_decl, sizeof(legacy_VertexLayout)); // read vertex declaration
 
-	uint32_t tri_count = 0;
+	Model model;
+	legacy_VertexLayoutToVertexLayout(vs_decl, model.vtx_layout);
 
+	uint32_t tri_count = 0;
 	std::vector<uint8_t> data;
 
 	while (true) {
@@ -552,7 +607,6 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 		model.mats.push_back(Read<uint16_t>(ir, h));
 	}
 
-	// model.vtx_layout = ; FIXME implement lightweight vtx layout
 	model.tri_count = tri_count;
 
 	if (version > 0) { // version 1: add bind poses

@@ -253,20 +253,24 @@ struct ShaderLayout {
 struct VertexLayout {
 	VertexLayout();
 
-	void Set(VertexAttribute semantic, sg_vertex_format format);
+	void Set(VertexAttribute semantic, sg_vertex_format format, size_t offset);
+	bool Has(VertexAttribute attr) const { return attrib[attr].format != SG_VERTEXFORMAT_INVALID; }
 
-	/// Return offsets for each vertex attribute as output parameter and layout stride as return value.
-	size_t GetOffsets(int offset[VA_Count]) const;
-	size_t GetStride() const;
+	sg_vertex_format GetFormat(VertexAttribute attr) const { return sg_vertex_format(attrib[attr].format); }
+	size_t GetOffset(VertexAttribute attr) const { return size_t(attrib[attr].offset); }
+	size_t GetStride() const { return stride; }
 
-	bool Has(VertexAttribute attr) const { return attrib[attr] != SG_VERTEXFORMAT_INVALID; }
-	sg_vertex_format GetFormat(VertexAttribute attr) const { return sg_vertex_format(attrib[attr]); }
+	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
+	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
 
-	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const;
-	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const;
+	struct Attrib {
+		uint8_t format; // sg_vertex_format
+		uint8_t offset; // offset
+	};
 
 private:
-	uint8_t attrib[VA_Count]; // sg_vertex_format
+	Attrib attrib[VA_Count];
+	uint8_t stride;
 };
 
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
@@ -324,6 +328,10 @@ struct Shader { // 20B
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
 Shader LoadShaderFromFile(const std::string &path, bool silent = false);
 Shader LoadShaderFromAssets(const std::string &name, bool silent = false);
+
+struct PipelineProgram {
+	Shader shader;
+};
 
 /*
 struct TextureUniform {
@@ -474,7 +482,6 @@ struct Material { // 56B
 	std::map<std::string, Texture> textures;
 
 	RenderState state;
-
 	uint8_t flags;
 };
 
@@ -572,6 +579,7 @@ size_t GetModelMaterialCount(const Model &model);
 //
 void Destroy(Model &model);
 void Destroy(Material &material);
+void Destroy(PipelineProgram &pipeline_shader);
 
 //
 struct TextureLoad {
@@ -587,10 +595,10 @@ struct ModelLoad {
 };
 
 struct PipelineResources {
-	PipelineResources() : /*programs(Destroy),*/ textures(Destroy), materials(Destroy), models(Destroy) {}
+	PipelineResources() : programs(Destroy), textures(Destroy), materials(Destroy), models(Destroy) {}
 	~PipelineResources() { DestroyAll(); }
 
-	//	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
+	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
 	ResourceCache<Texture, TextureRef> textures;
 	ResourceCache<Material, MaterialRef> materials;
 	ResourceCache<Model, ModelRef> models;

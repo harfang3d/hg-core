@@ -394,7 +394,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 		return geo;
 	}
 
-	if (Read<uint8_t>(ir, h) != /*GeometryMarker*/ModelMarker) {
+	if (Read<uint8_t>(ir, h) != /*GeometryMarker*/ ModelMarker) {
 		warn(fmt::format("Cannot load geometry '{}', invalid geometry marker", name));
 		return geo;
 	}
@@ -520,27 +520,40 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 VertexLayout ComputeGeometryVertexLayout(const Geometry &geo) {
 	VertexLayout layout;
 
-	layout.Set(VA_Position, SG_VERTEXFORMAT_FLOAT3);
+	size_t offset = 0;
 
-	if (!geo.normal.empty())
-		layout.Set(VA_Normal, SG_VERTEXFORMAT_UBYTE4N);
+	layout.Set(VA_Position, SG_VERTEXFORMAT_FLOAT3, offset);
+	offset += 12;
 
-	if (!geo.tangent.empty()) {
-		layout.Set(VA_Tangent, SG_VERTEXFORMAT_UBYTE4N);
-		layout.Set(VA_Bitangent, SG_VERTEXFORMAT_UBYTE4N);
+	if (!geo.normal.empty()) {
+		layout.Set(VA_Normal, SG_VERTEXFORMAT_UBYTE4N, offset);
+		offset += 4;
 	}
 
-	if (!geo.color.empty())
-		layout.Set(VA_Color, SG_VERTEXFORMAT_UBYTE4N);
+	if (!geo.tangent.empty()) {
+		layout.Set(VA_Tangent, SG_VERTEXFORMAT_UBYTE4N, offset);
+		offset += 4;
+		layout.Set(VA_Bitangent, SG_VERTEXFORMAT_UBYTE4N, offset);
+		offset += 4;
+	}
+
+	if (!geo.color.empty()) {
+		layout.Set(VA_Color, SG_VERTEXFORMAT_UBYTE4N, offset);
+		offset += 4;
+	}
 
 	if (!geo.skin.empty()) {
-		layout.Set(VA_BoneIndices, SG_VERTEXFORMAT_UBYTE4N);
-		layout.Set(VA_BoneWeights, SG_VERTEXFORMAT_UBYTE4N);
+		layout.Set(VA_BoneIndices, SG_VERTEXFORMAT_UBYTE4N, offset);
+		offset += 4;
+		layout.Set(VA_BoneWeights, SG_VERTEXFORMAT_UBYTE4N, offset);
+		offset += 4;
 	}
 
 	for (size_t i = 0; i < geo.uv.size() && i < 2; ++i)
-		if (!geo.uv[i].empty())
-			layout.Set(VertexAttribute(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2);
+		if (!geo.uv[i].empty()) {
+			layout.Set(VertexAttribute(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2, offset);
+			offset += 8;
+		}
 
 	return layout;
 }

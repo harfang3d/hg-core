@@ -19,14 +19,6 @@ using namespace hg;
 
 
 
-struct BoundDisplayList { // links DisplayList to object and its materials
-	sg_pipeline pipeline; // links list attributes to shader inputs
-	sg_bindings bindings; // links list buffers and material resources to shader inputs
-};
-
-struct BoundModel { // links Model to Object and its Materials
-	std::vector<BoundDisplayList> bound_lists;
-};
 
 
 
@@ -60,34 +52,48 @@ void BindDisplayList(const DisplayList &list, BoundDisplayList &bound_list, cons
 	bound_list.bindings.vertex_buffers[0] = list.vertex_buffer;
 
 	//
-	bound_list.pipeline = MakePipeline(vtx_layout, shader, shader_layout);
+	bound_list.pipeline = MakePipeline(vtx_layout, shader, shader_layout); // MUST BE REMADE ON SHADER CHANGE!
 }
 
 
 
 //
-/*
-void BindModel(const Model &mdl, BoundModel &bound_mdl) {
-	bound_mdl.bound_lists.resize(mdl.lists.size());
+void BindModelLists(const Model &mdl, std::vector<BoundDisplayList> &bound_lists, const std::vector<Material> &mats, const PipelineResources &resources) {
+	bound_lists.resize(mdl.lists.size());
 
-	for (size_t i = 0; i < mdl.lists.size(); ++i)
-		BindDisplayList(mdl.lists[i], bound_mdl.bound_lists[i]);
+	for (size_t i = 0; i < mdl.lists.size(); ++i) {
+		const Material &mat = mats[i];
 
+		if (!resources.programs.IsValidRef(mat.program))
+			continue;
+
+		const PipelineProgram &pipeline_shader = resources.programs.Get(mat.program);
+
+		BindDisplayList(mdl.lists[i], bound_lists[i], mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout);
+	}
+}
+
+
+
+
+void BindObject(Scene::Object_ &obj, const PipelineResources &resources) {
+	if (!resources.models.IsValidRef(obj.model))
+		return;
+
+	const Model &mdl = resources.models.Get_unsafe_(obj.model.ref.idx);
+
+
+	BindModelLists(mdl, obj.bound_lists, obj.materials, resources);
 
 
 
 }
-*/
+
+
 
 
 
 void SubmitSceneToPipeline(const Scene &scene, const ViewState &view_state, const PipelineResources &resources) {
-
-
-
-
-
-
 
 
 	const std::vector<Node> all_nodes = scene.GetAllNodes();
@@ -139,37 +145,16 @@ void SubmitSceneToPipeline(const Scene &scene, const ViewState &view_state, cons
 
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
 
 
 
-void TU() {
-	hg::Scene scene;
-	hg::Node node = scene.CreateNode();
 
-	assert(node.IsValid() == true);
-	scene.DestroyNode(node);
-	assert(node.IsValid() == false);
 
-	assert(node.HasTransform() == false);
-	assert(node.HasCamera() == false);
-	assert(node.HasLight() == false);
-	assert(node.HasObject() == false);
-}
+
+
 
 
 
@@ -195,6 +180,17 @@ int main(int narg, const char **args) {
 	PrintProfilerFrame(EndProfilerFrame());
 
 	Vec3 pos(0, 2, -5), rot(0, 0, 0);
+
+
+
+
+Node node = scene.GetNodeEx("scene_range:Car01_Body/Car01_Body_LOD0");
+Scene::Object_ &obj = scene.objects[node.GetObject().ref.idx];
+
+	BindObject(obj, resources);
+
+
+
 
 	while (!glfwWindowShouldClose(win)) {
 		const Mat4 camera_world = TransformationMat4(pos, rot);

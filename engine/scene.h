@@ -27,6 +27,23 @@ namespace hg {
 
 class Scene;
 
+
+
+
+
+struct BoundDisplayList { // links DisplayList to object and its materials
+	sg_pipeline pipeline; // links list attributes to shader inputs
+	sg_bindings bindings; // links list buffers and material resources to shader inputs
+};
+
+
+
+
+
+
+
+
+
 //
 struct NodesChildren {
 	std::vector<NodeRef> GetChildren(NodeRef node) const;
@@ -761,6 +778,7 @@ private:
 		bool ortho;
 	};
 
+public:
 	struct Object_ {
 		ModelRef model;
 		std::vector<Material> materials;
@@ -771,6 +789,8 @@ private:
 		std::vector<MaterialInfo> material_infos;
 
 		std::vector<NodeRef> bones;
+
+		std::vector<BoundDisplayList> bound_lists;
 	};
 
 	struct Light_ {
