@@ -57,35 +57,27 @@ static void test_transform() {
 		transform.SetPos(Vec3::One);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		transform.SetRot(Vec3::One);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetScale(Vec3(0.5f, 0.5f, 0.5f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetTRS(trs);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetParent(InvalidNodeRef);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetParentNode(Node());
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetPosRot(pos, rot);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetWorld(Mat4::Identity);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		transform.SetLocal(Mat4::Identity);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -197,49 +189,38 @@ static void test_camera() {
 		TEST_CHECK(cam.GetZNear() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		TEST_CHECK(cam.GetZFar() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
-		mask = 0;
 		TEST_CHECK(cam.GetFov() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		range = cam.GetZRange();
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		TEST_CHECK(range.znear == 0.01f);
 		TEST_CHECK(range.zfar == 1000.f);
 
-		mask = 0;
 		TEST_CHECK(cam.GetIsOrthographic() == false);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		TEST_CHECK(cam.GetSize() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		cam.SetZNear(1.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		cam.SetZFar(100.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		cam.SetFov(Deg(60.f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		cam.SetZRange(range);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		cam.SetIsOrthographic(true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
-		mask = 0;
 		cam.SetSize(2.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -313,6 +294,9 @@ static void test_object() {
 		Material mat;
 
 		obj.SetModelRef(InvalidModelRef);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		obj.ClearModelRef();
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
 		obj.SetMaterial(0, mat);
@@ -458,16 +442,155 @@ static void test_light() {
 		Light l;
 		TEST_CHECK(l.IsValid() == false);
 
-		// [todo]
-	}
-	{
-		// [todo]
+		mask = 0;
+		l.SetType(LT_Spot);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetShadowType(LST_Map);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetDiffuseColor(Color::Orange);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetDiffuseIntensity(0.5f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetSpecularColor(Color::Yellow);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetSpecularIntensity(0.8f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetRadius(2.f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetInnerAngle(Deg(20.f));
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetOuterAngle(Deg(30.f));
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetPSSMSplit(Vec4(1.f, 10.f, 20.f, 50.f));
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetPriority(1.f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		l.SetShadowBias(0.01f);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetType() == LT_Point);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetShadowType() == LST_None);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetDiffuseColor() == Color::Red);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetDiffuseIntensity() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetSpecularColor() == Color::Red);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetSpecularIntensity() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetRadius() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetInnerAngle() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetOuterAngle() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetPSSMSplit() == default_pssm_split);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetPriority() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(l.GetShadowBias() == default_shadow_bias);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
 	{ 
 		Scene scene;
 		Light l0 = scene.CreateLight();
 
-		// [todo] 
+		mask = 0;
+		l0.SetType(LT_Spot);
+		TEST_CHECK(mask == 0);
+
+		l0.SetShadowType(LST_Map);
+		TEST_CHECK(mask == 0);
+
+		l0.SetDiffuseColor(Color::Orange);
+		TEST_CHECK(mask == 0);
+
+		l0.SetDiffuseIntensity(0.5f);
+		TEST_CHECK(mask == 0);
+
+		l0.SetSpecularColor(Color::Yellow);
+		TEST_CHECK(mask == 0);
+
+		l0.SetSpecularIntensity(0.8f);
+		TEST_CHECK(mask == 0);
+
+		l0.SetRadius(2.f);
+		TEST_CHECK(mask == 0);
+		
+		l0.SetInnerAngle(Deg(20.f));
+		TEST_CHECK(mask == 0);
+
+		l0.SetOuterAngle(Deg(30.f));
+		TEST_CHECK(mask == 0);
+
+		l0.SetPSSMSplit(Vec4(1.f, 10.f, 20.f, 50.f));
+		TEST_CHECK(mask == 0);
+
+		l0.SetPriority(1.f);
+		TEST_CHECK(mask == 0);
+
+		l0.SetShadowBias(0.01f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetType() == LT_Spot);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetShadowType() == LST_Map);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetDiffuseColor() == Color::Orange);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetDiffuseIntensity() == 0.5f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetSpecularColor() == Color::Yellow);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetSpecularIntensity() == 0.8f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetRadius() == 2.f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(l0.GetInnerAngle(), Deg(20.f)) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(l0.GetOuterAngle(), Deg(30.f)) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(AlmostEqual(l0.GetPSSMSplit(), Vec4(1.f, 10.f, 20.f, 50.f), 0.00001f) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(l0.GetPriority() == 1.f);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(TestEqual(l0.GetShadowBias(), 0.01f) == true);
+		TEST_CHECK(mask == 0);
 
 		Light l1 = l0;
 		Light l2 = scene.CreateLight();
