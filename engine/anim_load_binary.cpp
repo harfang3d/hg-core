@@ -205,7 +205,7 @@ void LoadAnimFromBinary(const Reader &ir, const Handle &h, Anim &anim) {
 	if (version >= 2)
 		LoadInstanceAnimTrack(ir, h, anim.instance_anim_track);
 
-	MigrateLegacyAnimTracks(anim);
+	// [todo] MigrateLegacyAnimTracks(anim);
 }
 
 } // namespace hg

@@ -262,7 +262,13 @@ static bool CompareKeyValue(const float &t0, const float &t1, float epsilon) { r
 
 static bool CompareKeyValue(const Vec3 &v_a, const Vec3 &v_b, float epsilon) { return Len(v_a - v_b) <= epsilon; }
 
-static bool CompareKeyValue(const Quaternion &v_a, const Quaternion &v_b, float epsilon) { return Abs(ACos(Dot(v_a, v_b))) <= epsilon * 0.5f; }
+static bool CompareKeyValue(const Quaternion &v_a, const Quaternion &v_b, float epsilon) { 
+	float v = Dot(v_a, v_b);
+	if (v < 0.f) {
+		v = Dot(v_a, v_b * -1.f);
+	}
+	return Abs(ACos(v)) <= epsilon * 0.5f; 
+}
 
 static bool CompareKeyValue(const Color &v_a, const Color &v_b, float epsilon) {
 	return Max(Abs(v_a.r - v_b.r), Max(Abs(v_a.g - v_b.g), Max(Abs(v_a.b - v_b.b), Abs(v_a.a - v_b.a)))) <= epsilon;
@@ -292,9 +298,6 @@ template <typename AnimTrack> size_t SimplifyAnimTrackT(AnimTrack &track, float 
 	}
 	return removed;
 }
-
-//
-void MigrateLegacyAnimTracks(Anim &anim);
 
 //
 bool AnimHasKeys(const Anim &anim);
