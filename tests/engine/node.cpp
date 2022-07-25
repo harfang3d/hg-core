@@ -888,6 +888,87 @@ static void test_collision() {
 	set_log_hook(nullptr, nullptr);
 }
 
+static void test_instance() {
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+
+	{
+		Instance i0;
+		TEST_CHECK(i0.IsValid() == false);
+
+		mask = 0;
+
+		i0.SetPath("instance path");
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		i0.SetOnInstantiateAnim("on instantiate");
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		i0.SetOnInstantiateAnimLoopMode(ALM_Loop);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		i0.ClearOnInstantiateAnim();
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(i0.GetPath().empty() == true);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(i0.GetOnInstantiateAnim().empty() == true);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(i0.GetOnInstantiateAnimLoopMode() == ALM_Once);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(i0.GetOnInstantiatePlayAnimRef() == InvalidScenePlayAnimRef);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+	}
+
+	{
+		Scene scene;
+
+		Instance i0 = scene.CreateInstance();
+		TEST_CHECK(i0.IsValid() == true);
+
+		mask = 0;
+
+		i0.SetPath("instance path");
+		TEST_CHECK(mask == 0);
+
+		i0.SetOnInstantiateAnim("on instantiate");
+		TEST_CHECK(mask == 0);
+
+		i0.SetOnInstantiateAnimLoopMode(ALM_Loop);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(i0.GetPath() == "instance path");
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(i0.GetOnInstantiateAnim() == "on instantiate");
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(i0.GetOnInstantiateAnimLoopMode() == ALM_Loop);
+		TEST_CHECK(mask == 0);
+		
+		TEST_CHECK(i0.GetOnInstantiatePlayAnimRef() == InvalidScenePlayAnimRef);
+		TEST_CHECK(mask == 0);
+		
+		i0.ClearOnInstantiateAnim();
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(i0.GetOnInstantiateAnim().empty() == true);
+		TEST_CHECK(mask == 0);
+
+		Instance i1 = i0;
+		Instance i2 = scene.CreateInstance("another instance");
+		TEST_CHECK(i1 == i0);
+		TEST_CHECK((i2 == i1) == false);
+		TEST_CHECK((i0 == i2) == false);
+	}
+	set_log_hook(nullptr, nullptr);
+}
+
 void test_node() {
 	test_transform();
 	test_camera();
@@ -895,5 +976,6 @@ void test_node() {
 	test_light();
 	test_rigid_body();
 	test_collision();
+	test_instance();
 	// [todo]
 }
