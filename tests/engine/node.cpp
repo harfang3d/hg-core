@@ -19,7 +19,7 @@ static void on_log(const std::string&, int mask, const std::string&, void *user)
 }
 
 static void test_transform() {
-	int mask = 0;
+	int mask = 0; // here mask will serve as an errno substitute.
 
 	set_log_level(LL_All);
 	set_log_hook(on_log, &mask); // mute logs but catch the mask of the log being issued.
@@ -296,8 +296,193 @@ static void test_camera() {
 	set_log_hook(nullptr, nullptr);
 }
 
+static void test_object() {
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+
+	PipelineResources res;
+
+	{ 
+		Object obj;
+		TEST_CHECK(obj.IsValid() == false);
+
+		mask = 0;
+		
+		Material mat;
+
+		obj.SetModelRef(InvalidModelRef);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		obj.SetMaterial(0, mat);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		obj.SetMaterialCount(3);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		obj.SetMaterialName(3, "dummy");
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		obj.SetBoneCount(5);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(obj.SetBone(4, InvalidNodeRef) == false);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(obj.SetBoneNode(2, Node()) == false);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		mask = 0;
+
+		TEST_CHECK(obj.GetModelRef() == InvalidModelRef);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		
+		TEST_CHECK(obj.GetMaterialCount() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		
+		mat = obj.GetMaterial(1);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		TEST_CHECK(mat.program == InvalidPipelineProgramRef);
+		TEST_CHECK(mat.textures.empty() == true);
+		TEST_CHECK(mat.values.empty() == true);
+
+		TEST_CHECK(obj.GetMaterialName(0).empty() == true);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(obj.GetMaterial("any") == nullptr);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		MinMax box;
+		TEST_CHECK(obj.GetMinMax(res, box) == false);
+
+		TEST_CHECK(obj.GetBoneCount() == 0);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(obj.GetBone(0) == InvalidNodeRef);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		TEST_CHECK(obj.GetBone(0) == InvalidNodeRef);
+		
+		Node bone = obj.GetBoneNode(1);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		TEST_CHECK(bone.IsValid() == false);
+	}
+	{
+		Scene scene;
+
+		Object obj = scene.CreateObject();
+		TEST_CHECK(obj.IsValid() == true);
+
+		mask = 0;
+		obj.SetMaterialCount(2);
+		TEST_CHECK(mask == 0);
+		TEST_CHECK(obj.GetMaterialCount() == 2);
+
+		Material mat;
+		mat.flags = 1;
+		obj.SetMaterial(0, mat);
+		TEST_CHECK(mask == 0);
+		
+		mat.flags = 2;
+		obj.SetMaterial(1, mat);
+		TEST_CHECK(mask == 0);
+		
+		mat = obj.GetMaterial(0);
+		TEST_CHECK(mask == 0);
+		TEST_CHECK(mat.flags == 1);
+
+		mat = obj.GetMaterial(1);
+		TEST_CHECK(mask == 0);
+		TEST_CHECK(mat.flags == 2);
+
+		obj.SetMaterialName(0, "material #0");
+		TEST_CHECK(mask == 0);
+		
+		obj.SetMaterialName(1, "material #1");
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(obj.GetMaterialName(0) == "material #0");
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(obj.GetMaterialName(1) == "material #1");
+		TEST_CHECK(mask == 0);
+
+		Material *ptr;
+
+		ptr = obj.GetMaterial("material #0");
+		TEST_CHECK(ptr != nullptr);
+		TEST_CHECK(ptr->flags == 1);
+
+		ptr = obj.GetMaterial("material #1");
+		TEST_CHECK(ptr != nullptr);
+		TEST_CHECK(ptr->flags == 2);
+
+		obj.SetBoneCount(4);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(obj.GetBoneCount() == 4);
+		TEST_CHECK(mask == 0);
+
+		Node node = scene.CreateNode("dummy node");
+		TEST_CHECK(obj.SetBoneNode(0, node) == true);
+
+		TEST_CHECK(obj.GetBone(1) == InvalidNodeRef);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(obj.GetBoneNode(3).IsValid() == false);
+		TEST_CHECK(mask == 0);
+
+		Node n0 = obj.GetBoneNode(0);
+		TEST_CHECK(n0.IsValid() == true);
+		TEST_CHECK(n0.GetName() == "dummy node");
+		TEST_CHECK(mask == 0);
+
+		Object o0 = obj;
+		Object o1 = scene.CreateObject();
+		TEST_CHECK(o0 == obj);
+		TEST_CHECK((obj == o1) == false);
+		TEST_CHECK((o1 == o0) == false);
+	}
+	// [todo] GetMinMax
+
+	set_log_hook(nullptr, nullptr);
+}
+
+static void test_light() {
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+	
+	{ 
+		Light l;
+		TEST_CHECK(l.IsValid() == false);
+
+		// [todo]
+	}
+	{
+		// [todo]
+	}
+	{ 
+		Scene scene;
+		Light l0 = scene.CreateLight();
+
+		// [todo] 
+
+		Light l1 = l0;
+		Light l2 = scene.CreateLight();
+		TEST_CHECK(l0 == l1);
+		TEST_CHECK((l0 == l2) == false);
+		TEST_CHECK((l2 == l1) == false);
+	}
+
+	set_log_hook(nullptr, nullptr);
+}
+
 void test_node() {
 	test_transform();
 	test_camera();
+	test_object();
+	test_light();
 	// [todo]
 }
