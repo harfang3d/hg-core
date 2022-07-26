@@ -969,6 +969,83 @@ static void test_instance() {
 	set_log_hook(nullptr, nullptr);
 }
 
+static void test_script() {
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+
+	{ 
+		Script s0;
+		TEST_CHECK(s0.IsValid() == false);
+	
+		mask = 0;
+
+		s0.SetPath("script_00.lua");
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		ScriptParam p0, p1;
+		p0.type = SPT_Int;
+		p0.iv = 0xcafe;
+
+		TEST_CHECK(s0.SetParam("param_00", p0) == false);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(s0.GetPath().empty() == true);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		TEST_CHECK(s0.HasParam("param_01") == false);
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+
+		p1 = s0.GetParam("param_00");
+		TEST_CHECK((mask & LL_Warning) == LL_Warning);
+		TEST_CHECK(p1.type == SPT_Null);
+		TEST_CHECK(p1.iv == 0);
+	}
+	{
+		Scene scene;
+		Script s0 = scene.CreateScript();
+		TEST_CHECK(s0.IsValid() == true);
+
+		mask = 0;
+
+		s0.SetPath("script_00.lua");
+		TEST_CHECK(mask == 0);
+
+		ScriptParam p0, p1;
+		p0.type = SPT_Int;
+		p0.iv = 0xcafe;
+
+		TEST_CHECK(s0.SetParam("param_00", p0) == true);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(s0.GetPath() == "script_00.lua");
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(s0.HasParam("param_01") == false);
+		TEST_CHECK(mask == 0);
+
+		TEST_CHECK(s0.HasParam("param_00") == true);
+		TEST_CHECK(mask == 0);
+
+		p1 = s0.GetParam("param_00");
+		TEST_CHECK(mask == 0);
+		TEST_CHECK(p1.type == p0.type);
+		TEST_CHECK(p1.iv == p0.iv);
+
+		Script s1 = scene.CreateScript("script_01.lua");
+		Script s2 = s0;
+		TEST_CHECK(s2 == s0);
+		TEST_CHECK((s2 == s1) == false);
+		TEST_CHECK((s1 == s0) == false);
+	}
+	set_log_hook(nullptr, nullptr);
+}
+
+static void test_node_impl() {
+	// [todo]
+}
+
 void test_node() {
 	test_transform();
 	test_camera();
@@ -977,5 +1054,6 @@ void test_node() {
 	test_rigid_body();
 	test_collision();
 	test_instance();
-	// [todo]
+	test_script();
+	test_node_impl();
 }
