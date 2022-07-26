@@ -1206,21 +1206,53 @@ static void test_node_impl() {
 		TEST_CHECK(n0.GetScriptCount() == 0);
 		TEST_CHECK(n0.GetCollisionCount() == 0);
 
-/* [todo]
-			void Enable();
-			void Disable();
-			bool IsEnabled() const;
-			bool IsItselfEnabled() const;
-			void RemoveTransform();
-			void RemoveCamera();
+		n0.Enable();
+		TEST_CHECK(n0.IsEnabled() == false);
+		TEST_CHECK(n0.IsItselfEnabled() == false);
+
+		n0.Disable();
+		TEST_CHECK(n0.IsEnabled() == false);
+		TEST_CHECK(n0.IsItselfEnabled() == false);
+
+		n0.RemoveTransform();
+		TEST_CHECK(n0.HasTransform() == false);
+
+		n0.RemoveCamera();
+		TEST_CHECK(n0.HasCamera() == false);
+
+		n0.RemoveObject();
+		TEST_CHECK(n0.HasObject() == false);
+
+		n0.RemoveLight();
+		TEST_CHECK(n0.HasLight() == false);
+
+		n0.RemoveRigidBody();
+		TEST_CHECK(n0.HasRigidBody() == false);
+	
+		n0.DestroyInstance();
+		TEST_CHECK(n0.HasInstance() == false);
+
+		n0.RemoveScript(script.ref);
+		TEST_CHECK(n0.GetScriptCount() == 0);
+		
+		n0.RemoveScript(0);
+		TEST_CHECK(n0.GetScriptCount() == 0);
+		
+		n0.RemoveScript(script);
+		TEST_CHECK(n0.GetScriptCount() == 0);
+		
+		n0.RemoveCollision(0);
+		TEST_CHECK(n0.GetCollisionCount() == 0);
+
+		n0.RemoveCollision(collision);
+		TEST_CHECK(n0.GetCollisionCount() == 0);
+
+		n0.RemoveCollision(collision.ref);
+		TEST_CHECK(n0.GetCollisionCount() == 0);
+
+		/* [todo]
 			ViewState ComputeCameraViewState(const Vec2 &aspect_ratio);
-			void RemoveObject();
 			bool GetMinMax(const PipelineResources &resources, MinMax &minmax) const;
-			void RemoveLight();
-			void RemoveRigidBody();
-			void RemoveCollision(ComponentRef cref);
-			void RemoveCollision(size_t slot_idx);
-			void RemoveCollision(const Collision &c) { RemoveCollision(c.ref); }
 			bool SetupInstance(
 				const Reader &ir, const ReadProvider &ip, PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
 			bool SetupInstanceFromFile(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
@@ -1231,9 +1263,6 @@ static void test_node_impl() {
 			SceneAnimRef GetInstanceSceneAnim(const std::string &path) const;
 			void StartOnInstantiateAnim();
 			void StopOnInstantiateAnim();
-			void RemoveScript(ComponentRef cref);
-			void RemoveScript(size_t slot_idx);
-			void RemoveScript(const Script &c) { RemoveScript(c.ref); }
 			Mat4 GetWorld() const;
 			Mat4 ComputeWorld() const;
 */
