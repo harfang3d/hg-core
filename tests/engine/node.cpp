@@ -389,6 +389,7 @@ static void test_object() {
 
 		Object obj = scene.CreateObject();
 		TEST_CHECK(obj.IsValid() == true);
+		TEST_CHECK(obj == true);
 
 		mask = 0;
 		obj.SetMaterialCount(2);
@@ -1020,6 +1021,7 @@ static void test_instance() {
 
 		Instance i0 = scene.CreateInstance();
 		TEST_CHECK(i0.IsValid() == true);
+		TEST_CHECK(i0 == true);
 
 		mask = 0;
 
@@ -1147,6 +1149,7 @@ static void test_node_impl() {
 
 		Node n0;
 		TEST_CHECK(n0.IsValid() == false);
+		TEST_CHECK(n0 == false);
 		TEST_CHECK(n0.GetUid() == InvalidNodeRef.idx);
 
 		// Node::(Set|Get)* methods don't issue any warnings if the node is invalid.
@@ -1272,6 +1275,43 @@ static void test_node_impl() {
 		Scene scene;
 		Node n0 = scene.CreateNode("node #00");
 		TEST_CHECK(n0.IsValid() == true);
+
+		TEST_CHECK(n0.GetUid() != InvalidNodeRef.idx);
+
+		n0.SetName("node #00");
+		TEST_CHECK(n0.GetName() == "node #00");
+
+		n0.SetFlags(0xc0c0a);
+		TEST_CHECK(n0.GetFlags() == 0xc0c0a);
+
+		TEST_CHECK(n0.GetWorld() == Mat4::Identity);
+		TEST_CHECK(n0.ComputeWorld() == Mat4::Identity);
+		
+		Vec3 pos(-1.f, 3.f, 5.f);
+		Vec3 rot(Deg3(30.f, 45.f, 60.f));
+		Mat4 world = TransformationMat4(pos, rot);
+		Transform trs = scene.CreateTransform(pos, rot);
+		n0.SetTransform(trs);
+		TEST_CHECK(n0.GetTransform().IsValid() == true);
+		TEST_CHECK(n0.GetTransform() == trs);
+
+		TEST_CHECK(n0.GetWorld() == Mat4::Identity);
+		TEST_CHECK(n0.ComputeWorld() == world);
+		
+		n0.RemoveTransform();
+		TEST_CHECK(n0.GetTransform().IsValid() == false);
+
+		n0.Enable();
+		TEST_CHECK(n0.IsEnabled() == true);
+		TEST_CHECK(n0.IsItselfEnabled() == true);
+
+		n0.Disable();
+		TEST_CHECK(n0.IsEnabled() == false);
+		TEST_CHECK(n0.IsItselfEnabled() == false);
+
+		n0.Enable();
+		TEST_CHECK(n0.IsEnabled() == true);
+		TEST_CHECK(n0.IsItselfEnabled() == true);
 
 		// [todo]
 
