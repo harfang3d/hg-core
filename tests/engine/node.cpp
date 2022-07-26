@@ -57,27 +57,35 @@ static void test_transform() {
 		transform.SetPos(Vec3::One);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		transform.SetRot(Vec3::One);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetScale(Vec3(0.5f, 0.5f, 0.5f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetTRS(trs);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetParent(InvalidNodeRef);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetParentNode(Node());
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetPosRot(pos, rot);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetWorld(Mat4::Identity);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		transform.SetLocal(Mat4::Identity);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -189,38 +197,49 @@ static void test_camera() {
 		TEST_CHECK(cam.GetZNear() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		TEST_CHECK(cam.GetZFar() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		TEST_CHECK(cam.GetFov() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		range = cam.GetZRange();
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		TEST_CHECK(range.znear == 0.01f);
 		TEST_CHECK(range.zfar == 1000.f);
 
+		mask = 0;
 		TEST_CHECK(cam.GetIsOrthographic() == false);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(cam.GetSize() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		cam.SetZNear(1.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		cam.SetZFar(100.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		cam.SetFov(Deg(60.f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		cam.SetZRange(range);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		cam.SetIsOrthographic(true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		cam.SetSize(2.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -293,60 +312,74 @@ static void test_object() {
 		
 		Material mat;
 
+		mask = 0;
 		obj.SetModelRef(InvalidModelRef);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		obj.ClearModelRef();
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		obj.SetMaterial(0, mat);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		obj.SetMaterialCount(3);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		obj.SetMaterialName(3, "dummy");
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		obj.SetBoneCount(5);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(obj.SetBone(4, InvalidNodeRef) == false);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(obj.SetBoneNode(2, Node()) == false);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
 		mask = 0;
-
 		TEST_CHECK(obj.GetModelRef() == InvalidModelRef);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		TEST_CHECK(obj.GetMaterialCount() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		mat = obj.GetMaterial(1);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		TEST_CHECK(mat.program == InvalidPipelineProgramRef);
 		TEST_CHECK(mat.textures.empty() == true);
 		TEST_CHECK(mat.values.empty() == true);
 
+		mask = 0;
 		TEST_CHECK(obj.GetMaterialName(0).empty() == true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(obj.GetMaterial("any") == nullptr);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
 		MinMax box;
 		TEST_CHECK(obj.GetMinMax(res, box) == false);
 
+		mask = 0;
 		TEST_CHECK(obj.GetBoneCount() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(obj.GetBone(0) == InvalidNodeRef);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		TEST_CHECK(obj.GetBone(0) == InvalidNodeRef);
 		
+		mask = 0;
 		Node bone = obj.GetBoneNode(1);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		TEST_CHECK(bone.IsValid() == false);
@@ -446,72 +479,95 @@ static void test_light() {
 		l.SetType(LT_Spot);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetShadowType(LST_Map);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetDiffuseColor(Color::Orange);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetDiffuseIntensity(0.5f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetSpecularColor(Color::Yellow);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetSpecularIntensity(0.8f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetRadius(2.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetInnerAngle(Deg(20.f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetOuterAngle(Deg(30.f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetPSSMSplit(Vec4(1.f, 10.f, 20.f, 50.f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetPriority(1.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		l.SetShadowBias(0.01f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetType() == LT_Point);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetShadowType() == LST_None);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetDiffuseColor() == Color::Red);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetDiffuseIntensity() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetSpecularColor() == Color::Red);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetSpecularIntensity() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetRadius() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetInnerAngle() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetOuterAngle() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetPSSMSplit() == default_pssm_split);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetPriority() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(l.GetShadowBias() == default_shadow_bias);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -613,42 +669,50 @@ static void test_rigid_body() {
 		TEST_CHECK(body.IsValid() == false);
 
 		mask = 0;
-
 		body.SetType(RBT_Kinematic);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		body.SetLinearDamping(0.1f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		body.SetAngularDamping(0.4f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		body.SetRestitution(0.2f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		body.SetFriction(0.01f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		body.SetRollingFriction(0.02f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
 		mask = 0;
-
 		TEST_CHECK(body.GetType() == RBT_Dynamic);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(body.GetLinearDamping() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(body.GetAngularDamping() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(body.GetRestitution() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(body.GetFriction() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(body.GetRollingFriction() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -724,74 +788,94 @@ static void test_collision() {
 		Vec3 pos(5.f, 7.f, -1.f);
 		Vec3 rot(Deg3(30.f, 60.f, -45.f));
 
+		mask = 0;
 		c0.SetType(CT_Capsule);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetLocalTransform(TransformationMat4(pos, rot));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetPosition(pos);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetRotation(rot);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		c0.SetMass(10.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetRadius(3.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetHeight(5.f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetSize(Vec3(2.f, 9.f, 7.f));
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetCollisionResource("dummy collision");
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
 #if 0
+		mask = 0;
 		c0.SetRestitution(0.5f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		c0.SetFriction(0.25f);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 #endif
 
 		mask = 0;
-
 		TEST_CHECK(c0.GetType() == CT_Sphere);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
+		mask = 0;
 		TEST_CHECK(c0.GetLocalTransform() == Mat4::Identity);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetPosition() == Vec3::Zero);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetRotation() == Vec3::Zero);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetMass() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetRadius() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetHeight() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetSize() == Vec3::Zero);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetCollisionResource().empty() == true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		
 #if 0
+		mask = 0;
 		TEST_CHECK(c0.GetRestitution() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(c0.GetFriction() == 0);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 #endif
@@ -899,28 +983,34 @@ static void test_instance() {
 		TEST_CHECK(i0.IsValid() == false);
 
 		mask = 0;
-
 		i0.SetPath("instance path");
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		i0.SetOnInstantiateAnim("on instantiate");
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		i0.SetOnInstantiateAnimLoopMode(ALM_Loop);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		i0.ClearOnInstantiateAnim();
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(i0.GetPath().empty() == true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(i0.GetOnInstantiateAnim().empty() == true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(i0.GetOnInstantiateAnimLoopMode() == ALM_Once);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(i0.GetOnInstantiatePlayAnimRef() == InvalidScenePlayAnimRef);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 	}
@@ -980,7 +1070,6 @@ static void test_script() {
 		TEST_CHECK(s0.IsValid() == false);
 	
 		mask = 0;
-
 		s0.SetPath("script_00.lua");
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
@@ -988,15 +1077,19 @@ static void test_script() {
 		p0.type = SPT_Int;
 		p0.iv = 0xcafe;
 
+		mask = 0;
 		TEST_CHECK(s0.SetParam("param_00", p0) == false);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(s0.GetPath().empty() == true);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		TEST_CHECK(s0.HasParam("param_01") == false);
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 
+		mask = 0;
 		p1 = s0.GetParam("param_00");
 		TEST_CHECK((mask & LL_Warning) == LL_Warning);
 		TEST_CHECK(p1.type == SPT_Null);
@@ -1043,7 +1136,124 @@ static void test_script() {
 }
 
 static void test_node_impl() {
-	// [todo]
+	int mask = 0;
+
+	set_log_level(LL_All);
+	set_log_hook(on_log, &mask);
+
+	{ 
+		Scene scene;
+
+		Node n0;
+		TEST_CHECK(n0.IsValid() == false);
+		TEST_CHECK(n0.GetUid() == InvalidNodeRef.idx);
+
+		// Node::(Set|Get)* methods don't issue any warnings if the node is invalid.
+		n0.SetName("node #00");
+		TEST_CHECK(n0.GetName().empty() == true);
+
+		n0.SetFlags(0xc0c0a);
+		TEST_CHECK(n0.GetFlags() == 0);
+
+		Transform trs = scene.CreateTransform();
+		n0.SetTransform(trs);
+		TEST_CHECK(n0.GetTransform().IsValid() == false);
+		TEST_CHECK((n0.GetTransform() == trs) == false);
+
+		Camera cam = scene.CreateCamera();
+		n0.SetCamera(cam);
+		TEST_CHECK(n0.GetCamera().IsValid() == false);
+		TEST_CHECK((n0.GetCamera() == cam) == false);
+
+		Object obj = scene.CreateObject();
+		n0.SetObject(obj);
+		TEST_CHECK(n0.GetObject().IsValid() == false);
+		TEST_CHECK((n0.GetObject() == obj) == false);
+
+		Light lt = scene.CreateLight();
+		n0.SetLight(lt);
+		TEST_CHECK(n0.GetLight().IsValid() == false);
+		TEST_CHECK((n0.GetLight() == lt) == false);
+
+		RigidBody body = scene.CreateRigidBody();
+		n0.SetRigidBody(body);
+		TEST_CHECK(n0.GetRigidBody().IsValid() == false);
+		TEST_CHECK((n0.GetRigidBody() == body) == false);
+
+		Collision collision = scene.CreateCollision();
+		n0.SetCollision(0, collision);
+		TEST_CHECK(n0.GetCollision(0).IsValid() == false);
+		TEST_CHECK((n0.GetCollision(0) == collision) == false);
+
+		Instance instance = scene.CreateInstance();
+		n0.SetInstance(instance);
+		TEST_CHECK(n0.GetInstance().IsValid() == false);
+		TEST_CHECK((n0.GetInstance() == instance) == false);
+
+		Script script = scene.CreateScript();
+		n0.SetScript(0, script);
+		TEST_CHECK(n0.GetScript(0).IsValid() == false);
+		TEST_CHECK((n0.GetScript(0) == script) == false);
+
+		n0.SetWorld(Mat4::Identity);
+
+		TEST_CHECK(n0.HasTransform() == false);
+		TEST_CHECK(n0.HasCamera() == false);
+		TEST_CHECK(n0.HasObject() == false);
+		TEST_CHECK(n0.HasLight() == false);
+		TEST_CHECK(n0.HasRigidBody() == false);
+		TEST_CHECK(n0.HasInstance() == false);
+		TEST_CHECK(n0.GetScriptCount() == 0);
+		TEST_CHECK(n0.GetCollisionCount() == 0);
+
+/* [todo]
+			void Enable();
+			void Disable();
+			bool IsEnabled() const;
+			bool IsItselfEnabled() const;
+			void RemoveTransform();
+			void RemoveCamera();
+			ViewState ComputeCameraViewState(const Vec2 &aspect_ratio);
+			void RemoveObject();
+			bool GetMinMax(const PipelineResources &resources, MinMax &minmax) const;
+			void RemoveLight();
+			void RemoveRigidBody();
+			void RemoveCollision(ComponentRef cref);
+			void RemoveCollision(size_t slot_idx);
+			void RemoveCollision(const Collision &c) { RemoveCollision(c.ref); }
+			bool SetupInstance(
+				const Reader &ir, const ReadProvider &ip, PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
+			bool SetupInstanceFromFile(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
+			bool SetupInstanceFromAssets(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
+			void DestroyInstance();
+			Node IsInstantiatedBy() const;
+			const SceneView &GetInstanceSceneView() const;
+			SceneAnimRef GetInstanceSceneAnim(const std::string &path) const;
+			void StartOnInstantiateAnim();
+			void StopOnInstantiateAnim();
+			void RemoveScript(ComponentRef cref);
+			void RemoveScript(size_t slot_idx);
+			void RemoveScript(const Script &c) { RemoveScript(c.ref); }
+			Mat4 GetWorld() const;
+			Mat4 ComputeWorld() const;
+*/
+	}
+
+	{
+		Scene scene;
+		Node n0 = scene.CreateNode("node #00");
+		TEST_CHECK(n0.IsValid() == true);
+
+		// [todo]
+
+		Node n1 = scene.CreateNode("node #01");
+		Node n2 = n0;
+		TEST_CHECK(n2 == n0);
+		TEST_CHECK((n1 == n0) == false);
+		TEST_CHECK((n2 == n1) == false);
+	}
+
+	set_log_hook(nullptr, nullptr);
 }
 
 void test_node() {
