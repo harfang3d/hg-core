@@ -1142,6 +1142,7 @@ static void test_node_impl() {
 	set_log_hook(on_log, &mask);
 
 	{ 
+		PipelineResources res;
 		Scene scene;
 
 		Node n0;
@@ -1250,22 +1251,21 @@ static void test_node_impl() {
 		n0.RemoveCollision(collision.ref);
 		TEST_CHECK(n0.GetCollisionCount() == 0);
 
-		/* [todo]
-			ViewState ComputeCameraViewState(const Vec2 &aspect_ratio);
-			bool GetMinMax(const PipelineResources &resources, MinMax &minmax) const;
-			bool SetupInstance(
-				const Reader &ir, const ReadProvider &ip, PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
-			bool SetupInstanceFromFile(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
-			bool SetupInstanceFromAssets(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
-			void DestroyInstance();
-			Node IsInstantiatedBy() const;
-			const SceneView &GetInstanceSceneView() const;
-			SceneAnimRef GetInstanceSceneAnim(const std::string &path) const;
-			void StartOnInstantiateAnim();
-			void StopOnInstantiateAnim();
-			Mat4 GetWorld() const;
-			Mat4 ComputeWorld() const;
-*/
+		ViewState view = n0.ComputeCameraViewState(Vec2(4.f/3.f, 1.f));
+		TEST_CHECK(view.proj == Mat44::Identity);
+		TEST_CHECK(view.view == Mat4::Identity);
+
+		MinMax minmax;
+		TEST_CHECK(n0.GetMinMax(res, minmax) == false);
+		TEST_CHECK(n0.IsInstantiatedBy().IsValid() == false);
+
+		const SceneView& scn_view = n0.GetInstanceSceneView();
+		TEST_CHECK(scn_view.nodes.empty() == true);
+		TEST_CHECK(scn_view.anims.empty() == true);
+		TEST_CHECK(scn_view.scene_anims.empty() == true);
+
+		TEST_CHECK(n0.GetWorld() == Mat4::Identity);
+		TEST_CHECK(n0.ComputeWorld() == Mat4::Identity);
 	}
 
 	{
@@ -1284,6 +1284,17 @@ static void test_node_impl() {
 
 	set_log_hook(nullptr, nullptr);
 }
+
+/* [todo]
+	bool SetupInstance(
+		const Reader &ir, const ReadProvider &ip, PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
+	bool SetupInstanceFromFile(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
+	bool SetupInstanceFromAssets(PipelineResources &resources, const PipelineInfo &pipeline, uint32_t flags = LSSF_AllNodeFeatures);
+	void DestroyInstance();
+	SceneAnimRef GetInstanceSceneAnim(const std::string &path) const;
+	void StartOnInstantiateAnim();
+	void StopOnInstantiateAnim();
+*/
 
 void test_node() {
 	test_transform();
