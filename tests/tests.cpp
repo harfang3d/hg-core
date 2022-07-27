@@ -38,6 +38,7 @@ extern void test_clock();
 extern void test_vertex_layout();
 extern void test_anim();
 extern void test_node();
+extern void test_picture();
 
 //
 TEST_LIST = {
@@ -76,6 +77,7 @@ TEST_LIST = {
 	{"engine.vertex_layout", test_vertex_layout},
 	{"engine.anim", test_anim},
 	{"engine.node", test_node},
+	{"engine.picture", test_picture},
 
 	{NULL, NULL},
 };

@@ -19,21 +19,26 @@ namespace hg {
 
 int size_of(PictureFormat format) {
 	static const int size_of_format[PF_Last] = {0, 3, 4, 16};
+	if (format >= PF_Last)
+		return 0;
 	return size_of_format[format];
 }
 
 size_t GetChannelCount(PictureFormat format) {
 	static const size_t channel_count_format[PF_Last] = {0, 3, 4, 4};
+	if (format >= PF_Last)
+		return 0;
 	return channel_count_format[format];
 }
 
 //
-Picture::Picture() : w(0), h(0), f(PF_RGBA32), has_ownership(0), d(nullptr) {}
+Picture::Picture() : w(0), h(0), f(PF_None), has_ownership(0), d(nullptr) {}
 
 Picture::Picture(uint16_t width, uint16_t height, PictureFormat format)
 	: w(width), h(height), f(format), has_ownership(1), d(new uint8_t[w * h * size_of(f)]) {}
 
-Picture::Picture(void *data, uint16_t width, uint16_t height, PictureFormat format) : w(width), h(height), f(format), d(reinterpret_cast<uint8_t *>(data)) {}
+Picture::Picture(void *data, uint16_t width, uint16_t height, PictureFormat format)
+	: w(width), h(height), f(format), has_ownership(0), d(reinterpret_cast<uint8_t *>(data)) {}
 
 Picture::Picture(const Picture &pic)
 	: w(pic.w), h(pic.h), f(pic.f), has_ownership(pic.has_ownership), d(pic.has_ownership ? new uint8_t[w * h * size_of(f)] : pic.d) {
@@ -103,12 +108,16 @@ Picture MakePicture(const void *data, uint16_t width, uint16_t height, PictureFo
 //
 void Picture::Clear() {
 	w = h = 0;
-	f = PF_RGBA32;
+	f = PF_None;
 
 	if (has_ownership)
 		delete[](reinterpret_cast<uint8_t *>(d));
 	has_ownership = 0;
 	d = nullptr;
+}
+
+bool IsValid(const Picture& picture) {
+	return (picture.GetFormat() != PF_None) && (picture.GetWidth() != 0) && (picture.GetHeight() != 0) && (picture.GetData() != nullptr);
 }
 
 // TODO EJ implement these
@@ -123,7 +132,7 @@ Picture Resize(const Picture &picture, uint16_t width, uint16_t height) {
 
 //
 Color GetPixelRGBA(const Picture &pic, uint16_t x, uint16_t y) {
-	if (x >= pic.GetWidth() || y >= pic.GetHeight())
+	if ((!IsValid(pic)) || (x >= pic.GetWidth()) || (y >= pic.GetHeight()))
 		return Color::Zero;
 
 	const int size = size_of(pic.GetFormat());
@@ -138,7 +147,7 @@ Color GetPixelRGBA(const Picture &pic, uint16_t x, uint16_t y) {
 }
 
 void SetPixelRGBA(Picture &pic, uint16_t x, uint16_t y, const Color &col) {
-	if ((x >= pic.GetWidth()) || (y >= pic.GetHeight()))
+	if ((!IsValid(pic)) || (x >= pic.GetWidth()) || (y >= pic.GetHeight()))
 		return;
 
 	const int size = size_of(pic.GetFormat());

@@ -54,6 +54,8 @@ private:
 	uint8_t *d;
 };
 
+bool IsValid(const Picture &picture);
+
 Picture MakePictureView(void *data, uint16_t width, uint16_t height, PictureFormat format);
 Picture MakePicture(const void *data, uint16_t width, uint16_t height, PictureFormat format);
 
