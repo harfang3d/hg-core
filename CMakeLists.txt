@@ -15,6 +15,7 @@ set_property(CACHE HG_ENGINE_BACKEND PROPERTY STRINGS SOKOL_GLCORE33 SOKOL_GLES2
 
 if(HG_ENABLE_COVERAGE)
 	include(CodeCoverage)
+	set(HG_ENGINE_BACKEND "SOKOL_DUMMY_BACKEND")
 	append_coverage_compiler_flags()
 endif()
 
