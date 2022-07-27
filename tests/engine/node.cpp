@@ -5,11 +5,15 @@
 
 #include <string>
 
+#include <sokol_gfx.h>
+
 #include "engine/node.h"
 
 #include "foundation/log.h"
+#include "foundation/projection.h"
 
 #include "engine/scene.h"
+#include "engine/create_model.h"
 
 using namespace hg;
 
@@ -1272,6 +1276,11 @@ static void test_node_impl() {
 	}
 
 	{
+		sg_desc desc;
+		memset(&desc, 0, sizeof(sg_desc));
+		sg_setup(&desc);
+
+		PipelineResources res;
 		Scene scene;
 		Node n0 = scene.CreateNode("node #00");
 		TEST_CHECK(n0.IsValid() == true);
@@ -1286,7 +1295,13 @@ static void test_node_impl() {
 
 		TEST_CHECK(n0.GetWorld() == Mat4::Identity);
 		TEST_CHECK(n0.ComputeWorld() == Mat4::Identity);
-		
+
+		Node n1 = scene.CreateNode("node #01");
+		Node n2 = n0;
+		TEST_CHECK(n2 == n0);
+		TEST_CHECK((n1 == n0) == false);
+		TEST_CHECK((n2 == n1) == false);
+
 		Vec3 pos(-1.f, 3.f, 5.f);
 		Vec3 rot(Deg3(30.f, 45.f, 60.f));
 		Mat4 world = TransformationMat4(pos, rot);
@@ -1301,6 +1316,10 @@ static void test_node_impl() {
 		n0.RemoveTransform();
 		TEST_CHECK(n0.GetTransform().IsValid() == false);
 
+		trs.SetRot(Vec3::Zero);
+		n0.SetTransform(trs);
+		TEST_CHECK(n0.HasTransform() == true);
+
 		n0.Enable();
 		TEST_CHECK(n0.IsEnabled() == true);
 		TEST_CHECK(n0.IsItselfEnabled() == true);
@@ -1313,13 +1332,114 @@ static void test_node_impl() {
 		TEST_CHECK(n0.IsEnabled() == true);
 		TEST_CHECK(n0.IsItselfEnabled() == true);
 
-		// [todo]
+		VertexLayout layout;
+		layout.Set(VA_Position, SG_VERTEXFORMAT_FLOAT3);
+		layout.Set(VA_Normal, SG_VERTEXFORMAT_FLOAT3);
+		layout.Set(VA_UV0, SG_VERTEXFORMAT_FLOAT2);
 
-		Node n1 = scene.CreateNode("node #01");
-		Node n2 = n0;
-		TEST_CHECK(n2 == n0);
-		TEST_CHECK((n1 == n0) == false);
-		TEST_CHECK((n2 == n1) == false);
+		Model cube = CreateCubeModel(layout, 1.f, 1.f, 1.f);
+		ModelRef model_ref = res.models.Add("cube", cube);
+
+		std::vector<Material> materials;
+		
+		Object obj = scene.CreateObject(model_ref, materials);
+		n0.SetObject(obj);
+		TEST_CHECK(n0.GetObject().IsValid() == true);
+		TEST_CHECK((n0.GetObject() == obj) == true);
+		TEST_CHECK(n0.HasObject() == true);
+
+		MinMax minmax;
+		TEST_CHECK(n0.GetMinMax(res, minmax) == true);
+		TEST_CHECK(AlmostEqual(minmax.mn,-Vec3(0.5), 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(minmax.mx, Vec3(0.5), 0.000001f) == true);
+
+		std::vector<Node> nodes;
+		TEST_CHECK(GetNodesMinMax(nodes, res, minmax) == false);
+
+		nodes.push_back(n0);
+		nodes.push_back(n1);
+
+		// world matrices are not ready yet and only n0 has an object.
+		TEST_CHECK(GetNodesMinMax(nodes, res, minmax) == true);
+		TEST_CHECK(AlmostEqual(minmax.mn, -Vec3(0.5), 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(minmax.mx, Vec3(0.5), 0.000001f) == true);
+
+		Transform trs1 = scene.CreateTransform(Vec3(2.f, 0.f, 3.f));
+		n1.SetTransform(trs1);
+		trs1.SetParentNode(n0);
+
+		n1.SetObject(scene.CreateObject(model_ref, materials));
+		TEST_CHECK(n1.HasObject() == true);
+
+		scene.Update(time_from_ms(20));
+				
+		TEST_CHECK(GetNodesMinMax(nodes, res, minmax) == true);
+		
+		TEST_CHECK(AlmostEqual(minmax.mn, Vec3(-1.5f, 2.5f, 4.5f), 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(minmax.mx, Vec3( 1.5f, 3.5f, 8.5f), 0.000001f) == true);
+		
+		n1.RemoveObject();
+		TEST_CHECK(n1.HasObject() == false);
+		n1.SetObject(scene.CreateObject());
+
+		TEST_CHECK(GetNodesMinMax(nodes, res, minmax) == true);
+
+		TEST_CHECK(AlmostEqual(minmax.mn, Vec3(-1.5f, 2.5f, 4.5f), 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(minmax.mx, Vec3(-0.5f, 3.5f, 5.5f), 0.000001f) == true);
+
+		n0.SetWorld(TranslationMat4(Vec3(2.f, 0.f, 0.f)));
+
+		TEST_CHECK(n0.GetMinMax(res, minmax) == true);
+		TEST_CHECK(AlmostEqual(minmax.mn, Vec3(1.5f, -0.5f, -0.5f), 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(minmax.mx, Vec3(2.5f, 0.5f, 0.5f), 0.000001f) == true);
+
+		Camera cam = scene.CreateCamera(0.1f, 100.f, Deg(60.f));
+		Vec2 ar = ComputeAspectRatioX(16.f, 9.f);
+		n0.SetCamera(cam);
+		ViewState vs = n0.ComputeCameraViewState(ar);
+		Mat4 m = trs.GetWorld() * vs.view;			// must be identity
+		TEST_CHECK(AlmostEqual(GetColumn(m, 0), Vec3::Right, 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(GetColumn(m, 1), Vec3::Up, 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(GetColumn(m, 2), Vec3::Front, 0.000001f) == true);
+		TEST_CHECK(AlmostEqual(GetColumn(m, 3), Vec3::Zero, 0.000001f) == true);
+
+		n0.RemoveCamera();
+		TEST_CHECK(n0.HasCamera() == false);
+
+		n1.SetLight(scene.CreateLight());
+		TEST_CHECK(n1.HasLight() == true);
+
+		n1.RemoveLight();
+		TEST_CHECK(n1.HasLight() == false);
+
+		n0.SetRigidBody(scene.CreateRigidBody());
+		TEST_CHECK(n0.HasRigidBody() == true);
+
+		n0.RemoveRigidBody();
+		TEST_CHECK(n0.HasRigidBody() == false);
+
+		Collision collision = scene.CreateCollision();
+		n0.SetCollision(0, collision);
+		TEST_CHECK(n0.GetCollisionCount() == 1);
+
+		n0.RemoveCollision(collision);
+		TEST_CHECK(n0.GetCollisionCount() == 0);
+
+		n0.RemoveCollision(0);
+		TEST_CHECK(n0.GetCollisionCount() == 0);
+
+		Script script = scene.CreateScript();
+		n1.SetScript(0, script);
+		TEST_CHECK(n1.GetScriptCount() == 1);
+
+		n1.RemoveScript(0);
+		TEST_CHECK(n1.GetScriptCount() == 0);
+
+		n1.RemoveScript(script);
+		TEST_CHECK(n1.GetScriptCount() == 0);
+
+
+		sg_shutdown();
 	}
 
 	set_log_hook(nullptr, nullptr);
