@@ -8,6 +8,7 @@
 #include "engine/picture.h"
 
 #include "foundation/math.h"
+#include "foundation/file.h"
 
 using namespace hg;
 
@@ -54,6 +55,7 @@ void test_picture() {
 		TEST_CHECK(LoadGIF(pic0, "unknown.gif") == false);
 		TEST_CHECK(LoadPSD(pic0, "unknown.psd") == false);
 		TEST_CHECK(LoadJPG(pic0, "unknown.jpg") == false);
+		TEST_CHECK(LoadPicture(pic0, "unknown.png") == false);
 	}
 
 	{ 
@@ -130,10 +132,66 @@ void test_picture() {
 		TEST_CHECK(pic1.HasDataOwnership() == true);
 
 		Picture pic2(pic1);
-		TEST_CHECK(pic2.GetWidth() == pic2.GetWidth());
-		TEST_CHECK(pic2.GetHeight() == pic2.GetHeight());
-		TEST_CHECK(pic2.GetFormat() == pic2.GetFormat());
+		TEST_CHECK(pic2.GetWidth() == pic1.GetWidth());
+		TEST_CHECK(pic2.GetHeight() == pic1.GetHeight());
+		TEST_CHECK(pic2.GetFormat() == pic1.GetFormat());
 		TEST_CHECK(pic2.GetData() != pic1.GetData());
 		TEST_CHECK(pic2.HasDataOwnership() == true);
+	}
+
+	{ 
+		uint16_t w = 256;
+		uint16_t h = 256;
+		PictureFormat fmt = PF_RGBA32;
+		
+		Picture pic0(w, h, fmt);
+		uint8_t *ptr = pic0.GetData();
+		for (uint16_t j = 0; j < h; j++) {
+			for (uint16_t i = 0; i < w; i++) {
+				for (uint8_t k = 0; k < 4; k++) {
+					uint8_t c = (((uintptr_t)ptr) >> (8*k)) & 0xff;
+					*ptr++ = c;
+				}
+			}
+		}
+
+		{
+			Picture pic1;
+			TEST_CHECK(SavePNG(pic0, "picture.png") == true);
+			TEST_CHECK(LoadPNG(pic1, "picture.png") == true);
+			TEST_CHECK(pic1.GetWidth() == pic0.GetWidth());
+			TEST_CHECK(pic1.GetHeight() == pic0.GetHeight());
+			TEST_CHECK(pic1.GetFormat() == pic0.GetFormat());
+			TEST_CHECK(pic1.HasDataOwnership() == true);
+			TEST_CHECK(memcmp(pic1.GetData(), pic0.GetData(), w * h * size_of(fmt)) == 0);
+			TEST_CHECK(SavePNG(pic0, "ZZ://unreachable/picture.png") == false);
+			Unlink("picture.png");
+		}
+
+		{
+			Picture pic1;
+			TEST_CHECK(SaveBMP(pic0, "picture.bmp") == true);
+			TEST_CHECK(LoadBMP(pic1, "picture.bmp") == true);
+			TEST_CHECK(pic1.GetWidth() == pic0.GetWidth());
+			TEST_CHECK(pic1.GetHeight() == pic0.GetHeight());
+			TEST_CHECK(pic1.GetFormat() == pic0.GetFormat());
+			TEST_CHECK(pic1.HasDataOwnership() == true);
+			TEST_CHECK(memcmp(pic1.GetData(), pic0.GetData(), w * h * size_of(fmt)) == 0);
+			TEST_CHECK(SaveBMP(pic0, "ZZ://unreachable/picture.bmp") == false);
+			Unlink("picture.bmp");
+		}
+
+		{
+			Picture pic1;
+			TEST_CHECK(SaveTGA(pic0, "picture.tga") == true);
+			TEST_CHECK(LoadTGA(pic1, "picture.tga") == true);
+			TEST_CHECK(pic1.GetWidth() == pic0.GetWidth());
+			TEST_CHECK(pic1.GetHeight() == pic0.GetHeight());
+			TEST_CHECK(pic1.GetFormat() == pic0.GetFormat());
+			TEST_CHECK(pic1.HasDataOwnership() == true);
+			TEST_CHECK(memcmp(pic1.GetData(), pic0.GetData(), w * h * size_of(fmt)) == 0);
+			TEST_CHECK(SaveTGA(pic0, "ZZ://unreachable/picture.tga") == false);
+			Unlink("picture.tga");
+		}
 	}
 }

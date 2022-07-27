@@ -160,7 +160,7 @@ void SetPixelRGBA(Picture &pic, uint16_t x, uint16_t y, const Color &col) {
 
 //
 struct STB_callbacks {
-	ScopedFile file;
+	File file;
 	stbi_io_callbacks clbk;
 };
 
@@ -175,7 +175,7 @@ STB_callbacks open_STB_file(const std::string &path) {
 
 static bool load_STB_picture(Picture &pic, const std::string &path) {
 	STB_callbacks cb = open_STB_file(path);
-	if (!cb.file)
+	if (!IsValid(cb.file))
 		return false;
 
 	int x, y, n;
@@ -186,6 +186,7 @@ static bool load_STB_picture(Picture &pic, const std::string &path) {
 	pic.CopyData(data, x, y, PF_RGBA32);
 
 	stbi_image_free(data);
+	Close(cb.file);
 	return true;
 }
 
