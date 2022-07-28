@@ -447,6 +447,27 @@ struct UniformSetTexture { // burn it with fire, complete insanity
 UniformSetTexture MakeUniformSetTexture(const std::string &name, const Texture &texture, uint8_t stage);
 
 //
+struct UniformData { // stored in material, links to Shader.uniforms
+	UniformData() { std::fill(offset, offset + SG_MAX_UB_MEMBERS, 0); }
+
+	uint16_t offset[SG_MAX_UB_MEMBERS];
+	std::vector<int8_t> data;
+};
+
+int GetUniformDataIndex(const std::string &name, const Shader &shader);
+
+template <typename T> T GetUniformDataValue(const UniformData &data, const int index) { return *reinterpret_cast<T *>(&data.data[data.offset[index]]); }
+template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
+	*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
+}
+
+const void *GetUniformDataPtr(const UniformData &data);
+size_t GetUniformDataSize(const UniformData &data);
+
+void SetupShaderUniformData(const Shader &shader, UniformData &data);
+
+
+//
 static const int MF_EnableSkinning = 0x01;
 static const int MF_DiffuseUV1 = 0x02;
 static const int MF_SpecularUV1 = 0x04;
@@ -483,6 +504,8 @@ struct Material { // 56B
 
 	RenderState state;
 	uint8_t flags;
+
+	UniformData uniform_data;
 };
 
 Material CreateMaterial(PipelineProgramRef prg);

@@ -41,61 +41,40 @@ sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, co
 	return sg_make_pipeline(&pipeline_desc);
 }
 
-
-
-
 //
-void BindDisplayList(const DisplayList &list, BoundDisplayList &bound_list, const VertexLayout &vtx_layout, sg_shader shader, const ShaderLayout &shader_layout) {
-	memset(&bound_list.bindings, 0, sizeof(sg_bindings));
-
-	bound_list.bindings.index_buffer = list.index_buffer;
-	bound_list.bindings.vertex_buffers[0] = list.vertex_buffer;
-
-	//
-	bound_list.pipeline = MakePipeline(vtx_layout, shader, shader_layout); // MUST BE REMADE ON SHADER CHANGE!
-}
-
-
-
-//
-void BindModelLists(const Model &mdl, std::vector<BoundDisplayList> &bound_lists, const std::vector<Material> &mats, const PipelineResources &resources) {
-	bound_lists.resize(mdl.lists.size());
-
-	for (size_t i = 0; i < mdl.lists.size(); ++i) {
-		const Material &mat = mats[i];
-
-		if (!resources.programs.IsValidRef(mat.program))
-			continue;
-
-		const PipelineProgram &pipeline_shader = resources.programs.Get(mat.program);
-
-		BindDisplayList(mdl.lists[i], bound_lists[i], mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout);
-	}
-}
-
-
-
-
 void BindObject(Scene::Object_ &obj, const PipelineResources &resources) {
 	if (!resources.models.IsValidRef(obj.model))
 		return;
 
 	const Model &mdl = resources.models.Get_unsafe_(obj.model.ref.idx);
 
+	obj.bound_lists.resize(mdl.lists.size());
 
-	BindModelLists(mdl, obj.bound_lists, obj.materials, resources);
+	for (size_t i = 0; i < mdl.lists.size(); ++i) {
+		const Material &mat = obj.materials[i];
 
+		if (!resources.programs.IsValidRef(mat.program))
+			continue;
 
+		const DisplayList &list = mdl.lists[i];
+		BoundDisplayList &bound_list = obj.bound_lists[i];
 
+		const PipelineProgram &pipeline_shader = resources.programs.Get(mat.program);
+
+		memset(&bound_list.bindings, 0, sizeof(sg_bindings));
+
+		bound_list.bindings.index_buffer = list.index_buffer;
+		bound_list.bindings.vertex_buffers[0] = list.vertex_buffer;
+
+		bound_list.pipeline = MakePipeline(mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout); // MUST BE REMADE ON SHADER CHANGE!
+	}
 }
 
 
 
 
-
+//
 void SubmitSceneToPipeline(const Scene &scene, const ViewState &view_state, const PipelineResources &resources) {
-
-
 	const std::vector<Node> all_nodes = scene.GetAllNodes();
 
 	for (std::vector<Node>::const_iterator i = all_nodes.begin(); i != all_nodes.end(); ++i) {
@@ -148,6 +127,43 @@ void SubmitSceneToPipeline(const Scene &scene, const ViewState &view_state, cons
 }
 
 
+
+
+
+
+void DrawObject(Scene::Object_ &obj, PipelineResources &resources, const Mat44 &mvp) {
+	if (!resources.models.IsValidRef(obj.model))
+		return;
+
+	const Model &mdl = resources.models.Get(obj.model);
+	const size_t list_count = mdl.lists.size();
+
+	for (size_t i = 0; i < list_count; ++i) {
+		const DisplayList &list = mdl.lists[i];
+		const BoundDisplayList &bound_list = obj.bound_lists[i];
+
+		const uint16_t mat_idx = mdl.mats[i];
+		Material &mat = obj.materials[mat_idx];
+
+		const PipelineProgram &program = resources.programs.Get(mat.program);
+
+		//
+		sg_apply_pipeline(bound_list.pipeline);
+		sg_apply_bindings(bound_list.bindings);
+
+		// TODO set uniform values
+		const int mvp_idx = GetUniformDataIndex("mvp", program.shader);
+		SetUniformDataValue(mat.uniform_data, mvp_idx, mvp);
+
+		//
+		sg_range range;
+		range.ptr = GetUniformDataPtr(mat.uniform_data);
+		range.size = GetUniformDataSize(mat.uniform_data);
+		sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, range);
+
+		sg_draw(0, list.element_count, 1);
+	}
+}
 
 
 
@@ -206,8 +222,10 @@ Scene::Object_ &obj = scene.objects[node.GetObject().ref.idx];
 		view_state.view = InverseFast(camera_world);
 		view_state.frustum = MakeFrustum(projection, camera_world);
 
-		SubmitSceneToPipeline(scene, view_state, resources);
+		// SubmitSceneToPipeline(scene, view_state, resources);
 
+		const Mat44 mvp = Transpose(view_state.proj * view_state.view);
+		DrawObject(obj, resources, mvp);
 
 /*
 		vs_params.mvp = Transpose(proj * view);

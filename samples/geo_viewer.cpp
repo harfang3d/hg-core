@@ -55,58 +55,6 @@ sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, co
 }
 
 //
-struct UniformData { // stored in material, links to Shader.uniforms
-	UniformData() { std::fill(offset, offset + SG_MAX_UB_MEMBERS, 0); }
-
-	uint16_t offset[SG_MAX_UB_MEMBERS];
-	std::vector<int8_t> data;
-};
-
-int GetUniformDataIndex(const std::string &name, const Shader &shader) {
-	for (int i = 0; i < SG_MAX_UB_MEMBERS; ++i)
-		if (shader.uniforms.uniform[i].name == name)
-			return i;
-	return -1;
-}
-
-template <typename T> T GetUniformDataValue(const UniformData &data, const int index) { return *reinterpret_cast<T *>(&data.data[data.offset[index]]); }
-template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
-	*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
-}
-
-const void *GetUniformDataPtr(const UniformData &data) { return data.data.data(); }
-size_t GetUniformDataSize(const UniformData &data) { return data.data.size(); }
-
-void SetupShaderUniformData(const Shader &shader, UniformData &data) {
-	size_t offset = 0;
-
-	for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
-		const sg_uniform_type type = shader.uniforms.uniform[i].type;
-
-		data.offset[i] = numeric_cast<uint16_t>(offset);
-
-		if (type == SG_UNIFORMTYPE_FLOAT)
-			offset += 4;
-		else if (type == SG_UNIFORMTYPE_FLOAT2)
-			offset += 4 * 2;
-		else if (type == SG_UNIFORMTYPE_FLOAT3)
-			offset += 4 * 3;
-		else if (type == SG_UNIFORMTYPE_FLOAT4)
-			offset += 4 * 4;
-		else if (type == SG_UNIFORMTYPE_INT)
-			offset += 4;
-		else if (type == SG_UNIFORMTYPE_INT2)
-			offset += 4 * 2;
-		else if (type == SG_UNIFORMTYPE_INT3)
-			offset += 4 * 3;
-		else if (type == SG_UNIFORMTYPE_INT4)
-			offset += 4 * 4;
-		else if (type == SG_UNIFORMTYPE_MAT4)
-			offset += 4 * 4 * 4; // float 4x4
-	}
-
-	data.data.resize(offset);
-}
 
 //
 struct RenderMaterial {

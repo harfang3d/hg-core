@@ -414,6 +414,49 @@ TextureRef SkipLoadOrQueueTextureLoad(
 }
 
 //
+int GetUniformDataIndex(const std::string &name, const Shader &shader) {
+	for (int i = 0; i < SG_MAX_UB_MEMBERS; ++i)
+		if (shader.uniforms.uniform[i].name == name)
+			return i;
+	return -1;
+}
+
+const void *GetUniformDataPtr(const UniformData &data) { return data.data.data(); }
+size_t GetUniformDataSize(const UniformData &data) { return data.data.size(); }
+
+void SetupShaderUniformData(const Shader &shader, UniformData &data) {
+	size_t offset = 0;
+
+	for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+		const sg_uniform_type type = shader.uniforms.uniform[i].type;
+
+		data.offset[i] = numeric_cast<uint16_t>(offset);
+
+		if (type == SG_UNIFORMTYPE_FLOAT)
+			offset += 4;
+		else if (type == SG_UNIFORMTYPE_FLOAT2)
+			offset += 4 * 2;
+		else if (type == SG_UNIFORMTYPE_FLOAT3)
+			offset += 4 * 3;
+		else if (type == SG_UNIFORMTYPE_FLOAT4)
+			offset += 4 * 4;
+		else if (type == SG_UNIFORMTYPE_INT)
+			offset += 4;
+		else if (type == SG_UNIFORMTYPE_INT2)
+			offset += 4 * 2;
+		else if (type == SG_UNIFORMTYPE_INT3)
+			offset += 4 * 3;
+		else if (type == SG_UNIFORMTYPE_INT4)
+			offset += 4 * 4;
+		else if (type == SG_UNIFORMTYPE_MAT4)
+			offset += 4 * 4 * 4; // float 4x4
+	}
+
+	data.data.resize(offset);
+}
+
+
+//
 enum legacy_Attrib {
 	lA_Position,
 	lA_Normal,
@@ -568,8 +611,6 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 
 			if (idx_type_size == 0)
 				break; // EOLists
-
-			//__ASSERT_MSG__(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
 		}
 
 		// index buffer
