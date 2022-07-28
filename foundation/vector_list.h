@@ -106,7 +106,15 @@ public:
 
 		inline bool operator==(const iterator &i_) const { return i == i_.i; }
 		inline bool operator!=(const iterator &i_) const { return i != i_.i; }
-		inline void operator++() { i = c->next(i); }
+		inline iterator &operator++() {
+			i = c->next(i);
+			return *this;
+		}
+		inline iterator operator++(int) {
+			iterator tmp = *this;
+			i = c->next();
+			return tmp;
+		}
 
 		inline uint32_t idx() const { return i; }
 

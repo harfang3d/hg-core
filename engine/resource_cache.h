@@ -73,8 +73,8 @@ public:
 	}
 
 	void DestroyAll() {
-		for (res_iterator i = resources.begin(); i < resources.end(); i++) {
-			_destroy(i.T_);
+		for (res_iterator i = resources.begin(); i != resources.end(); ++i) {
+			_destroy(i->T_);
 		}
 		resources.clear();
 		name_to_ref.clear();
@@ -114,7 +114,8 @@ public:
 		return std::string();
 	}
 
-	const T &Get(RefType ref) const { return resources.is_valid(ref.ref) ? resources[ref.ref.idx].T_ : dflt; }
+	const T &Get(RefType ref) const { return IsValidRef(ref) ? resources[ref.ref.idx].T_ : dflt; }
+	T &Get(RefType ref) { return IsValidRef(ref) ? resources[ref.ref.idx].T_ : dflt; }
 
 	const T &Get_unsafe_(uint16_t idx) const {
 		if (idx != 0xffff) {
@@ -127,11 +128,6 @@ public:
 	const T &Get(const std::string &name) const {
 		const_dict_iterator i = name_to_ref.find(name);
 		return i != name_to_ref.end() ? resources[i->second.ref.idx].T_ : dflt;
-	}
-
-	T &Get(RefType ref) {
-		__ASSERT__(IsValidRef(ref));
-		return resources[ref.ref.idx].T_;
 	}
 
 	gen_ref first_ref() const { return resources.first_ref(); }
