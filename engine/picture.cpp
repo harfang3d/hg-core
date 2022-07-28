@@ -116,10 +116,6 @@ void Picture::Clear() {
 	d = nullptr;
 }
 
-bool IsValid(const Picture& picture) {
-	return (picture.GetFormat() != PF_None) && (picture.GetWidth() != 0) && (picture.GetHeight() != 0) && (picture.GetData() != nullptr);
-}
-
 // TODO EJ implement these
 Picture Crop(const Picture &picture, uint16_t width, uint16_t height) { return picture; }
 Picture Resize(const Picture &picture, uint16_t width, uint16_t height) {
@@ -132,7 +128,7 @@ Picture Resize(const Picture &picture, uint16_t width, uint16_t height) {
 
 //
 Color GetPixelRGBA(const Picture &pic, uint16_t x, uint16_t y) {
-	if ((!IsValid(pic)) || (x >= pic.GetWidth()) || (y >= pic.GetHeight()))
+	if ((!pic.IsValid()) || (x >= pic.GetWidth()) || (y >= pic.GetHeight()))
 		return Color::Zero;
 
 	const int size = size_of(pic.GetFormat());
@@ -147,7 +143,7 @@ Color GetPixelRGBA(const Picture &pic, uint16_t x, uint16_t y) {
 }
 
 void SetPixelRGBA(Picture &pic, uint16_t x, uint16_t y, const Color &col) {
-	if ((!IsValid(pic)) || (x >= pic.GetWidth()) || (y >= pic.GetHeight()))
+	if ((!pic.IsValid()) || (x >= pic.GetWidth()) || (y >= pic.GetHeight()))
 		return;
 
 	const int size = size_of(pic.GetFormat());
@@ -250,7 +246,6 @@ bool SaveHDR(const Picture &pic, const std::string &path) {
 		return false;
 
 	int comp = 4;
-	assert(pic.GetFormat() == PF_RGBA32F);
 	if (pic.GetFormat() != PF_RGBA32F)
 		return false;
 

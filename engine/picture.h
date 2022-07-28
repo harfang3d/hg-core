@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string>
 
+#include <foundation/cext.h>
 #include <foundation/color.h>
 
 namespace hg {
@@ -23,6 +24,8 @@ public:
 	~Picture();
 
 	Picture &operator=(const Picture &pic);
+
+	bool IsValid() const { return (f != PF_None) && (w != 0) && (h != 0) && (d != nullptr); }
 
 	uint16_t GetWidth() const { return w; }
 	uint16_t GetHeight() const { return h; }
@@ -53,8 +56,6 @@ private:
 
 	uint8_t *d;
 };
-
-bool IsValid(const Picture &picture);
 
 Picture MakePictureView(void *data, uint16_t width, uint16_t height, PictureFormat format);
 Picture MakePicture(const void *data, uint16_t width, uint16_t height, PictureFormat format);

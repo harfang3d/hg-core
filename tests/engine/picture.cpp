@@ -1,5 +1,7 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
+#include <math.h>
+
 #define TEST_NO_MAIN
 #include "acutest.h"
 
@@ -32,7 +34,7 @@ void test_picture() {
 		TEST_CHECK(pic0.GetFormat() == PF_None);
 		TEST_CHECK(pic0.GetData() == nullptr);
 		TEST_CHECK(pic0.HasDataOwnership() == false);
-		TEST_CHECK(IsValid(pic0) == false);
+		TEST_CHECK(pic0.IsValid() == false);
 
 		SetPixelRGBA(pic0, 0, 0, Color::Yellow);
 		TEST_CHECK(GetPixelRGBA(pic0, 0, 0) == Color::Zero);
@@ -65,7 +67,7 @@ void test_picture() {
 		TEST_CHECK(pic0.GetFormat() == PF_RGB24);
 		TEST_CHECK(pic0.GetData() != nullptr);
 		TEST_CHECK(pic0.HasDataOwnership() == true);
-		TEST_CHECK(IsValid(pic0) == true);
+		TEST_CHECK(pic0.IsValid() == true);
 
 		SetPixelRGBA(pic0, 7, 9, Color::Orange);
 		Color c = GetPixelRGBA(pic0, 7, 9);
@@ -76,14 +78,14 @@ void test_picture() {
 		TEST_CHECK(GetPixelRGBA(pic0, 20, 8) == Color::Zero);
 
 		pic0.Clear();
-		TEST_CHECK(IsValid(pic0) == false);
+		TEST_CHECK(pic0.IsValid() == false);
 
 		uint16_t w = 12;
 		uint16_t h = 8;
 		PictureFormat fmt = PF_RGBA32;
 		uint8_t *data = new uint8_t[w * h * size_of(fmt)];
 		pic0 = MakePictureView(data, w, h, fmt);
-		TEST_CHECK(IsValid(pic0) == true);
+		TEST_CHECK(pic0.IsValid() == true);
 		TEST_CHECK(pic0.HasDataOwnership() == false);
 		TEST_CHECK(pic0.GetData() == data);
 		TEST_CHECK(pic0.GetWidth() == w);
@@ -193,5 +195,86 @@ void test_picture() {
 			TEST_CHECK(SaveTGA(pic0, "ZZ://unreachable/picture.tga") == false);
 			Unlink("picture.tga");
 		}
+	}
+
+	{
+		uint16_t w = 256;
+		uint16_t h = 256;
+		PictureFormat fmt = PF_RGBA32F;
+
+		Picture pic0(w, h, fmt);
+		float *ptr = reinterpret_cast<float*>(pic0.GetData());
+		float rmax = sqrt(2.f) / 2.f;
+		for (uint16_t j = 0; j < h; j++) {
+			for (uint16_t i = 0; i < w; i++) {
+				float dx = 0.5f - (i / (float)w);
+				float dy = 0.5f - (j / (float)h);
+				float r = sqrt(dx * dx + dy * dy) / rmax;
+				float t = atan2(dy, dx);
+				*ptr++ = r;
+				*ptr++ = 0.5f * cos(t) + 0.5f;
+				*ptr++ = 0.5f * sin(t) + 0.5f;
+				*ptr++ = r;
+			}
+		}
+
+		{
+			Picture pic1;
+			TEST_CHECK(SaveHDR(pic0, "picture.hdr") == true);
+			TEST_CHECK(LoadPicture(pic1, "picture.hdr") == true);
+			TEST_CHECK(pic1.GetWidth() == pic0.GetWidth());
+			TEST_CHECK(pic1.GetHeight() == pic0.GetHeight());
+			TEST_CHECK(pic1.HasDataOwnership() == true);
+			TEST_CHECK(SaveHDR(pic0, "ZZ://unreachable/picture.hdr") == false);
+			TEST_CHECK(SaveHDR(pic1, "picture.hdr") == false);
+			// We can really compare the two images...
+			Unlink("picture.hdr");
+		}
+
+		{ 
+			Picture pic1;
+
+			File out = OpenWrite("picture.raw");
+			Write(out, pic0.GetData(), w * h * size_of(fmt));
+			Close(out);
+
+			TEST_CHECK(LoadPicture(pic1, "picture.raw") == false);
+			Unlink("picture.raw");
+		}
+	}
+
+	{ 
+		Picture pic0(256, 256, PF_RGB24);
+
+		uint8_t *p0 = pic0.GetData();
+		for (uint16_t j = 0; j < 256; j++) {
+			for (uint16_t i = 0; i < 256; i++) {
+				uint8_t c = (((i & 32) ^ (j & 32)) >> 5) + 0xff; 
+
+				*p0++ = c;
+				*p0++ = c;
+				*p0++ = c;
+			}
+		}
+
+		Picture pic1 = Resize(pic0, 32, 32);
+		TEST_CHECK(pic1.IsValid());
+		TEST_CHECK(pic1.GetWidth() == 32);
+		TEST_CHECK(pic1.GetHeight() == 32);
+		TEST_CHECK(pic1.GetFormat() == pic0.GetFormat());
+
+		bool ok = true;
+		uint8_t *p1 = pic1.GetData();
+		uint16_t i, j;
+		for (j = 0; ok && (j < 32); j++) {
+			for (i = 0; ok && (i < 32); i++, p1+=3) {
+				uint8_t expected = (((i & 4) ^ (j & 4)) >> 2) + 0xff;
+				// we threshold the pixel value in order to counter scaling interpolation
+				ok = ok && (expected ? (p1[0] >= 128) : (p1[0] < 128));
+				ok = ok && (expected ? (p1[1] >= 128) : (p1[1] < 128));
+				ok = ok && (expected ? (p1[2] >= 128) : (p1[2] < 128));
+			}
+		}
+		TEST_CHECK(ok == true);
 	}
 }
