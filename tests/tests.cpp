@@ -39,6 +39,7 @@ extern void test_vertex_layout();
 extern void test_anim();
 extern void test_node();
 extern void test_picture();
+extern void test_resource_cache();
 
 //
 TEST_LIST = {
@@ -78,6 +79,7 @@ TEST_LIST = {
 	{"engine.anim", test_anim},
 	{"engine.node", test_node},
 	{"engine.picture", test_picture},
+	{"engine.resource_cache", test_resource_cache},
 
 	{NULL, NULL},
 };

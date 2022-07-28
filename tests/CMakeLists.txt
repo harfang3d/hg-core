@@ -37,6 +37,7 @@ set(TEST_ENGINE_SRCS
 	engine/anim.cpp
 	engine/node.cpp
 	engine/picture.cpp
+	engine/resource_cache.cpp
 )
 
 add_executable(tests tests.cpp utils.cpp utils.h ${TEST_FOUNDATION_SRCS} ${TEST_ENGINE_SRCS})

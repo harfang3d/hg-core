@@ -591,10 +591,10 @@ struct PipelineResources {
 	PipelineResources() : /*programs(Destroy),*/ textures(Destroy), materials(Destroy), models(Destroy) {}
 	~PipelineResources() { DestroyAll(); }
 
-	//	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
-	ResourceCache<Texture, TextureRef> textures;
-	ResourceCache<Material, MaterialRef> materials;
-	ResourceCache<Model, ModelRef> models;
+	//	ResourceCache<PipelineProgram> programs;
+	ResourceCache<Texture> textures;
+	ResourceCache<Material> materials;
+	ResourceCache<Model> models;
 
 	std::deque<TextureLoad> texture_loads;
 	std::deque<ModelLoad> model_loads;
