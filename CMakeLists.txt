@@ -32,3 +32,11 @@ add_subdirectory(tests)
 
 add_subdirectory(app_glfw)
 add_subdirectory(samples)
+
+#
+include(FetchContent)
+FetchContent_Declare(PVS_CMakeModule GIT_REPOSITORY "https://github.com/viva64/pvs-studio-cmake-module.git" GIT_TAG "master")
+FetchContent_MakeAvailable(PVS_CMakeModule)
+include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
+
+pvs_studio_add_target(TARGET foundation.analyze ALL FORMAT fullhtml ANALYZE foundation MODE MISRA:1,2 LOG pvs_report_foundation CONVERTER_ARGS -m misra)
