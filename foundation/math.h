@@ -71,12 +71,20 @@ inline bool NotEqual(float a, float b) {
 	return Abs(a - b) > std::numeric_limits<float>::epsilon();
 }
 
+inline bool AlmostEqual(float a, float b, float e = 0.00001f) {
+	return Abs(a - b) <= e;
+}
+
 inline bool EqualZero(float a) {
 	return Abs(a) <= std::numeric_limits<float>::epsilon();
 }
 
 inline bool NotEqualZero(float a) {
 	return Abs(a) > std::numeric_limits<float>::epsilon();
+}
+
+inline bool AlmostEqualZero(float a, float e) {
+	return Abs(a) <= e;
 }
 
 float Pow(float v, float exp);

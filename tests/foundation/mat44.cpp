@@ -149,18 +149,18 @@ void test_mat44() {
 		const Mat44 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f);
 		const Vec3 u(0.1f, 0.2f, 0.3f);
 		Vec3 v = m * u;
-		TEST_CHECK(TestEqual(v.x, 16.8f));
-		TEST_CHECK(TestEqual(v.y, 18.4f));
-		TEST_CHECK(TestEqual(v.z, 20.0f));
+		TEST_CHECK(Equal(v.x, 16.8f));
+		TEST_CHECK(Equal(v.y, 18.4f));
+		TEST_CHECK(Equal(v.z, 20.0f));
 	}
 	{
 		const Mat44 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f);
 		const Vec4 u(0.1f, 0.2f, 0.3f, 0.4f);
 		Vec4 v = m * u;
-		TEST_CHECK(TestEqual(v.x, 9.f));
-		TEST_CHECK(TestEqual(v.y, 10.f));
-		TEST_CHECK(TestEqual(v.z, 11.f));
-		TEST_CHECK(TestEqual(v.w, 12.f));
+		TEST_CHECK(Equal(v.x, 9.f));
+		TEST_CHECK(Equal(v.y, 10.f));
+		TEST_CHECK(Equal(v.z, 11.f));
+		TEST_CHECK(Equal(v.w, 12.f));
 	}
 	{
 		const Mat44 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f);

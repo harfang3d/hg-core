@@ -58,6 +58,10 @@ bool NotEqual(const Vec3 &a, const Vec3 &b) {
 	return NotEqual(a.x, b.x) || NotEqual(a.y, b.y) || NotEqual(a.z, b.z);
 }
 
+bool AlmostEqual(const Vec3 &a, const Vec3 &b, float e) {
+	return AlmostEqual(a.x, b.x, e) && AlmostEqual(a.y, b.y, e) && AlmostEqual(a.z, b.z, e);
+}
+
 //
 float Dist2(const Vec3 &a, const Vec3 &b) {
 	return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y) + (b.z - a.z) * (b.z - a.z);

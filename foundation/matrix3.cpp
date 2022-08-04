@@ -497,7 +497,7 @@ bool operator!=(const Mat3 &a, const Mat3 &b) {
 	}
 
 ne_done:
-	return false;
+	return res;
 }
 
 //

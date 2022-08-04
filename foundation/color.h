@@ -24,8 +24,12 @@ struct Color {
 	Color() : r(0.f), g(0.f), b(0.f), a(0.f) {}
 	Color(float r_, float g_, float b_, float a_ = 1.f) : r(r_), g(g_), b(b_), a(a_) {}
 
-	inline bool operator==(const Color &v) const { return r == v.r && g == v.g && b == v.b && a == v.a; }
-	inline bool operator!=(const Color &v) const { return r != v.r || g != v.g || b != v.b || a != v.a; }
+	inline bool operator==(const Color &v) const {
+		return r == v.r && g == v.g && b == v.b && a == v.a;
+	}
+	inline bool operator!=(const Color &v) const {
+		return r != v.r || g != v.g || b != v.b || a != v.a;
+	}
 
 	inline Color &operator+=(const Color &c) {
 		r += c.r;
@@ -92,8 +96,12 @@ struct Color {
 		return *this;
 	}
 
-	inline float operator[](int n) const { return (&r)[n]; }
-	inline float &operator[](int n) { return (&r)[n]; }
+	inline float operator[](int n) const {
+		return (&r)[n];
+	}
+	inline float &operator[](int n) {
+		return (&r)[n];
+	}
 
 	float r, g, b, a;
 };
@@ -135,8 +143,9 @@ float Dist2(const Color &i, const Color &j);
 /// Vector distance.
 float Dist(const Color &i, const Color &j);
 
-/// Compare two colors with a configurable threshold.
-bool AlmostEqual(const Color &a, const Color &b, float epsilon);
+/// Compare two colors.
+bool Equal(const Color &a, const Color &b);
+bool AlmostEqual(const Color &a, const Color &b, const float epsilon = 0.00001f);
 
 /// Scale the chroma component of a color, return the result as a new color.
 Color ChromaScale(const Color &c, float k);
@@ -157,7 +166,9 @@ struct Vec4;
 Color ColorFromVector4(const Vec4 &);
 
 /// Create a color from integer values in the [0;255] range.
-inline Color ColorI(int r, int g, int b, int a = 255) { return Color(float(r) / 255.f, float(g) / 255.f, float(b) / 255.f, float(a) / 255.f); }
+inline Color ColorI(int r, int g, int b, int a = 255) {
+	return Color(static_cast<float>(r) / 255.F, static_cast<float>(g) / 255.F, static_cast<float>(b) / 255.F, static_cast<float>(a) / 255.F);
+}
 
 /// Convert input RGBA color to hue/luminance/saturation, alpha channel is left unmodified.
 Color ToHLS(const Color &);

@@ -26,24 +26,24 @@ void test_projection() {
 		const float zoom = sqrt(3.f);
 
 		float z = FovToZoomFactor(fov);
-		TEST_CHECK(TestEqual(z, zoom));
-		
+		TEST_CHECK(Equal(z, zoom));
+
 		float f = ZoomFactorToFov(zoom);
-		TEST_CHECK(TestEqual(f, fov));
+		TEST_CHECK(Equal(f, fov));
 	}
 	{
 		SetNDCInfos(true, true);
 		Mat44 m0 = ComputeOrthographicProjectionMatrix(1.0f, 21.f, 40.f, Vec2(16.f / 9.f, 1.f), Vec2(-1.5f, 1.5f));
-		TEST_CHECK(AlmostEqual(GetRow(m0, 0), Vec4(0.028125f, 0.0f,  0.0f,-1.5f), 0.000001f));
-		TEST_CHECK(AlmostEqual(GetRow(m0, 1), Vec4(0.0f,      0.05f, 0.0f, 1.5f), 0.000001f));
-		TEST_CHECK(AlmostEqual(GetRow(m0, 2), Vec4(0.0f,      0.0f,  0.1f,-1.1f), 0.000001f));
-		TEST_CHECK(AlmostEqual(GetRow(m0, 3), Vec4(0.0f,      0.0f,  0.0f, 1.0f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m0, 0), Vec4(0.028125f, 0.0f, 0.0f, -1.5f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m0, 1), Vec4(0.0f, 0.05f, 0.0f, 1.5f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m0, 2), Vec4(0.0f, 0.0f, 0.1f, -1.1f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m0, 3), Vec4(0.0f, 0.0f, 0.0f, 1.0f), 0.000001f));
 
 		SetNDCInfos(true, false);
 		Mat44 m1 = ComputeOrthographicProjectionMatrix(1.0f, 21.f, 40.f, Vec2(16.f / 9.f, 1.f), Vec2(-1.5f, 1.5f));
 		TEST_CHECK(AlmostEqual(GetRow(m1, 0), GetRow(m0, 0), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetRow(m1, 1), GetRow(m0, 1), 0.000001f));
-		TEST_CHECK(AlmostEqual(GetRow(m1, 2), Vec4(0.0f, 0.0f, 0.05f,-0.05f), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m1, 2), Vec4(0.0f, 0.0f, 0.05f, -0.05f), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetRow(m1, 3), GetRow(m0, 3), 0.000001f));
 	}
 	{
@@ -55,8 +55,8 @@ void test_projection() {
 		const float zfar = 21.f;
 
 		Mat44 m0 = ComputePerspectiveProjectionMatrix(znear, zfar, zoom, ar, off);
-		TEST_CHECK(AlmostEqual(GetRow(m0, 0), Vec4(zoom/ar.x, 0.0f, 0.0f, off.x), 0.000001f));
-		TEST_CHECK(AlmostEqual(GetRow(m0, 1), Vec4(0.0f, zoom/ar.y, 0.0f, off.y), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m0, 0), Vec4(zoom / ar.x, 0.0f, 0.0f, off.x), 0.000001f));
+		TEST_CHECK(AlmostEqual(GetRow(m0, 1), Vec4(0.0f, zoom / ar.y, 0.0f, off.y), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetRow(m0, 2), Vec4(0.0f, 0.0f, 1.1f, -2.1f), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetRow(m0, 3), Vec4(0.0f, 0.0f, 1.0f, 0.0f), 0.000001f));
 
@@ -95,41 +95,41 @@ void test_projection() {
 		TEST_CHECK(AlmostEqual(GetRow(m3, 1), -GetRow(m2, 1), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetRow(m3, 2), GetRow(m2, 2), 0.000001f));
 		TEST_CHECK(AlmostEqual(GetRow(m3, 3), GetRow(m2, 3), 0.000001f));
-	} 
-	{ 
+	}
+	{
 		const float zoom = FovToZoomFactor(Deg(60.f));
 		{
 			SetNDCInfos(true, true);
 			const Vec2 ar = ComputeAspectRatioX(4.f, 3.f);
 			Mat44 m = ComputePerspectiveProjectionMatrix(0.1f, 100.f, zoom, ar, Vec2::Zero);
-			TEST_CHECK(TestEqual(ExtractZoomFactorFromProjectionMatrix(m, ar), zoom));
+			TEST_CHECK(Equal(ExtractZoomFactorFromProjectionMatrix(m, ar), zoom));
 		}
 		{
 			SetNDCInfos(true, false);
 			const Vec2 ar = ComputeAspectRatioY(4.f, 3.f);
 			Mat44 m = ComputePerspectiveProjectionMatrix(0.1f, 100.f, zoom, ar, Vec2::Zero);
-			TEST_CHECK(TestEqual(ExtractZoomFactorFromProjectionMatrix(m, ar), zoom));
+			TEST_CHECK(Equal(ExtractZoomFactorFromProjectionMatrix(m, ar), zoom));
 		}
 	}
 	{
 		const Vec2 ar = ComputeAspectRatioX(4.f, 3.f);
 		const float zoom = FovToZoomFactor(Deg(60.f));
-		const float z_near = 0.4f; 
+		const float z_near = 0.4f;
 		const float z_far = 20.f;
 		float z0, z1;
 		{
 			SetNDCInfos(true, true);
 			Mat44 m = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar, Vec2::One);
 			ExtractZRangeFromPerspectiveProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{
 			SetNDCInfos(true, false);
 			Mat44 m = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar, Vec2::Zero);
 			ExtractZRangeFromPerspectiveProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 	}
 	{
@@ -143,15 +143,15 @@ void test_projection() {
 			SetNDCInfos(true, true);
 			Mat44 m = ComputeOrthographicProjectionMatrix(z_near, z_far, size, Vec2::One);
 			ExtractZRangeFromOrthographicProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{
 			SetNDCInfos(true, false);
 			Mat44 m = ComputeOrthographicProjectionMatrix(z_near, z_far, size, ar, Vec2::Zero);
 			ExtractZRangeFromOrthographicProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 	}
 	{
@@ -165,29 +165,29 @@ void test_projection() {
 			SetNDCInfos(true, true);
 			Mat44 m = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar, Vec2::One);
 			ExtractZRangeFromProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{
 			SetNDCInfos(true, false);
 			Mat44 m = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar, Vec2::Zero);
 			ExtractZRangeFromProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{
 			SetNDCInfos(true, true);
 			Mat44 m = ComputeOrthographicProjectionMatrix(z_near, z_far, size, Vec2::One);
 			ExtractZRangeFromProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{
 			SetNDCInfos(true, false);
 			Mat44 m = ComputeOrthographicProjectionMatrix(z_near, z_far, size, ar, Vec2::Zero);
 			ExtractZRangeFromProjectionMatrix(m, z0, z1);
-			TEST_CHECK(TestEqual(z0, z_near));
-			TEST_CHECK(TestEqual(z1, z_far, 0.0001f));
+			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 	}
 	{
@@ -198,16 +198,16 @@ void test_projection() {
 		TEST_CHECK(ProjectToClipSpace(m, Vec3(-0.4f, 0.2f, 0.f), clip) == false);
 		TEST_CHECK(ProjectToClipSpace(m, Vec3(-10.f * sqrt(3.f) * ar.x, 12.5f * sqrt(3.f) * ar.y, 50.f), clip));
 		TEST_CHECK(AlmostEqual(clip, Vec3(-0.6f, 0.75f, 0.998998940f), 0.000001f));
-	} 
+	}
 	{
 		const Vec2 res(3840.f, 2160.f);
 		const Vec2 ar = ComputeAspectRatioX(res.x, res.y);
 		const Mat44 m = ComputeOrthographicProjectionMatrix(0.0f, 100.f, 40.0f, ar, Vec2::Zero);
 		Vec3 clip;
-		TEST_CHECK(ProjectOrthoToClipSpace(m, Vec3(100.f/5.625f, -10.f, 50.f), clip));
+		TEST_CHECK(ProjectOrthoToClipSpace(m, Vec3(100.f / 5.625f, -10.f, 50.f), clip));
 		TEST_CHECK(AlmostEqual(clip, Vec3(0.5f, -0.5f, 0.5), 0.000001f));
 	}
-	{ 
+	{
 		TEST_CHECK(AlmostEqual(ClipSpaceToScreenSpace(Vec3(-1.0f, -1.0f, 0.12f), Vec2(1920.0f, 1080.0f)), Vec3(0.f, 0.f, 0.12f), 0.000001f));
 		TEST_CHECK(AlmostEqual(ClipSpaceToScreenSpace(Vec3(1.0f, 1.0f, 0.2f), Vec2(1920.0f, 1080.0f)), Vec3(1920.0f, 1080.0f, 0.2f), 0.000001f));
 		TEST_CHECK(AlmostEqual(ClipSpaceToScreenSpace(Vec3(0.0f, 0.0f, 0.45f), Vec2(1920.0f, 1080.0f)), Vec3(960.f, 540.f, 0.45f), 0.000001f));
@@ -226,8 +226,8 @@ void test_projection() {
 		TEST_CHECK(ProjectToScreenSpace(m, Vec3(-10.f * sqrt(3.f) * ar.x, 12.5f * sqrt(3.f) * ar.y, 50.f), res, screen));
 		TEST_CHECK(AlmostEqual(screen, Vec3(768.f, 1890.f, 0.998998940f), 0.0001f));
 		TEST_CHECK(ProjectToScreenSpace(m, Vec3(0.f, 0.f, 50.f), res, screen));
-		TEST_CHECK(AlmostEqual(screen, Vec3(res.x/2.f, res.y/2.f, 0.998998940f), 0.000001f));
-	} 
+		TEST_CHECK(AlmostEqual(screen, Vec3(res.x / 2.f, res.y / 2.f, 0.998998940f), 0.000001f));
+	}
 	{
 		const Vec2 res(3840.f, 2160.f);
 		const Vec2 ar = ComputeAspectRatioX(res.x, res.y);
@@ -248,10 +248,10 @@ void test_projection() {
 		Vec3 v(-10.f * sqrt(3.f) * ar.x, 12.5f * sqrt(3.f) * ar.y, 50.f);
 		TEST_CHECK(UnprojectFromScreenSpace(m, Vec3(768.f, 1890.f, 0.998998940f), res, p));
 		TEST_CHECK(AlmostEqual(p, v, 0.005f));
-		
+
 		TEST_CHECK(UnprojectFromScreenSpace(m, Vec3(res.x / 2.f, res.y / 2.f, 0.998998940f), res, p));
 		TEST_CHECK(AlmostEqual(p, Vec3(0.f, 0.f, 50.f), 0.005f));
-	} 
+	}
 	{
 		const Vec2 res(3840.f, 2160.f);
 		const Vec2 ar = ComputeAspectRatioX(res.x, res.y);
@@ -283,25 +283,25 @@ void test_projection() {
 		{
 			SetNDCInfos(true, true);
 			Mat44 m = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar, Vec2::One);
-			TEST_CHECK(TestEqual(ProjectZToClipSpace(z_near, m), -1.f));
-			TEST_CHECK(ProjectZToClipSpace(z_near-0.2f, m) < -1.f);
-			TEST_CHECK(ProjectZToClipSpace(z_far+10.f, m) > 1.f);
-			TEST_CHECK(TestEqual(ProjectZToClipSpace(z, m), (m.m[2][2]*z + m.m[2][3]) / z));
+			TEST_CHECK(Equal(ProjectZToClipSpace(z_near, m), -1.f));
+			TEST_CHECK(ProjectZToClipSpace(z_near - 0.2f, m) < -1.f);
+			TEST_CHECK(ProjectZToClipSpace(z_far + 10.f, m) > 1.f);
+			TEST_CHECK(Equal(ProjectZToClipSpace(z, m), (m.m[2][2] * z + m.m[2][3]) / z));
 		}
 		{
 			SetNDCInfos(true, false);
 			Mat44 m = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar, Vec2::One);
-			TEST_CHECK(TestEqual(ProjectZToClipSpace(z_near, m), 0.f));
+			TEST_CHECK(Equal(ProjectZToClipSpace(z_near, m), 0.f));
 			TEST_CHECK(ProjectZToClipSpace(z_near - 0.2f, m) < 0.f);
 			TEST_CHECK(ProjectZToClipSpace(z_far + 10.f, m) > 1.f);
-			TEST_CHECK(TestEqual(ProjectZToClipSpace(z, m), (m.m[2][2] * z + m.m[2][3]) / z));
+			TEST_CHECK(Equal(ProjectZToClipSpace(z, m), (m.m[2][2] * z + m.m[2][3]) / z));
 		}
 	}
 	{
 		const float width = 1900.f;
 		const float height = 1080.f;
-		TEST_CHECK(TestEqual(ComputeAspectRatioX(width, height), Vec2(width / height, 1.f), 0.000001f));
-		TEST_CHECK(TestEqual(ComputeAspectRatioY(width, height), Vec2(1.f, height / width), 0.000001f));
+		TEST_CHECK(AlmostEqual(ComputeAspectRatioX(width, height), Vec2(width / height, 1.f), 0.000001f));
+		TEST_CHECK(AlmostEqual(ComputeAspectRatioY(width, height), Vec2(1.f, height / width), 0.000001f));
 	}
 	{
 		const Vec2 res(1900.f, 1600.f);
@@ -312,7 +312,7 @@ void test_projection() {
 		const Mat44 proj = ComputePerspectiveProjectionMatrix(z_near, z_far, zoom, ar);
 		const Mat44 inv_proj = Inverse(proj);
 		Vec3 o, d;
-		TEST_CHECK(WorldRaycastScreenPos(res.x/2.f, res.y/2.f, res.x, res.y, inv_proj, Mat4::Identity, o, d));
+		TEST_CHECK(WorldRaycastScreenPos(res.x / 2.f, res.y / 2.f, res.x, res.y, inv_proj, Mat4::Identity, o, d));
 		TEST_CHECK(AlmostEqual(o, Vec3::Zero, 0.000001f));
 		TEST_CHECK(AlmostEqual(Normalize(d), Vec3(0.f, 0.f, 1.f), 0.000001f));
 
@@ -324,14 +324,13 @@ void test_projection() {
 		TEST_CHECK(AlmostEqual(o, Vec3::Zero, 0.000001f));
 		TEST_CHECK(AlmostEqual(Normalize(d), Normalize(Vec3(ar.x / zoom, 0.f, 1.f)), 0.000001f));
 
-		TEST_CHECK(WorldRaycastScreenPos(res.x/2.f, 0.f, res.x, res.y, inv_proj, Mat4::Identity, o, d));
+		TEST_CHECK(WorldRaycastScreenPos(res.x / 2.f, 0.f, res.x, res.y, inv_proj, Mat4::Identity, o, d));
 		TEST_CHECK(AlmostEqual(o, Vec3::Zero, 0.000001f));
 		TEST_CHECK(AlmostEqual(Normalize(d), Normalize(Vec3(0.f, -ar.y / zoom, 1.f)), 0.000001f));
-	
-		TEST_CHECK(WorldRaycastScreenPos(res.x/2.f, res.y, res.x, res.y, inv_proj, Mat4::Identity, o, d));
+
+		TEST_CHECK(WorldRaycastScreenPos(res.x / 2.f, res.y, res.x, res.y, inv_proj, Mat4::Identity, o, d));
 		TEST_CHECK(AlmostEqual(o, Vec3::Zero, 0.000001f));
 		TEST_CHECK(AlmostEqual(Normalize(d), Normalize(Vec3(0.f, ar.y / zoom, 1.f)), 0.000001f));
-
 
 		TEST_CHECK(WorldRaycastScreenPos(res.x, res.y, res.x, res.y, inv_proj, Mat4::Identity, o, d));
 		TEST_CHECK(AlmostEqual(o, Vec3::Zero, 0.000001f));
