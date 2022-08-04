@@ -35,13 +35,15 @@ std::vector<DirEntry> ListDir(const std::string &path, int mask) {
 	WIN32_FIND_DATAW data;
 	const std::wstring wfind_path = utf8_to_wchar(PathJoin(path, "*.*"));
 	HANDLE hFind = FindFirstFileW(wfind_path.c_str(), &data);
-	if (hFind == INVALID_HANDLE_VALUE)
+	if (hFind == INVALID_HANDLE_VALUE) {
 		return entries;
+	}
 
 	do {
 		std::string name = wchar_to_utf8(data.cFileName);
-		if (name == "." || name == "..")
+		if (name == "." || name == "..") {
 			continue;
+		}
 
 		const DirEntryType type = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DE_Dir : DE_File;
 		const int64_t last_modified = time_to_ns(((uint64_t(data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime) * 100);

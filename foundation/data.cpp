@@ -6,20 +6,32 @@
 namespace hg {
 
 Data::Data() : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {}
-Data::Data(size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) { Resize(size); }
-Data::Data(const Data &data) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) { *this = data; }
 
-Data::Data(const void *data, size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) { Write(data, size); }
+Data::Data(size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {
+	Resize(size);
+}
+
+Data::Data(const Data &data) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {
+	*this = data;
+}
+
+Data::Data(const void *data, size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {
+	Write(data, size);
+}
+
 Data::Data(void *data, size_t size) : data_(reinterpret_cast<uint8_t *>(data)), size_(size), capacity_(0), has_ownership(false), cursor(0) {}
 
-Data::~Data() { Free(); }
+Data::~Data() {
+	Free();
+}
 
 Data &Data::operator=(const Data &data) {
 	Free();
 
 	if (data.has_ownership) {
-		if (Reserve(data.size_))
+		if (Reserve(data.size_)) {
 			Write(data.data_, data.size_);
+		}
 	} else {
 		data_ = data.data_;
 		size_ = data.size_;
@@ -49,76 +61,95 @@ Data &Data::operator=(Data &&data) {
 #endif
 
 bool Data::Reserve(size_t size) {
+	bool res = true;
+
 	const size_t new_capacity = (size / 8192 + 1) * 8192; // grow in 8KB increments
 
 	if (new_capacity > capacity_) {
 		uint8_t *_data_ = new uint8_t[new_capacity];
-		if (_data_ == nullptr)
-			return false;
 
-		if (data_)
-			std::copy(data_, data_ + size_, _data_);
+		if (_data_ == nullptr) {
+			res = false;
+		} else {
+			if (data_)
+				std::copy(data_, data_ + size_, _data_);
 
-		if (has_ownership)
-			delete[] data_;
-		has_ownership = true;
+			if (has_ownership)
+				delete[] data_;
+			has_ownership = true;
 
-		data_ = _data_;
-		capacity_ = new_capacity;
+			data_ = _data_;
+			capacity_ = new_capacity;
+		}
 	}
 
-	return true;
+	return res;
 }
 
 bool Data::Resize(size_t size) {
-	if (!Reserve(size))
-		return false;
+	bool res = false;
 
-	size_ = size;
+	if (Reserve(size)) {
+		size_ = size;
 
-	if (size_ < cursor)
-		cursor = size_;
+		if (size_ < cursor)
+			cursor = size_;
 
-	return true;
+		res = true;
+	}
+
+	return res;
 }
 
 bool Data::Skip(size_t count) {
-	if (!Reserve(cursor + count))
-		return false;
+	bool res = false;
 
-	cursor += count;
-	if (cursor > size_)
-		size_ = cursor;
+	if (Reserve(cursor + count)) {
+		cursor += count;
+
+		if (cursor > size_)
+			size_ = cursor;
+
+		res = true;
+	}
 
 	return true;
 }
 
 size_t Data::Write(const void *data, size_t size) {
-	if (!Reserve(cursor + size))
-		return 0;
+	size_t res = 0;
 
-	std::copy(reinterpret_cast<const uint8_t *>(data), reinterpret_cast<const uint8_t *>(data) + size, data_ + cursor);
+	if (Reserve(cursor + size)) {
+		std::copy(reinterpret_cast<const uint8_t *>(data), reinterpret_cast<const uint8_t *>(data) + size, data_ + cursor);
 
-	cursor += size;
-	if (cursor > size_)
-		size_ = cursor;
+		cursor += size;
+		if (cursor > size_) {
+			size_ = cursor;
+		}
+
+		res = size;
+	}
 
 	return size;
 }
 
 size_t Data::Read(void *data, size_t size) const {
-	if (cursor + size > size_)
+	if (cursor + size > size_) {
 		size = size_ - cursor;
+	}
+
 	if (size) {
 		std::copy(data_ + cursor, data_ + cursor + size, reinterpret_cast<uint8_t *>(data));
 		cursor += size;
 	}
+
 	return size;
 }
 
 void Data::Free() {
-	if (has_ownership)
+	if (has_ownership) {
 		delete[] data_;
+	}
 
 	data_ = nullptr;
 	size_ = 0;
@@ -131,17 +162,21 @@ void Data::Free() {
 //
 bool Read(Data &data, std::string &str) {
 	uint16_t size;
-	if (!Read<uint16_t>(data, size))
+	if (!Read<uint16_t>(data, size)) {
 		return false;
+	}
 
 	std::vector<char> s_(size_t(size) + 1);
-	if (data.Read(s_.data(), size) != size)
+	if (data.Read(s_.data(), size) != size) {
 		return false;
+	}
 
-	if (size)
+	if (size) {
 		str = s_.data();
-	else
+	} else {
 		str.clear();
+	}
+
 	return true;
 }
 
@@ -152,32 +187,38 @@ bool Write(Data &data, const std::string &s) {
 
 //
 bool LoadDataFromFile(const std::string &path, Data &data) {
-	const File file = Open(path);
-	if (!IsValid(file))
-		return false;
+	bool res = false;
 
-	const size_t size = GetSize(file);
-	if (!data.Reserve(size)) {
+	const File file = Open(path);
+
+	if (IsValid(file)) {
+		const size_t size = GetSize(file);
+
+		if (data.Reserve(size)) {
+			Read(file, data.GetCursorPtr(), size);
+			data.Skip(size);
+			res = true;
+		}
+
 		Close(file);
-		return false;
 	}
 
-	Read(file, data.GetCursorPtr(), size);
-	data.Skip(size);
-
-	Close(file);
-	return true;
+	return res;
 }
 
 bool SaveDataToFile(const std::string &path, const Data &data) {
+	bool res = false;
+
 	const File file = OpenWrite(path);
-	if (!IsValid(file))
-		return false;
 
-	const size_t wsize = Write(file, data.GetData(), data.GetSize());
+	if (IsValid(file)) {
+		const size_t wsize = Write(file, data.GetData(), data.GetSize());
+		res = wsize == data.GetSize();
 
-	Close(file);
-	return wsize == data.GetSize();
+		Close(file);
+	}
+
+	return res;
 }
 
 } // namespace hg

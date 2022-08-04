@@ -13,60 +13,70 @@ void SetNDCInfos(bool origin_bottom_left, bool homogeneous_depth) {
 	g_ndc_infos.homogeneous_depth = homogeneous_depth;
 }
 
-const NDCInfos &GetNDCInfos() { return g_ndc_infos; }
+const NDCInfos &GetNDCInfos() {
+	return g_ndc_infos;
+}
 
-float ZoomFactorToFov(float zoom_factor) { return ATan(1.f / zoom_factor) * 2.f; }
-float FovToZoomFactor(float fov) { return 1.f / Tan(Clamp(fov, Deg(0.1f), Deg(179.9f)) * 0.5f); }
+float ZoomFactorToFov(float zoom_factor) {
+	return ATan(1.F / zoom_factor) * 2.F;
+}
+
+float FovToZoomFactor(float fov) {
+	return 1.F / Tan(Clamp(fov, Deg(0.1F), Deg(179.9F)) * 0.5F);
+}
 
 Mat44 ComputeOrthographicProjectionMatrix(float znear, float zfar, float size, const Vec2 &aspect_ratio, const Vec2 &offset) {
 	const NDCInfos &ndc_infos = GetNDCInfos();
 
-	const float qA = ndc_infos.homogeneous_depth ? (2.f / (zfar - znear)) : (1.f / (zfar - znear));
+	const float qA = ndc_infos.homogeneous_depth ? (2.F / (zfar - znear)) : (1.F / (zfar - znear));
 	const float qB = ndc_infos.homogeneous_depth ? (-(zfar + znear) / (zfar - znear)) : (-qA * znear);
-	return Mat44(2.f / size / aspect_ratio.x, 0, 0, 0, 0, 2.f / size / aspect_ratio.y, 0, 0, 0, 0, qA, 0, offset.x, offset.y, qB, 1);
+	return Mat44(2.F / size / aspect_ratio.x, 0.F, 0.F, 0.F, 0.F, 2.F / size / aspect_ratio.y, 0.F, 0.F, 0.F, 0.F, qA, 0.F, offset.x, offset.y, qB, 1.F);
 }
 
 Mat44 ComputePerspectiveProjectionMatrix(float znear, float zfar, float zoom_factor, const Vec2 &aspect_ratio, const Vec2 &offset) {
 	const NDCInfos &ndc_infos = GetNDCInfos();
 
 	const float qA = ndc_infos.homogeneous_depth ? ((zfar + znear) / (zfar - znear)) : (zfar / (zfar - znear));
-	const float qB = ndc_infos.homogeneous_depth ? (-2 * zfar * znear / (zfar - znear)) : (-qA * znear);
-	return Mat44(zoom_factor / aspect_ratio.x, 0, 0, 0, 0, zoom_factor / aspect_ratio.y, 0, 0, 0, 0, qA, 1, offset.x, offset.y, qB, 0);
+	const float qB = ndc_infos.homogeneous_depth ? (-2.F * zfar * znear / (zfar - znear)) : (-qA * znear);
+
+	return Mat44(zoom_factor / aspect_ratio.x, 0.F, 0.F, 0.F, 0.F, zoom_factor / aspect_ratio.y, 0.F, 0.F, 0.F, 0.F, qA, 1.F, offset.x, offset.y, qB, 0.F);
 }
 
 Mat44 Compute2DProjectionMatrix(float znear, float zfar, float res_x, float res_y, bool y_up) {
 	const NDCInfos &ndc_infos = GetNDCInfos();
 
-	const float qA = ndc_infos.homogeneous_depth ? (2.f / (zfar - znear)) : (1.f / (zfar - znear));
+	const float qA = ndc_infos.homogeneous_depth ? (2.F / (zfar - znear)) : (1.F / (zfar - znear));
 	const float qB = ndc_infos.homogeneous_depth ? (-(zfar + znear) / (zfar - znear)) : (-qA * znear);
 
-	Mat44 p_m(2.f / res_x, 0, 0, 0, 0, 2.f / res_y, 0, 0, 0, 0, qA, 0, -1.f, -1.f, qB, 1.f);
+	Mat44 p_m(2.F / res_x, 0.F, 0.F, 0.F, 0.F, 2.F / res_y, 0.F, 0.F, 0.F, 0.F, qA, 0.F, -1.F, -1.F, qB, 1.F);
 
 	if (!y_up) {
-		p_m.m[1][1] *= -1;
-		p_m.m[1][3] *= -1;
+		p_m.m[1][1] *= -1.F;
+		p_m.m[1][3] *= -1.F;
 	}
 	return p_m;
 }
 
 //
-float ExtractZoomFactorFromProjectionMatrix(const Mat44 &m, const Vec2 &aspect_ratio) { return m.m[1][1] * aspect_ratio.y; }
+float ExtractZoomFactorFromProjectionMatrix(const Mat44 &m, const Vec2 &aspect_ratio) {
+	return m.m[1][1] * aspect_ratio.y;
+}
 
 void ExtractZRangeFromPerspectiveProjectionMatrix(const Mat44 &m, float &znear, float &zfar) {
 	const NDCInfos &ndc_infos = GetNDCInfos();
-	znear = ndc_infos.homogeneous_depth ? (-m.m[2][3] / (m.m[2][2] + 1.f)) : (-m.m[2][3] / m.m[2][2]);
-	zfar = -m.m[2][3] / (m.m[2][2] - 1.f);
+	znear = ndc_infos.homogeneous_depth ? (-m.m[2][3] / (m.m[2][2] + 1.F)) : (-m.m[2][3] / m.m[2][2]);
+	zfar = -m.m[2][3] / (m.m[2][2] - 1.F);
 }
 
 void ExtractZRangeFromOrthographicProjectionMatrix(const Mat44 &m, float &znear, float &zfar) {
 	const NDCInfos &ndc_infos = GetNDCInfos();
-	znear = ndc_infos.homogeneous_depth ? (-(m.m[2][3] + 1.f) / m.m[2][2]) : (-m.m[2][3] / m.m[2][2]);
-	zfar = -(m.m[2][3] - 1.f) / m.m[2][2];
+	znear = ndc_infos.homogeneous_depth ? (-(m.m[2][3] + 1.F) / m.m[2][2]) : (-m.m[2][3] / m.m[2][2]);
+	zfar = -(m.m[2][3] - 1.F) / m.m[2][2];
 }
 
 void ExtractZRangeFromProjectionMatrix(const Mat44 &m, float &znear, float &zfar) {
 	// Here we assume that the projection is either a well formed perspective or orthographic projection matrix.
-	if (m.m[3][3] == 0.f) {
+	if (m.m[3][3] == 0.F) {
 		ExtractZRangeFromPerspectiveProjectionMatrix(m, znear, zfar);
 	} else {
 		ExtractZRangeFromOrthographicProjectionMatrix(m, znear, zfar);
@@ -76,18 +86,28 @@ void ExtractZRangeFromProjectionMatrix(const Mat44 &m, float &znear, float &zfar
 //
 bool ProjectToClipSpace(const Mat44 &proj, const Vec3 &view, Vec3 &clip) {
 	Vec4 ndc = proj * Vec4(view);
-	if (ndc.w <= 0.f)
-		return false;
-	clip = Vec3(ndc) / ndc.w;
-	return true;
+
+	bool res = false;
+
+	if (ndc.w > 0.F) {
+		clip = Vec3(ndc) / ndc.w;
+		res = true;
+	}
+
+	return res;
 }
 
 bool ProjectOrthoToClipSpace(const Mat44 &proj, const Vec3 &view, Vec3 &clip) {
 	Vec4 ndc = proj * Vec4(view);
-	if (ndc.w <= 0.f)
-		return false;
-	clip = Vec3(ndc);
-	return true;
+
+	bool res = false;
+
+	if (ndc.w > 0.F) {
+		clip = Vec3(ndc);
+		res = true;
+	}
+
+	return res;
 }
 
 bool UnprojectFromClipSpace(const Mat44 &inv_proj, const Vec3 &clip, Vec3 &view) {
@@ -107,8 +127,12 @@ bool UnprojectOrthoFromClipSpace(const Mat44 &inv_proj, const Vec3 &clip, Vec3 &
 }
 
 // NOTE [EJ] Z is a problem here... DX -> [0;1], GL -> [-1;1]
-Vec3 ClipSpaceToScreenSpace(const Vec3 &clip, const Vec2 &res) { return Vec3((clip.x + 1.f) * res.x * 0.5f, (clip.y + 1.f) * res.y * 0.5f, clip.z); }
-Vec3 ScreenSpaceToClipSpace(const Vec3 &screen, const Vec2 &res) { return Vec3(screen.x / res.x * 2.f - 1.f, screen.y / res.y * 2.f - 1.f, screen.z); }
+Vec3 ClipSpaceToScreenSpace(const Vec3 &clip, const Vec2 &res) {
+	return Vec3((clip.x + 1.f) * res.x * 0.5f, (clip.y + 1.f) * res.y * 0.5f, clip.z);
+}
+Vec3 ScreenSpaceToClipSpace(const Vec3 &screen, const Vec2 &res) {
+	return Vec3(screen.x / res.x * 2.f - 1.f, screen.y / res.y * 2.f - 1.f, screen.z);
+}
 
 //
 bool ProjectToScreenSpace(const Mat44 &proj, const Vec3 &view, const Vec2 &res, Vec3 &screen) {
@@ -138,11 +162,17 @@ bool UnprojectOrthoFromScreenSpace(const Mat44 &inv_proj, const Vec3 &screen, co
 }
 
 //
-float ProjectZToClipSpace(float z, const Mat44 &proj) { return (z * proj.m[2][2] + proj.m[2][3]) / z; }
+float ProjectZToClipSpace(float z, const Mat44 &proj) {
+	return (z * proj.m[2][2] + proj.m[2][3]) / z;
+}
 
 //
-Vec2 ComputeAspectRatioX(float width, float height) { return Vec2(width / height, 1.f); }
-Vec2 ComputeAspectRatioY(float width, float height) { return Vec2(1.f, height / width); }
+Vec2 ComputeAspectRatioX(float width, float height) {
+	return Vec2(width / height, 1.f);
+}
+Vec2 ComputeAspectRatioY(float width, float height) {
+	return Vec2(1.f, height / width);
+}
 
 //
 bool WorldRaycastScreenPos(float x, float y, float width, float height, const Mat44 &inv_proj, const Mat4 &inv_view, Vec3 &ray_o, Vec3 &ray_d) {

@@ -9,24 +9,44 @@
 
 namespace hg {
 
-static const float Pi = 3.1415926535f;
+static const float Pi = 3.1415926535F;
 
-static const float HalfPi = Pi / 2.f;
-static const float TwoPi = Pi * 2.f;
+static const float HalfPi = Pi / 2.F;
+static const float TwoPi = Pi * 2.F;
 
 /// Return the absolute value of the function input.
-template <class T> constexpr T inline Abs(const T &v) { return v < 0 ? -v : v; }
+template <class T> constexpr T inline Abs(const T &v) {
+	return v < 0 ? -v : v;
+}
+
 /// Return the minimum of two values.
-template <class T> constexpr T inline Min(const T &a, const T &b) { return a < b ? a : b; }
-template <class T> constexpr T inline Min(const T &a, const T &b, const T &c) { return Min(Min(a, b), c); }
+template <class T> constexpr T inline Min(const T &a, const T &b) {
+	return a < b ? a : b;
+}
+
+template <class T> constexpr T inline Min(const T &a, const T &b, const T &c) {
+	return Min(Min(a, b), c);
+}
+
 /// Return the maximum of two values.
-template <class T> constexpr T inline Max(const T &a, const T &b) { return a > b ? a : b; }
-template <class T> constexpr T inline Max(const T &a, const T &b, const T &c) { return Max(Max(a, b), c); }
+template <class T> constexpr T inline Max(const T &a, const T &b) {
+	return a > b ? a : b;
+}
+
+template <class T> constexpr T inline Max(const T &a, const T &b, const T &c) {
+	return Max(Max(a, b), c);
+}
+
 /// Clip a value to the specified inclusive interval.
-template <class T> constexpr T inline Clamp(const T &v, const T &min, const T &max) { return v < min ? min : (v > max ? max : v); }
+template <class T> constexpr T inline Clamp(const T &v, const T &min, const T &max) {
+	return v < min ? min : (v > max ? max : v);
+}
+
 /// Linear interpolate between two vectors on the [0;1] interval.
 /// @see LinearInterpolate.
-template <class T> constexpr T inline Lerp(const T &a, const T &b, float k) { return T(a * (1.f - k) + b * k); }
+template <class T> constexpr T inline Lerp(const T &a, const T &b, float k) {
+	return T(a * (1.F - k) + b * k);
+}
 
 template <class T> T inline Wrap(T v, T range_start, T range_end) {
 	const T start = Min(range_start, range_end);
@@ -43,8 +63,21 @@ template <class T> T inline Wrap(T v, T range_start, T range_end) {
 
 float Sqrt(float v);
 
-bool TestEqual(float a, float b, float e = 0.000001f);
-bool EqualZero(float v, float e = 0.000001f);
+inline bool Equal(float a, float b) {
+	return Abs(a - b) <= std::numeric_limits<float>::epsilon();
+}
+
+inline bool NotEqual(float a, float b) {
+	return Abs(a - b) > std::numeric_limits<float>::epsilon();
+}
+
+inline bool EqualZero(float a) {
+	return Abs(a) <= std::numeric_limits<float>::epsilon();
+}
+
+inline bool NotEqualZero(float a) {
+	return Abs(a) > std::numeric_limits<float>::epsilon();
+}
 
 float Pow(float v, float exp);
 
@@ -67,12 +100,15 @@ float ATan(float);
 
 bool IsFinite(float);
 
-template <typename T> constexpr T LinearInterpolate(T y0, T y1, float t) { return y0 + (y1 - y0) * t; }
+template <typename T> constexpr T LinearInterpolate(T y0, T y1, float t) {
+	return y0 + (y1 - y0) * t;
+}
+
 /// Compute the cosine interpolated value between `y0` and `y1` at `t`.
 /// @see LinearInterpolate, CubicInterpolate and HermiteInterpolate.
 template <typename T> T CosineInterpolate(T y0, T y1, float t) {
-	const float t2 = (1.f - Cos(t * Pi)) / 2.f;
-	return y0 * (1.f - t2) + y1 * t2;
+	const float t2 = (1.f - Cos(t * Pi)) / 2.F;
+	return y0 * (1.F - t2) + y1 * t2;
 }
 
 /// Perform a cubic interpolation across four values with `t` in the [0;1] range between `y1` and `y2`.
@@ -118,6 +154,8 @@ template <typename T> inline T getPOT(T v) {
 	return n;
 }
 
-template <typename T> inline bool isPOT(T v) { return v == getPOT(v); }
+template <typename T> inline bool isPOT(T v) {
+	return v == getPOT(v);
+}
 
 } // namespace hg

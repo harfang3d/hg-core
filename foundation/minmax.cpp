@@ -1,72 +1,86 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
 #include "foundation/minmax.h"
-#include "foundation/matrix4.h"
 #include "foundation/math.h"
+#include "foundation/matrix4.h"
 #include "foundation/obb.h"
 #include <cfloat>
 
 namespace hg {
 
-enum {
-	ClipNone = 0,
-	ClipRight = 1,
-	ClipLeft = 2,
-	ClipTop = 4,
-	ClipBottom = 8,
-	ClipFront = 16,
-	ClipBack = 32
-};
+enum { ClipNone = 0, ClipRight = 1, ClipLeft = 2, ClipTop = 4, ClipBottom = 8, ClipFront = 16, ClipBack = 32 };
 
 static uint32_t cc_oc(const Vec3 &min, const Vec3 &max, const Vec3 &p) {
 	uint32_t oc = ClipNone;
-	if (p.x > max.x)
+
+	if (p.x > max.x) {
 		oc |= ClipRight;
-	else if (p.x < min.x)
+	} else if (p.x < min.x) {
 		oc |= ClipLeft;
-	if (p.y > max.y)
+	} else {
+		// this is not an error dumdum
+	}
+
+	if (p.y > max.y) {
 		oc |= ClipTop;
-	else if (p.y < min.y)
+	} else if (p.y < min.y) {
 		oc |= ClipBottom;
-	if (p.z > max.z)
+	} else {
+		// this is not an error dumdum
+	}
+
+	if (p.z > max.z) {
 		oc |= ClipBack;
-	else if (p.z < min.z)
+	} else if (p.z < min.z) {
 		oc |= ClipFront;
+	} else {
+		// this is not an error dumdum
+	}
+
 	return oc;
 }
 
 static uint32_t ss_oc(const Vec3 &p) {
 	uint32_t oc = ClipNone;
-	oc |= p.x > 0 ? ClipRight : ClipLeft;
-	oc |= p.y > 0 ? ClipTop : ClipBottom;
-	oc |= p.z > 0 ? ClipBack : ClipFront;
+
+	oc |= p.x > 0.F ? ClipRight : ClipLeft;
+	oc |= p.y > 0.F ? ClipTop : ClipBottom;
+	oc |= p.z > 0.F ? ClipBack : ClipFront;
+
 	return oc;
 }
 
 bool IntersectRay(const MinMax &mm, const Vec3 &o, const Vec3 &d, float &tmin, float &tmax) {
-	tmin = 0;
-	tmax = FLT_MAX;
+	bool res = true;
 
-	for (uint32_t n = 0; n < 3; ++n)
+	tmin = 0.F;
+	tmax = std::numeric_limits<float>::max();
+
+	for (uint32_t n = 0; n < 3; ++n) {
 		if (EqualZero(d[n])) {
-			if (o[n] < mm.mn[n] || o[n] > mm.mx[n])
-				return false;
+			if (o[n] < mm.mn[n] || o[n] > mm.mx[n]) {
+				res = false;
+			}
 		} else {
-			float ood = 1.f / d[n];
+			const float ood = 1.F / d[n];
 			float t0 = (mm.mn[n] - o[n]) * ood, t1 = (mm.mx[n] - o[n]) * ood;
 
 			if (t0 > t1) {
-				float swp = t1;
-				t1 = t0;
-				t0 = swp;
+				std::swap(t0, t1);
 			}
 
 			tmin = tmin < t0 ? t0 : tmin;
 			tmax = tmax < t1 ? tmax : t1;
 
-			if (tmin > tmax)
-				return false;
+			if (tmin > tmax) {
+				res = false;
+			}
 		}
+
+		if (res == false) {
+			break;
+		}
+	}
 
 	return true;
 }
@@ -77,76 +91,100 @@ bool IntersectRay(const MinMax &mm, const Vec3 &o, const Vec3 &d) {
 }
 
 bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 &itr, Vec3 *n) {
+	bool res = false;
+
 	uint32_t oc1, oc2;
 
 	oc1 = cc_oc(mm.mn, mm.mx, p1);
+
 	if (oc1 == ClipNone) {
-		if (n)
-			*n = Vec3(0, 0, 0);
+		if (n) {
+			*n = Vec3(0.F, 0.F, 0.F);
+		}
+
 		itr = p1;
-		return true; // point inside bounding box
-	}
+		res = true; // point inside bounding box
+	} else {
+		oc2 = ss_oc(direction);
 
-	oc2 = ss_oc(direction);
-
-	if ((oc1 & oc2) > ClipNone)
-		return false; // same side
-
-	if (oc1 & (ClipRight | ClipLeft)) {
-		if (oc1 & ClipRight) {
-			if (n)
-				*n = Vec3(1, 0, 0);
-			itr.x = mm.mx.x;
+		if ((oc1 & oc2) > ClipNone) {
+			// same side -> res = false dumdum
 		} else {
-			if (n)
-				*n = Vec3(-1, 0, 0);
-			itr.x = mm.mn.x;
-		}
-		float x1 = direction.x, x2 = itr.x - p1.x;
-		itr.y = p1.y + x2 * direction.y / x1;
-		itr.z = p1.z + x2 * direction.z / x1;
+			if (oc1 & (ClipRight | ClipLeft)) {
+				if (oc1 & ClipRight) {
+					if (n) {
+						*n = Vec3(1.F, 0.F, 0.F);
+					}
+					itr.x = mm.mx.x;
+				} else {
+					if (n) {
+						*n = Vec3(-1.F, 0.F, 0.F);
+					}
+					itr.x = mm.mn.x;
+				}
 
-		if (itr.y <= mm.mx.y && itr.y >= mm.mn.y && itr.z <= mm.mx.z && itr.z >= mm.mn.z)
-			return true;
+				const float x1 = direction.x, x2 = itr.x - p1.x;
+				itr.y = p1.y + x2 * direction.y / x1;
+				itr.z = p1.z + x2 * direction.z / x1;
+
+				if (itr.y <= mm.mx.y && itr.y >= mm.mn.y && itr.z <= mm.mx.z && itr.z >= mm.mn.z) {
+					res = true;
+				}
+			}
+
+			if (res == false) {
+				if (oc1 & (ClipTop | ClipBottom)) {
+					if (oc1 & ClipTop) {
+						if (n) {
+							*n = Vec3(0.F, 1.F, 0.F);
+						}
+						itr.y = mm.mx.y;
+					} else {
+						if (n) {
+							*n = Vec3(0.F, -1.F, 0.F);
+						}
+						itr.y = mm.mn.y;
+					}
+
+					const float y1 = direction.y, y2 = itr.y - p1.y;
+					itr.x = p1.x + y2 * direction.x / y1;
+					itr.z = p1.z + y2 * direction.z / y1;
+
+					if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.z <= mm.mx.z && itr.z >= mm.mn.z) {
+						res = true;
+					}
+				}
+			}
+
+			if (res == false) {
+				if (oc1 & (ClipFront | ClipBack)) {
+					if (oc1 & ClipBack) {
+						if (n) {
+							*n = Vec3(0.F, 0.F, 1.F);
+						}
+						itr.z = mm.mx.z;
+					} else {
+						if (n) {
+							*n = Vec3(0.F, 0.F, -1.F);
+						}
+						itr.z = mm.mn.z;
+					}
+
+					const float z1 = direction.z, z2 = itr.z - p1.z;
+					itr.x = p1.x + z2 * direction.x / z1;
+					itr.y = p1.y + z2 * direction.y / z1;
+
+					if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.y <= mm.mx.y && itr.y >= mm.mn.y) {
+						res = true;
+					}
+				}
+			}
+		}
 	}
 
-	if (oc1 & (ClipTop | ClipBottom)) {
-		if (oc1 & ClipTop) {
-			if (n)
-				*n = Vec3(0, 1, 0);
-			itr.y = mm.mx.y;
-		} else {
-			if (n)
-				*n = Vec3(0, -1, 0);
-			itr.y = mm.mn.y;
-		}
-		float y1 = direction.y, y2 = itr.y - p1.y;
-		itr.x = p1.x + y2 * direction.x / y1;
-		itr.z = p1.z + y2 * direction.z / y1;
-
-		if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.z <= mm.mx.z && itr.z >= mm.mn.z)
-			return true;
-	}
-
-	if (oc1 & (ClipFront | ClipBack)) {
-		if (oc1 & ClipBack) {
-			if (n)
-				*n = Vec3(0, 0, 1);
-			itr.z = mm.mx.z;
-		} else {
-			if (n)
-				*n = Vec3(0, 0, -1);
-			itr.z = mm.mn.z;
-		}
-		float z1 = direction.z, z2 = itr.z - p1.z;
-		itr.x = p1.x + z2 * direction.x / z1;
-		itr.y = p1.y + z2 * direction.y / z1;
-
-		if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.y <= mm.mx.y && itr.y >= mm.mn.y)
-			return true;
-	}
-	return false;
+	return res;
 }
+
 
 bool ClassifySegment(const MinMax &mm, const Vec3 &p1, const Vec3 &p2, Vec3 &itr, Vec3 *n) {
 	uint32_t oc1, oc2;

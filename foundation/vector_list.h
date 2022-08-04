@@ -26,31 +26,39 @@ namespace hg {
 */
 template <typename T> class vector_list {
 public:
-	static const uint32_t invalid_idx = 0xffffffff;
+	static const uint32_t invalid_idx = 0xffffffffU;
 
 	vector_list() : storage_capacity_(0), storage_(nullptr), idx_(), size_(0), free_(0) {}
-	explicit vector_list(size_t count) : storage_capacity_(0), storage_(nullptr), idx_(), size_(0), free_(0) { reserve(count); }
+	explicit vector_list(size_t count) : storage_capacity_(0), storage_(nullptr), idx_(), size_(0), free_(0) {
+		reserve(count);
+	}
 
 	//
 	void reserve(size_t count) {
-		__ASSERT__(count < 0x00ffffff);
-		const uint32_t capacity_ = uint32_t(idx_.size());
+		__ASSERT__(count < 0x00ffffffU);
+		const uint32_t capacity_ = static_cast<uint32_t>(idx_.size());
 
 		if (count > capacity_) {
 			reserve_storage_(count);
 
 			idx_.resize(count);
-			for (uint32_t i = capacity_; i < count; ++i)
+			for (uint32_t i = capacity_; i < count; ++i) {
 				idx_[i] = make_free_idx(i + 1, 1);
+			}
 		}
 	}
 
-	size_t size() const { return size_; }
-	size_t capacity() const { return idx_.size(); }
+	size_t size() const {
+		return size_;
+	}
+	size_t capacity() const {
+		return idx_.size();
+	}
 
 	void clear() {
-		for (uint32_t i = first(); i != invalid_idx; i = next(i))
+		for (uint32_t i = first(); i != invalid_idx; i = next(i)) {
 			reinterpret_cast<T *>(storage_)[i].~T();
+		}
 
 		free(storage_);
 		storage_ = nullptr;
@@ -63,89 +71,153 @@ public:
 	}
 
 	//
-	T &operator[](size_t i) { return reinterpret_cast<T *>(storage_)[idx_[i]]; }
-	const T &operator[](size_t i) const { return reinterpret_cast<const T *>(storage_)[idx_[i]]; }
+	T &operator[](size_t i) {
+		return reinterpret_cast<T *>(storage_)[idx_[i]];
+	}
 
-	T &value(size_t i) { return reinterpret_cast<T *>(storage_)[idx_[i]]; }
-	const T &value(size_t i) const { return reinterpret_cast<const T *>(storage_)[idx_[i]]; }
+	const T &operator[](size_t i) const {
+		return reinterpret_cast<const T *>(storage_)[idx_[i]];
+	}
+
+	T &value(size_t i) {
+		return reinterpret_cast<T *>(storage_)[idx_[i]];
+	}
+
+	const T &value(size_t i) const {
+		return reinterpret_cast<const T *>(storage_)[idx_[i]];
+	}
 
 	//
 	uint32_t first() const {
 		const size_t idx_count = idx_.size();
-		for (uint32_t i = 0; i < idx_count;) {
+
+		uint32_t i = 0;
+
+		while (i < idx_count) {
 			const uint32_t idx = idx_[i];
-			if (!is_free_idx(idx))
-				return i;
+
+			if (!is_free_idx(idx)) {
+				break;
+			}
+
 			i += get_free_skip(idx);
 		}
-		return invalid_idx;
+
+		return i == idx_count ? invalid_idx : i;
 	}
 
 	uint32_t next(uint32_t from) const {
 		const size_t idx_count = idx_.size();
+
 		++from;
 		while (from < idx_count) {
 			const uint32_t idx = idx_[from];
-			if (!is_free_idx(idx))
-				return from;
+
+			if (!is_free_idx(idx)) {
+				break;
+			}
+
 			from += get_free_skip(idx);
 		}
-		return invalid_idx;
+
+		return from == idx_count ? invalid_idx : from;
 	}
 
 	//
-	bool is_used(uint32_t i) const { return i < idx_.size() && !is_free_idx(idx_[i]); }
+	bool is_used(uint32_t i) const {
+		return i < idx_.size() && !is_free_idx(idx_[i]);
+	}
 
 	//
 	class iterator {
 	public:
 		inline iterator(vector_list<T> *c_, uint32_t i_) : c(c_), i(i_) {}
 
-		inline T &operator*() const { return (*c)[i]; }
-		inline T *operator->() const { return &(*c)[i]; }
+		inline T &operator*() const {
+			return (*c)[i];
+		}
 
-		inline bool operator==(const iterator &i_) const { return i == i_.i; }
-		inline bool operator!=(const iterator &i_) const { return i != i_.i; }
-		inline void operator++() { i = c->next(i); }
+		inline T *operator->() const {
+			return &(*c)[i];
+		}
 
-		inline uint32_t idx() const { return i; }
+		inline bool operator==(const iterator &i_) const {
+			return i == i_.i;
+		}
+
+		inline bool operator!=(const iterator &i_) const {
+			return i != i_.i;
+		}
+
+		inline void operator++() {
+			i = c->next(i);
+		}
+
+		inline uint32_t idx() const {
+			return i;
+		}
 
 	private:
 		vector_list<T> *c;
 		uint32_t i;
 	};
 
-	iterator begin() { return iterator(this, first()); }
-	iterator end() { return iterator(this, invalid_idx); }
+	iterator begin() {
+		return iterator(this, first());
+	}
+
+	iterator end() {
+		return iterator(this, invalid_idx);
+	}
 
 	struct const_iterator {
 	public:
 		inline const_iterator(const vector_list<T> *c_, uint32_t i_) : c(c_), i(i_) {}
 
-		inline const T &operator*() const { return (*c)[i]; }
-		inline const T *operator->() const { return &(*c)[i]; }
+		inline const T &operator*() const {
+			return (*c)[i];
+		}
 
-		inline bool operator==(const const_iterator &i_) const { return i == i_.i; }
-		inline bool operator!=(const const_iterator &i_) const { return i != i_.i; }
-		inline void operator++() { i = c->next(i); }
+		inline const T *operator->() const {
+			return &(*c)[i];
+		}
 
-		inline uint32_t idx() const { return i; }
+		inline bool operator==(const const_iterator &i_) const {
+			return i == i_.i;
+		}
+
+		inline bool operator!=(const const_iterator &i_) const {
+			return i != i_.i;
+		}
+
+		inline void operator++() {
+			i = c->next(i);
+		}
+
+		inline uint32_t idx() const {
+			return i;
+		}
 
 	private:
 		const vector_list<T> *c;
 		uint32_t i;
 	};
 
-	const_iterator begin() const { return const_iterator(this, first()); }
-	const_iterator end() const { return const_iterator(this, invalid_idx); }
+	const_iterator begin() const {
+		return const_iterator(this, first());
+	}
+	const_iterator end() const {
+		return const_iterator(this, invalid_idx);
+	}
 
 	//
 	uint32_t add(const T &v) {
 		__ASSERT__(size_ < 0x00ffffff);
 		const size_t capacity_ = capacity();
 
-		if (size_ == capacity_)
+		if (size_ == capacity_) {
 			reserve(capacity_ * 2 + 16);
+		}
 
 		const uint32_t i = free_;
 		free_ = get_free_idx(idx_[free_]);
@@ -192,10 +264,13 @@ public:
 		uint32_t free_skip = 1;
 		if ((i + 1) < idx_.size()) {
 			const uint32_t idx = idx_[i + 1];
+
 			if (is_free_idx(idx)) {
 				const uint32_t next_free_skip = get_free_skip(idx);
-				if (next_free_skip < 0x7f)
+
+				if (next_free_skip < 0x7f) {
 					free_skip += next_free_skip;
+				}
 			}
 		}
 
@@ -266,7 +341,7 @@ private:
 	template <typename U = T>
 	inline typename std::enable_if<(!std::is_trivially_copyable<U>::value) && std::is_move_constructible<U>::value, void>::type transfer_storage(
 		U *new_storage, const size_t new_storage_size) {
-		for (auto i = first(); i != invalid_idx; i = next(i)) {
+		for (uint32_t i = first(); i != invalid_idx; i = next(i)) {
 			U *dst = reinterpret_cast<U *>(new_storage) + i;
 			U *src = reinterpret_cast<U *>(storage_) + i;
 			new (dst) T(std::move(*src));
@@ -276,7 +351,7 @@ private:
 	template <typename U = T>
 	inline typename std::enable_if<(!std::is_trivially_copyable<U>::value) && (!std::is_move_constructible<U>::value), void>::type transfer_storage(
 		U *new_storage, const size_t new_storage_size) {
-		for (auto i = first(); i != invalid_idx; i = next(i)) {
+		for (uint32_t i = first(); i != invalid_idx; i = next(i)) {
 			U *dst = reinterpret_cast<U *>(new_storage) + i;
 			U *src = reinterpret_cast<U *>(storage_) + i;
 			new (dst) U(*src);
@@ -309,28 +384,38 @@ private:
 	size_t size_;
 	uint32_t free_;
 
-	static size_t get_storage_adjusted_reserve(size_t size) { return size + size / 8; }
-
-	static bool is_free_idx(uint32_t idx) { return idx & 0x80000000; }
-	static uint32_t make_free_idx(uint32_t free_idx, uint32_t free_skip) {
-		__ASSERT__(free_idx < 0x00ffffff);
-		__ASSERT__(free_skip < 128);
-		return 0x80000000 | ((free_skip & 0x7f) << 24) | (free_idx & 0x00ffffff);
+	static size_t get_storage_adjusted_reserve(size_t size) {
+		return size + size / 8;
 	}
-	static uint32_t get_free_skip(uint32_t idx) { return (idx >> 24) & 0x7f; }
-	static uint32_t get_free_idx(uint32_t idx) { return idx & 0x00ffffff; }
+
+	static bool is_free_idx(uint32_t idx) {
+		return idx & 0x80000000U;
+	}
+	static uint32_t make_free_idx(uint32_t free_idx, uint32_t free_skip) {
+		__ASSERT__(free_idx < 0x00ffffffU);
+		__ASSERT__(free_skip < 128U);
+		return 0x80000000U | ((free_skip & 0x7f) << 24) | (free_idx & 0x00ffffffU);
+	}
+	static uint32_t get_free_skip(uint32_t idx) {
+		return (idx >> 24) & 0x7f;
+	}
+	static uint32_t get_free_idx(uint32_t idx) {
+		return idx & 0x00ffffff;
+	}
 
 	void backward_fix_free_skip(uint32_t i, uint32_t free_skip) { // fix free_skip chain leading to this entry (costly backward memory access...)
 		// TODO EJ move backward one cache line then process forward
 		while (i > 0) {
 			--i;
 			const uint32_t idx = idx_[i];
-			if (!is_free_idx(idx))
+			if (!is_free_idx(idx)) {
 				break;
+			}
 
 			++free_skip;
-			if (free_skip > 0x7f)
+			if (free_skip > 0x7f) {
 				free_skip = 1;
+			}
 
 			idx_[i] = make_free_idx(get_free_idx(idx), free_skip);
 		}

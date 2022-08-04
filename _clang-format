@@ -8,9 +8,8 @@ AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
 AlwaysBreakTemplateDeclarations: false
 AlignTrailingComments: false
-AllowShortBlocksOnASingleLine: true
-AllowShortFunctionsOnASingleLine: true
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
 AllowAllParametersOfDeclarationOnNextLine: true
 BinPackParameters: true
 BinPackArguments: true
