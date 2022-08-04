@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 98)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 option(HG_ENABLE_COVERAGE "enable code coverage" OFF)
+option(HG_ENABLE_PVS_MISRA "enable MISRA compliance run" OFF)
 
 if(HG_ENABLE_COVERAGE)
 	include(CodeCoverage)
@@ -34,9 +35,11 @@ add_subdirectory(app_glfw)
 add_subdirectory(samples)
 
 #
-include(FetchContent)
-FetchContent_Declare(PVS_CMakeModule GIT_REPOSITORY "https://github.com/viva64/pvs-studio-cmake-module.git" GIT_TAG "master")
-FetchContent_MakeAvailable(PVS_CMakeModule)
-include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
+if(HG_ENABLE_PVS_MISRA)
+	include(FetchContent)
+	FetchContent_Declare(PVS_CMakeModule GIT_REPOSITORY "https://github.com/viva64/pvs-studio-cmake-module.git" GIT_TAG "master")
+	FetchContent_MakeAvailable(PVS_CMakeModule)
+	include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
 
-pvs_studio_add_target(TARGET foundation.analyze ALL FORMAT sarif-vscode ANALYZE foundation MODE MISRA:1,2 LOG foundation.sarif CONVERTER_ARGS -m misra)
+	pvs_studio_add_target(TARGET foundation.analyze ALL FORMAT sarif-vscode ANALYZE foundation MODE MISRA:1,2 LOG foundation.sarif CONVERTER_ARGS -m misra)
+endif()
