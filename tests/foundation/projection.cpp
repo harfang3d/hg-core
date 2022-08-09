@@ -143,7 +143,7 @@ void test_projection() {
 			SetNDCInfos(true, true);
 			Mat44 m = ComputeOrthographicProjectionMatrix(z_near, z_far, size, Vec2::One);
 			ExtractZRangeFromOrthographicProjectionMatrix(m, z0, z1);
-			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z0, z_near));
 			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{
@@ -179,7 +179,7 @@ void test_projection() {
 			SetNDCInfos(true, true);
 			Mat44 m = ComputeOrthographicProjectionMatrix(z_near, z_far, size, Vec2::One);
 			ExtractZRangeFromProjectionMatrix(m, z0, z1);
-			TEST_CHECK(Equal(z0, z_near));
+			TEST_CHECK(AlmostEqual(z0, z_near));
 			TEST_CHECK(AlmostEqual(z1, z_far, 0.0001f));
 		}
 		{

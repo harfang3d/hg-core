@@ -206,13 +206,13 @@ Color ToHLS(const Color &c) {
 static float QqhToRgb(float q1, float q2, float hue) {
 	if (hue > 360.F) {
 		hue -= 360.F;
-	} else if (hue < 0.F) {
-		hue += 360.F;
 	} else {
-		// nothing to be done dumdum
+		if (hue < 0.F) {
+			hue += 360.F;
+		}
 	}
 
-	float out = 0.f;
+	float out;
 
 	if (hue < 60.F) {
 		out = q1 + (q2 - q1) * hue / 60.F;
@@ -221,7 +221,7 @@ static float QqhToRgb(float q1, float q2, float hue) {
 	} else if (hue < 240.F) {
 		out = q1 + (q2 - q1) * (240.F - hue) / 60.F;
 	} else {
-		// nothing be done here too dumdum
+		out = q1;
 	}
 
 	return out;

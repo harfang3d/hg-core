@@ -26,6 +26,6 @@ void test_plane() {
 	TEST_CHECK(AlmostEqual(p0, p1, 0.000001f));
 
 	TEST_CHECK(Equal(DistanceToPlane(p0, Vec3(4.f, -3.4f, 10.f)), 0.f));
-	TEST_CHECK(Equal(DistanceToPlane(p0, Vec3(6.f, -1.4f, 12.f)), 2.f * sqrt(3.f)));
-	TEST_CHECK(Equal(DistanceToPlane(p0, Vec3(2.f, -5.4f, 8.f)), -2.f * sqrt(3.f)));
+	TEST_CHECK(AlmostEqual(DistanceToPlane(p0, Vec3(6.f, -1.4f, 12.f)), 2.f * sqrt(3.f)));
+	TEST_CHECK(AlmostEqual(DistanceToPlane(p0, Vec3(2.f, -5.4f, 8.f)), -2.f * sqrt(3.f)));
 }

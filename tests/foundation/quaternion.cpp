@@ -48,7 +48,7 @@ void test_quaternion() {
 		q0 += 0.1f;
 		TEST_CHECK(Equal(q0.x, 21.07f));
 		TEST_CHECK(Equal(q0.y, -3.f));
-		TEST_CHECK(Equal(q0.z, 10.12f));
+		TEST_CHECK(AlmostEqual(q0.z, 10.12f));
 		TEST_CHECK(Equal(q0.w, -1.302f));
 	}
 	{
@@ -110,7 +110,7 @@ void test_quaternion() {
 	{
 		Quaternion q0(-2.015f, 0.03f, 27.6f, -0.975f);
 		q0 /= 0.75f;
-		TEST_CHECK(Equal(q0.x, -2.686666666f));
+		TEST_CHECK(AlmostEqual(q0.x, -2.686666666f));
 		TEST_CHECK(Equal(q0.y, 0.04f));
 		TEST_CHECK(AlmostEqual(q0.z, 36.8f, 0.00001f));
 		TEST_CHECK(Equal(q0.w, -1.3f));
@@ -207,7 +207,7 @@ void test_quaternion() {
 		Quaternion q2 = 4.25f * q0;
 		TEST_CHECK(Equal(q1.x, -21.505f));
 		TEST_CHECK(Equal(q1.y, 3.1875f));
-		TEST_CHECK(Equal(q1.z, 11.5874125f));
+		TEST_CHECK(AlmostEqual(q1.z, 11.5874125f));
 		TEST_CHECK(Equal(q1.w, 0.729725f));
 		TEST_CHECK(Equal(q2.x, q1.x));
 		TEST_CHECK(Equal(q2.y, q1.y));

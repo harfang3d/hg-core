@@ -82,7 +82,7 @@ bool IntersectRay(const MinMax &mm, const Vec3 &o, const Vec3 &d, float &tmin, f
 		}
 	}
 
-	return true;
+	return res;
 }
 
 bool IntersectRay(const MinMax &mm, const Vec3 &o, const Vec3 &d) {
