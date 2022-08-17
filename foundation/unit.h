@@ -12,7 +12,7 @@ namespace hg {
 
 /// Convert an angle in degrees to the engine unit system.
 template <typename T> constexpr T Deg(T v) {
-	return v / T(180) * T(3.1415926535);
+	return v / static_cast<T>(180) * static_cast<T>(3.1415926535);
 }
 
 /// Convert an angle in radians to the engine unit system.
@@ -35,15 +35,15 @@ template <typename T> constexpr T Sec(T v) {
 }
 
 template <typename T> constexpr T Csec(T v) {
-	return v * T(0.01);
+	return v * static_cast<T>(0.01);
 }
 
 template <typename T> constexpr T Ms(T v) {
-	return v * T(0.001);
+	return v * static_cast<T>(0.001);
 }
 
 template <typename T> constexpr T Ton(T v) {
-	return v * T(1000);
+	return v * static_cast<T>(1000);
 }
 
 template <typename T> constexpr T Kg(T v) {
@@ -51,11 +51,11 @@ template <typename T> constexpr T Kg(T v) {
 }
 
 template <typename T> constexpr T G(T v) {
-	return v * T(0.001);
+	return v * static_cast<T>(0.001);
 }
 
 template <typename T> constexpr T Km(T v) {
-	return v * T(1000);
+	return v * static_cast<T>(1000);
 }
 
 template <typename T> constexpr T Mtr(T v) {
@@ -63,15 +63,15 @@ template <typename T> constexpr T Mtr(T v) {
 }
 
 template <typename T> constexpr T Cm(T v) {
-	return v * T(0.01);
+	return v * static_cast<T>(0.01);
 }
 
 template <typename T> constexpr T Mm(T v) {
-	return v * T(0.001);
+	return v * static_cast<T>(0.001);
 }
 
 template <typename T> constexpr T Inch(T v) {
-	return v * T(0.0254);
+	return v * static_cast<T>(0.0254);
 }
 
 inline constexpr size_t KB(const size_t size) {
@@ -95,13 +95,13 @@ template <typename T> std::string FormatMemorySize(T v_) {
 	if (v < 1024LL) {
 		str << std::fixed << std::setprecision(0) << v << "B";
 	} else if (v < 1024LL * 1024LL) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL)) / 10.f << "KB";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL)) / 10.F << "KB";
 	} else if (v < 1024LL * 1024LL * 1024LL) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL * 1024LL)) / 10.f << "MB";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL * 1024LL)) / 10.F << "MB";
 	} else if (v < 1024LL * 1024LL * 1024LL * 1024LL) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL * 1024LL * 1024LL)) / 10.f << "GB";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL * 1024LL * 1024LL)) / 10.F << "GB";
 	} else {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL * 1024LL * 1024LL * 1024LL)) / 10.f << "TB";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1024LL * 1024LL * 1024LL * 1024LL)) / 10.F << "TB";
 	}
 
 	return str.str();
@@ -120,11 +120,11 @@ template <typename T> std::string FormatCount(T v_) {
 	if (v < 1000LL) {
 		str << v;
 	} else if (v < 1000LL * 1000LL) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1000LL)) / 10.f << "K";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1000LL)) / 10.F << "K";
 	} else if (v < 1000LL * 1000LL * 1000LL) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1000LL * 1000LL)) / 10.f << "M";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1000LL * 1000LL)) / 10.F << "M";
 	} else {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1000LL * 1000LL * 1000LL)) / 10.f << "G";
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>((v * 10LL) / (1000LL * 1000LL * 1000LL)) / 10.F << "G";
 	}
 
 	return str.str();
@@ -135,17 +135,17 @@ template <typename T> std::string FormatDistance(T v_) {
 
 	float v = static_cast<float>(v_);
 
-	if (v < 0) {
+	if (v < 0.F) {
 		str << "-";
 		v = -v;
 	}
 
-	if (v < 0.1) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) * 1000.f << "mm";
-	} else if (v < 1) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) * 100.f << "cm";
-	} else if (v >= 1000) {
-		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) / 1000.f << "km";
+	if (v < 0.1F) {
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) * 1000.F << "mm";
+	} else if (v < 1.F) {
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) * 100.F << "cm";
+	} else if (v >= 1000.F) {
+		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) / 1000.F << "km";
 	} else {
 		str << std::fixed << std::setfill('0') << std::setprecision(1) << static_cast<float>(v) << "m";
 	}

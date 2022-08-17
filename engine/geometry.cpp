@@ -509,7 +509,7 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 		for (int i = 0; i < 4; ++i) {
 			uint16_t bone_idx = geo.skin[i_vtx].index[i];
 			std::map<uint16_t, uint16_t>::const_iterator bone_map_it = bone_map.find(bone_idx);
-			__ASSERT__(bone_map_it != bone_map.end());
+			HG_ASSERT(bone_map_it != bone_map.end());
 			vtx.index[i] = numeric_cast<uint8_t>(bone_map_it->second);
 			vtx.weight[i] = unpack_float(geo.skin[i_vtx].weight[i]);
 		}

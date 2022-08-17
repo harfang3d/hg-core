@@ -19,13 +19,13 @@ template <> tVec2<float>::tVec2(const Vec4 &v) {
 }
 
 template <> tVec2<int>::tVec2(const Vec3 &v) {
-	x = int(v.x);
-	y = int(v.y);
+	x = static_cast<int>(v.x);
+	y = static_cast<int>(v.y);
 }
 
 template <> tVec2<int>::tVec2(const Vec4 &v) {
-	x = int(v.x);
-	y = int(v.y);
+	x = static_cast<int>(v.x);
+	y = static_cast<int>(v.y);
 }
 
 bool Equal(const Vec2 &a, const Vec2 &b) {
@@ -42,7 +42,7 @@ template <> float Len(const tVec2<float> &v) {
 }
 
 template <> int Len(const tVec2<int> &v) {
-	return int(Sqrt(float(Len2(v))));
+	return static_cast<int>(Sqrt(static_cast<float>(Len2(v))));
 }
 
 template <> float Dist(const tVec2<float> &a, const tVec2<float> &b) {
@@ -50,7 +50,7 @@ template <> float Dist(const tVec2<float> &a, const tVec2<float> &b) {
 }
 
 template <> int Dist(const tVec2<int> &a, const tVec2<int> &b) {
-	return int(Sqrt(float(Dist2(a, b))));
+	return static_cast<int>(Sqrt(static_cast<float>(Dist2(a, b))));
 }
 
 } // namespace hg

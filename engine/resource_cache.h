@@ -96,7 +96,7 @@ public:
 
 	void SetName_unsafe_(uint16_t idx, const std::string &name) {
 		if (idx != 0xffff) {
-			__ASSERT__(resources.is_used(idx));
+			HG_ASSERT(resources.is_used(idx));
 			resources[idx].name = name;
 		}
 	}
@@ -105,7 +105,7 @@ public:
 
 	std::string GetName_unsafe_(uint16_t idx) const {
 		if (idx != 0xffff) {
-			__ASSERT__(resources.is_used(idx));
+			HG_ASSERT(resources.is_used(idx));
 			return resources[idx].name;
 		}
 		return std::string();
@@ -115,7 +115,7 @@ public:
 
 	const T &Get_unsafe_(uint16_t idx) const {
 		if (idx != 0xffff) {
-			__ASSERT__(resources.is_used(idx));
+			HG_ASSERT(resources.is_used(idx));
 			return resources[idx].T_;
 		}
 		return dflt;
@@ -127,7 +127,7 @@ public:
 	}
 
 	T &Get(R ref) {
-		__ASSERT__(IsValidRef(ref));
+		HG_ASSERT(IsValidRef(ref));
 		return resources[ref.ref.idx].T_;
 	}
 

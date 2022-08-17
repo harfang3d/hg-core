@@ -26,7 +26,7 @@ struct MinMax;
 enum Visibility { V_Outside, V_Inside, V_Clipped };
 
 /// Return the visibility of a set of vector.
-Visibility TestVisibility(const Frustum &frustum, uint32_t count, const Vec3 *points, float distance = 0.f);
+Visibility TestVisibility(const Frustum &frustum, uint32_t count, const Vec3 points[], float distance = 0.F);
 /// Return the visibility of a sphere.
 Visibility TestVisibility(const Frustum &frustum, const Vec3 &origin, float radius);
 /// Return the visibility of a minmax.

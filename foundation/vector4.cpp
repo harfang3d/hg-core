@@ -48,8 +48,8 @@ bool AlmostEqual(const Vec4 &a, const Vec4 &b, float e) {
 
 Vec4::Vec4() : x(0.F), y(0.F), z(0.F), w(0.F) {}
 Vec4::Vec4(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
-Vec4::Vec4(const tVec2<int> &v) : x((float)v.x), y((float)v.y), z(0.F), w(1.F) {}
-Vec4::Vec4(const tVec2<float> &v) : x(float(v.x)), y(float(v.y)), z(0.F), w(1.F) {}
+Vec4::Vec4(const tVec2<int> &v) : x(static_cast<float>(v.x)), y(static_cast<float>(v.y)), z(0.F), w(1.F) {}
+Vec4::Vec4(const tVec2<float> &v) : x(v.x), y(v.y), z(0.F), w(1.F) {}
 Vec4::Vec4(const Vec3 &v, float w_) : x(v.x), y(v.y), z(v.z), w(w_) {}
 Vec4::Vec4(const Color &c) : x(c.r), y(c.g), z(c.b), w(c.a) {}
 Vec4::Vec4(float v) : x(v), y(v), z(v), w(v) {}

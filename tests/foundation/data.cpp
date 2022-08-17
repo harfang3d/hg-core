@@ -7,8 +7,8 @@
 
 #include "foundation/data.h"
 
-#include "foundation/file.h"
 #include "foundation/dir.h"
+#include "foundation/file.h"
 
 #include "../utils.h"
 
@@ -20,9 +20,9 @@ using namespace hg;
 
 static int g_alloc_sentinel = 0;
 
-void * operator new[](const size_t size) { 
+void *operator new[](const size_t size) {
 	++g_alloc_sentinel;
-	return operator new(size); 
+	return operator new(size);
 }
 
 #if __cplusplus < 201103L
@@ -32,7 +32,7 @@ void operator delete[](void *block) noexcept
 #endif
 {
 	--g_alloc_sentinel;
-	 operator delete(block);
+	operator delete(block);
 }
 
 void test_data() {
@@ -51,7 +51,7 @@ void test_data() {
 		TEST_CHECK(d1.GetCapacity() == 0);
 		TEST_CHECK(d1.GetCursor() == 0);
 	}
-	{ 
+	{
 		Data d0(10);
 		TEST_CHECK(d0.Empty() == false);
 		TEST_CHECK(d0.GetSize() == 10);
@@ -75,18 +75,18 @@ void test_data() {
 
 		d0.Rewind();
 		TEST_CHECK(d0.GetCursor() == 0);
-		
+
 		for (unsigned int i = 0; i < 50; i++) {
 			TEST_CHECK(Write(d0, i) == true);
 		}
 		TEST_CHECK(d0.GetCursor() == (50 * sizeof(unsigned int)));
-		
+
 		d0.SetCursor(d0.GetSize());
 		for (unsigned int i = 1000; i < 1040; i++) {
 			TEST_CHECK(Write(d0, i) == true);
 		}
 		TEST_CHECK(d0.GetSize() == (5000 + (40 * sizeof(unsigned int))));
-		
+
 		d0.Rewind();
 		for (unsigned int i = 0; i < 50; i++) {
 			unsigned int v;
@@ -131,8 +131,8 @@ void test_data() {
 			TEST_CHECK(v1 == v0);
 		}
 	}
-	{ 
-		Data d0(hg::test::LoremIpsum.data(), hg::test::LoremIpsum.size());
+	{
+		Data d0(reinterpret_cast<const uint8_t *>(hg::test::LoremIpsum.data()), hg::test::LoremIpsum.size());
 		TEST_CHECK(d0.GetSize() == hg::test::LoremIpsum.size());
 
 		d0.Rewind();
@@ -153,32 +153,32 @@ void test_data() {
 
 		d0.Rewind();
 
-		{ 
+		{
 			std::string str;
-			TEST_CHECK(Read(d0, str) == true); 
+			TEST_CHECK(Read(d0, str) == true);
 			TEST_CHECK(str == hg::test::LoremIpsum);
 		}
 
-		{ 
+		{
 			std::string str(hg::test::LoremIpsum);
-			
+
 			d0.Reset();
-			TEST_CHECK(Read(d0, str) == false); 
-	
+			TEST_CHECK(Read(d0, str) == false);
+
 			Write<uint16_t>(d0, 4);
 			d0.Rewind();
-			TEST_CHECK(Read(d0, str) == false); 
+			TEST_CHECK(Read(d0, str) == false);
 
 			d0.Reset();
 			Write<uint16_t>(d0, 0);
 			Write<char>(d0, '\0');
 			d0.Rewind();
-			TEST_CHECK(Read(d0, str) == true); 
+			TEST_CHECK(Read(d0, str) == true);
 			TEST_CHECK(str.empty());
 		}
 	}
 
-	{ 
+	{
 		g_alloc_sentinel = 0;
 
 		size_t size = hg::test::LoremIpsum.size();
@@ -187,7 +187,7 @@ void test_data() {
 
 		TEST_CHECK(g_alloc_sentinel == 1);
 		{
-			Data d0(data, size);
+			Data d0(reinterpret_cast<uint8_t *>(data), size);
 			TEST_CHECK(d0.Empty() == false);
 			TEST_CHECK(d0.GetSize() == size);
 			TEST_CHECK(d0.GetCapacity() == 0);
@@ -195,8 +195,8 @@ void test_data() {
 		}
 		TEST_CHECK(g_alloc_sentinel == 1);
 
-		{ 
-			Data d0(data, size);
+		{
+			Data d0(reinterpret_cast<uint8_t *>(data), size);
 			TEST_CHECK(d0.Empty() == false);
 			TEST_CHECK(d0.GetSize() == size);
 			TEST_CHECK(d0.GetCapacity() == 0);
@@ -220,7 +220,7 @@ void test_data() {
 
 	{
 		std::string filename = hg::test::CreateTempFilepath();
-		
+
 		Data d0;
 		TEST_CHECK(Write(d0, hg::test::LoremIpsum) == true);
 		TEST_CHECK(SaveDataToFile(filename, d0) == true);

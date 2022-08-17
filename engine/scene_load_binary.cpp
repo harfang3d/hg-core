@@ -36,7 +36,7 @@ void SaveComponent(const Scene::Object_ *data_, const Writer &iw, const Handle &
 	for (size_t j = 0; j < mat_count; ++j)
 		Write(iw, h, j < data_->material_infos.size() ? data_->material_infos[j].name : std::string());
 
-	__ASSERT__(data_->bones.size() <= std::numeric_limits<uint16_t>::max());
+	HG_ASSERT(data_->bones.size() <= std::numeric_limits<uint16_t>::max());
 	Write(iw, h, uint16_t(data_->bones.size()));
 	for (std::vector<NodeRef>::const_iterator i = data_->bones.begin(); i != data_->bones.end(); ++i)
 		Write(iw, h, i->idx);

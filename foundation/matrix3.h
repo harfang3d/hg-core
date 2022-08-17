@@ -7,6 +7,7 @@
 namespace hg {
 
 template <typename T> struct tVec2;
+
 struct Vec3;
 struct Vec4;
 struct Mat4;
@@ -22,7 +23,7 @@ struct Mat3 {
 	Mat3();
 	Mat3(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22);
 	explicit Mat3(const Mat4 &m);
-	explicit Mat3(const float *v);
+	explicit Mat3(const float m_[]);
 	Mat3(const Vec3 &x, const Vec3 &y, const Vec3 &z);
 
 	Mat3 &operator+=(const Mat3 &b) {

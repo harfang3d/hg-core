@@ -2,26 +2,30 @@
 
 #include "foundation/math.h"
 #include "foundation/rotation_order.h"
+
 #include <cfloat>
 #include <cmath>
 
 namespace hg {
 
 RotationOrder ReverseRotationOrder(RotationOrder in) {
-	RotationOrder out = RO_Default;
+	RotationOrder out;
 
-	if (in == RO_ZYX)
+	if (in == RO_ZYX) {
 		out = RO_XYZ;
-	else if (in == RO_YZX)
+	} else if (in == RO_YZX) {
 		out = RO_XZY;
-	else if (in == RO_ZXY)
+	} else if (in == RO_ZXY) {
 		out = RO_YXZ;
-	else if (in == RO_XZY)
+	} else if (in == RO_XZY) {
 		out = RO_YZX;
-	else if (in == RO_YXZ)
+	} else if (in == RO_YXZ) {
 		out = RO_ZXY;
-	else if (in == RO_XYZ)
+	} else if (in == RO_XYZ) {
 		out = RO_ZYX;
+	} else {
+		out = RO_Default;
+	}
 
 	return out;
 }
@@ -39,14 +43,15 @@ float Ceil(float v) {
 #if __STDC_VERSION__ >= 199901L
 	return ceilf(v);
 #else
-	return float(ceil(double(v)));
+	return static_cast<float>(ceil(static_cast<double>(v)));
 #endif
 }
+
 float Floor(float v) {
 #if __STDC_VERSION__ >= 199901L
 	return floorf(v);
 #else
-	return float(floor(double(v)));
+	return static_cast<float>(floor(static_cast<double>(v)));
 #endif
 }
 
@@ -64,30 +69,35 @@ float Quantize(float v, float q) {
 }
 
 float Frac(float v) {
-	return v - int(v);
+	return v - static_cast<float>(static_cast<int>(v));
 }
 
 //
 bool IsFinite(float v) {
-	return (v <= FLT_MAX && v >= -FLT_MAX);
+	return (v <= FLT_MAX) && (v >= -FLT_MAX);
 }
 
 //
 float Sin(float v) {
 	return sin(v);
 }
+
 float ASin(float v) {
-	return asin(Clamp(v, -1.f, 1.f));
+	return asin(Clamp(v, -1.F, 1.F));
 }
+
 float Cos(float v) {
 	return cos(v);
 }
+
 float ACos(float v) {
-	return acos(Clamp(v, -1.f, 1.f));
+	return acos(Clamp(v, -1.F, 1.F));
 }
+
 float Tan(float v) {
 	return tan(v);
 }
+
 float ATan(float v) {
 	return atan(v);
 }

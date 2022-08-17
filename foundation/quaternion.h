@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "foundation/math.h"
 #include "foundation/rotation_order.h"
 
 namespace hg {
@@ -14,7 +15,7 @@ struct Mat3;
 struct Quaternion {
 	static const Quaternion Identity;
 
-	Quaternion() : x(0), y(0), z(0), w(1) {}
+	Quaternion() : x(0.F), y(0.F), z(0.F), w(1.F) {}
 	Quaternion(const Quaternion &q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
 	Quaternion(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
 
@@ -70,7 +71,7 @@ struct Quaternion {
 	}
 
 	Quaternion &operator/=(float k) {
-		k = 1.f / k;
+		k = 1.F / k;
 		x *= k;
 		y *= k;
 		z *= k;
@@ -79,26 +80,50 @@ struct Quaternion {
 	}
 };
 
-inline bool operator==(const Quaternion &a, const Quaternion &b) { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
-inline bool operator!=(const Quaternion &a, const Quaternion &b) { return a.x != b.x || a.y != b.y || a.z != b.z || a.w != b.w; }
-
-inline float Dot(const Quaternion &a, const Quaternion &b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
-
-inline Quaternion operator+(const Quaternion &a, const Quaternion &b) { return Quaternion(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
-inline Quaternion operator+(const Quaternion &q, float v) { return Quaternion(q.x + v, q.y + v, q.z + v, q.w + v); }
-inline Quaternion operator-(const Quaternion &a, const Quaternion &b) { return Quaternion(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
-inline Quaternion operator-(const Quaternion &q, float v) { return Quaternion(q.x - v, q.y - v, q.z - v, q.w - v); }
-
-inline Quaternion operator*(const Quaternion &a, const Quaternion &b) {
-	return Quaternion(a.w * b.x + b.w * a.x + a.y * b.z - a.z * b.y,
-		a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z,
-		a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x,
-		a.w * b.w - (a.x * b.x + a.y * b.y + a.z * b.z));
+inline bool operator==(const Quaternion &a, const Quaternion &b) {
+	return Equal(a.x, b.x) && Equal(a.y, b.y) && Equal(a.z, b.z) && Equal(a.w, b.w);
 }
 
-inline Quaternion operator*(const Quaternion &q, float v) { return Quaternion(q.x * v, q.y * v, q.z * v, q.w * v); }
-inline Quaternion operator*(float v, const Quaternion &q) { return q * v; }
-inline Quaternion operator/(const Quaternion &q, float v) { return Quaternion(q.x / v, q.y / v, q.z / v, q.w / v); }
+inline bool operator!=(const Quaternion &a, const Quaternion &b) {
+	return NotEqual(a.x, b.x) || NotEqual(a.y, b.y) || NotEqual(a.z, b.z) || NotEqual(a.w, b.w);
+}
+
+inline float Dot(const Quaternion &a, const Quaternion &b) {
+	return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+inline Quaternion operator+(const Quaternion &a, const Quaternion &b) {
+	return Quaternion(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+}
+
+inline Quaternion operator+(const Quaternion &q, float v) {
+	return Quaternion(q.x + v, q.y + v, q.z + v, q.w + v);
+}
+
+inline Quaternion operator-(const Quaternion &a, const Quaternion &b) {
+	return Quaternion(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
+}
+
+inline Quaternion operator-(const Quaternion &q, float v) {
+	return Quaternion(q.x - v, q.y - v, q.z - v, q.w - v);
+}
+
+inline Quaternion operator*(const Quaternion &a, const Quaternion &b) {
+	return Quaternion(a.w * b.x + b.w * a.x + a.y * b.z - a.z * b.y, a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z,
+		a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x, a.w * b.w - (a.x * b.x + a.y * b.y + a.z * b.z));
+}
+
+inline Quaternion operator*(const Quaternion &q, float v) {
+	return Quaternion(q.x * v, q.y * v, q.z * v, q.w * v);
+}
+
+inline Quaternion operator*(float v, const Quaternion &q) {
+	return q * v;
+}
+
+inline Quaternion operator/(const Quaternion &q, float v) {
+	return Quaternion(q.x / v, q.y / v, q.z / v, q.w / v);
+}
 
 /// Normalize quaternion.
 Quaternion Normalize(const Quaternion &q);
@@ -112,7 +137,7 @@ float Len2(const Quaternion &q);
 
 /// Distance to quaternion.
 float Dist(const Quaternion &a, const Quaternion &b);
-/// Slerp.
+/// Spherical linear interpolation.
 Quaternion Slerp(const Quaternion &a, const Quaternion &b, float t);
 
 /// From Euler angle triplet.

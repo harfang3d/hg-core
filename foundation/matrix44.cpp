@@ -178,7 +178,7 @@ Mat44 Inverse(const Mat44 &m, bool &result) {
 Mat44 Inverse(const Mat44 &m) {
 	bool result;
 	Mat44 out = Inverse(m, result);
-	__ASSERT__(result);
+	HG_ASSERT(result);
 	return out;
 }
 

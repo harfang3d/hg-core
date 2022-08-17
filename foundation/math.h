@@ -53,10 +53,13 @@ template <class T> T inline Wrap(T v, T range_start, T range_end) {
 	const T end = Max(range_start, range_end);
 	const T dt = end - start;
 
-	while (v < start)
+	while (v < start) {
 		v += dt;
-	while (v > end)
+	}
+
+	while (v > end) {
 		v -= dt;
+	}
 
 	return v;
 }
@@ -71,7 +74,7 @@ inline bool NotEqual(float a, float b) {
 	return Abs(a - b) > std::numeric_limits<float>::epsilon();
 }
 
-inline bool AlmostEqual(float a, float b, float e = 0.00001f) {
+inline bool AlmostEqual(float a, float b, float e = 0.00001F) {
 	return Abs(a - b) <= e;
 }
 
@@ -115,7 +118,7 @@ template <typename T> constexpr T LinearInterpolate(T y0, T y1, float t) {
 /// Compute the cosine interpolated value between `y0` and `y1` at `t`.
 /// @see LinearInterpolate, CubicInterpolate and HermiteInterpolate.
 template <typename T> T CosineInterpolate(T y0, T y1, float t) {
-	const float t2 = (1.f - Cos(t * Pi)) / 2.F;
+	const float t2 = (1.F - Cos(t * Pi)) / 2.F;
 	return y0 * (1.F - t2) + y1 * t2;
 }
 
@@ -134,31 +137,32 @@ template <typename T> T CubicInterpolate(T y0, T y1, T y2, T y3, float t) {
 template <typename T> T HermiteInterpolate(T y0, T y1, T y2, T y3, float t, float tension, float bias) {
 	const float t2 = t * t;
 	const float t3 = t2 * t;
-	T t0 = (y1 - y0) * (1.f + bias) * (1.f - tension) / 2.f;
-	t0 += (y2 - y1) * (1.f - bias) * (1.f - tension) / 2.f;
-	T t1 = (y2 - y1) * (1.f + bias) * (1.f - tension) / 2.f;
-	t1 += (y3 - y2) * (1.f - bias) * (1.f - tension) / 2.f;
-	const float a0 = 2.f * t3 - 3 * t2 + 1.f;
-	const float a1 = t3 - 2.f * t2 + t;
+	T t0 = (y1 - y0) * (1.F + bias) * (1.F - tension) / 2.F;
+	t0 += (y2 - y1) * (1.F - bias) * (1.F - tension) / 2.F;
+	T t1 = (y2 - y1) * (1.F + bias) * (1.F - tension) / 2.F;
+	t1 += (y3 - y2) * (1.F - bias) * (1.F - tension) / 2.F;
+	const float a0 = 2.F * t3 - 3.F * t2 + 1.F;
+	const float a1 = t3 - 2.F * t2 + t;
 	const float a2 = t3 - t2;
-	const float a3 = -2.f * t3 + 3.f * t2;
+	const float a3 = -2.F * t3 + 3.F * t2;
 	return y1 * a0 + t0 * a1 + t1 * a2 + y2 * a3;
 }
 
-template <class T> T LinearInterpolateArray(uint32_t count, const T *values, float t) {
-	const float s = t * (count - 1);
-	uint32_t lo = uint32_t(s), hi = lo + 1;
+template <class T> T LinearInterpolateArray(uint32_t count, const T values[], float t) {
+	const float s = t * static_cast<float>(count - 1);
+	uint32_t lo = static_cast<uint32_t>(s), hi = lo + 1;
 
 	lo = Clamp<uint32_t>(lo, 0, count - 1);
 	hi = Clamp<uint32_t>(hi, 0, count - 1);
 
-	return LinearInterpolate(values[lo], values[hi], s - lo);
+	return LinearInterpolate(values[lo], values[hi], s - static_cast<float>(lo));
 }
 
 template <typename T> inline T getPOT(T v) {
 	T n = 1;
-	for (; n < v; n *= 2)
-		;
+	while (n < v) {
+		n *= 2;
+	}
 	return n;
 }
 

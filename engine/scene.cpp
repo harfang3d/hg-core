@@ -380,7 +380,7 @@ void Scene::GetModelDisplayLists(std::vector<ModelDisplayList> &out_opaque, std:
 			if (mat_idx < obj_->materials.size()) { // FIXME fall back to error material
 				const auto mat = &obj_->materials[mat_idx];
 				const auto &bones_table = mdl.lists[i].bones_table;
-				__ASSERT__(bones_table.size() <= max_skinned_model_matrix_count);
+				HG_ASSERT(bones_table.size() <= max_skinned_model_matrix_count);
 
 				const bool is_transparent = GetMaterialBlendMode(*mat) != BM_Opaque;
 
@@ -395,7 +395,7 @@ void Scene::GetModelDisplayLists(std::vector<ModelDisplayList> &out_opaque, std:
 
 					for (int j = 0; j < bones_table.size(); ++j) {
 						auto bone_idx = bones_table[j];
-						__ASSERT__(bone_idx < total_bone_count);
+						HG_ASSERT(bone_idx < total_bone_count);
 
 						uint32_t mtx_idx = trs_ref.idx; // default to the node matrix in case a bone reference is invalid
 
@@ -2209,7 +2209,7 @@ BoundToSceneAnim Scene::BindSceneAnim(AnimRef anim_ref) const {
 
 	std::fill(bound_anim.float_track.begin(), bound_anim.float_track.end(), -1);
 	for (size_t i = 0; i < anim.float_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackHermiteT<float> &t = anim.float_tracks[i];
 		if (t.target == "FogNear")
 			bound_anim.float_track[SFAT_FogNear] = int8_t(i);
@@ -2219,7 +2219,7 @@ BoundToSceneAnim Scene::BindSceneAnim(AnimRef anim_ref) const {
 
 	std::fill(bound_anim.color_track.begin(), bound_anim.color_track.end(), -1);
 	for (size_t i = 0; i < anim.color_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackHermiteT<Color> &t = anim.color_tracks[i];
 		if (t.target == "AmbientColor")
 			bound_anim.color_track[SCAT_AmbientColor] = int8_t(i);
@@ -2277,7 +2277,7 @@ BoundToNodeAnim Scene::BindNodeAnim(NodeRef ref, AnimRef anim_ref) const {
 
 	std::fill(bound_anim.bool_track.begin(), bound_anim.bool_track.end(), -1);
 	for (size_t i = 0; i < anim.bool_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackT<bool> &t = anim.bool_tracks[i];
 		if (t.target == "Enable")
 			bound_anim.bool_track[NBAT_Enable] = int8_t(i);
@@ -2285,7 +2285,7 @@ BoundToNodeAnim Scene::BindNodeAnim(NodeRef ref, AnimRef anim_ref) const {
 
 	std::fill(bound_anim.float_track.begin(), bound_anim.float_track.end(), -1);
 	for (size_t i = 0; i < anim.float_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackHermiteT<float> &t = anim.float_tracks[i];
 		if (t.target == "Light.DiffuseIntensity")
 			bound_anim.float_track[NFAT_LightDiffuseIntensity] = int8_t(i);
@@ -2297,7 +2297,7 @@ BoundToNodeAnim Scene::BindNodeAnim(NodeRef ref, AnimRef anim_ref) const {
 
 	std::fill(bound_anim.vec3_track.begin(), bound_anim.vec3_track.end(), -1);
 	for (size_t i = 0; i < anim.vec3_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackHermiteT<Vec3> &t = anim.vec3_tracks[i];
 		if (t.target == "Position")
 			bound_anim.vec3_track[NV3AT_TransformPosition] = int8_t(i);
@@ -2309,14 +2309,14 @@ BoundToNodeAnim Scene::BindNodeAnim(NodeRef ref, AnimRef anim_ref) const {
 
 	std::fill(bound_anim.vec4_track.begin(), bound_anim.vec4_track.end(), -1);
 	for (size_t i = 0; i < anim.vec4_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackHermiteT<Vec4> &t = anim.vec4_tracks[i];
 
 		// material value vec4
 		size_t slot_idx;
 		std::string value;
 		if (SplitMaterialPropertyName(t.target, slot_idx, value)) {
-			__ASSERT__(slot_idx < 256);
+			HG_ASSERT(slot_idx < 256);
 			BoundToNodeMaterialAnim bound;
 			bound.track_idx = int8_t(i);
 			bound.slot_idx = uint8_t(slot_idx);
@@ -2327,7 +2327,7 @@ BoundToNodeAnim Scene::BindNodeAnim(NodeRef ref, AnimRef anim_ref) const {
 
 	std::fill(bound_anim.quat_track.begin(), bound_anim.quat_track.end(), -1);
 	for (size_t i = 0; i < anim.quat_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackT<Quaternion> &t = anim.quat_tracks[i];
 		if (t.target == "Rotation")
 			bound_anim.quat_track[NQAT_TransformRotation] = int8_t(i);
@@ -2335,7 +2335,7 @@ BoundToNodeAnim Scene::BindNodeAnim(NodeRef ref, AnimRef anim_ref) const {
 
 	std::fill(bound_anim.color_track.begin(), bound_anim.color_track.end(), -1);
 	for (size_t i = 0; i < anim.color_tracks.size(); ++i) {
-		__ASSERT__(i < 128);
+		HG_ASSERT(i < 128);
 		const AnimTrackHermiteT<Color> &t = anim.color_tracks[i];
 		if (t.target == "Light.Diffuse")
 			bound_anim.color_track[NCAT_LightDiffuse] = int8_t(i);

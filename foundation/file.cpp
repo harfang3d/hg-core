@@ -10,9 +10,9 @@
 #include <unistd.h>
 #endif
 
-#include "foundation/file.h"
 #include "foundation/cext.h"
 #include "foundation/dir.h"
+#include "foundation/file.h"
 #include "foundation/log.h"
 #include "foundation/rand.h"
 #include "foundation/string.h"
@@ -26,7 +26,7 @@ namespace hg {
 
 static generational_vector_list<FILE *> files;
 
-static FILE *_Open(const std::string &path, const std::string &mode, bool silent = false) {
+static FILE *Open_(const std::string &path, const std::string &mode, bool silent = false) {
 	FILE *file = nullptr;
 #if _WIN32
 	const std::wstring wpath = utf8_to_wchar(path);
@@ -34,8 +34,9 @@ static FILE *_Open(const std::string &path, const std::string &mode, bool silent
 
 	const errno_t err = _wfopen_s(&file, wpath.data(), wmode.data());
 
-	if (!silent && err != 0)
+	if (!silent && err != 0) {
 		warn(fmt::format("Failed to open file '{}' mode '{}', error code {} ({})", path, mode, err, strerror(err)));
+	}
 #else
 	file = fopen(path.c_str(), mode.c_str());
 #endif
@@ -47,91 +48,154 @@ static inline File from_posix_FILE(FILE *f) {
 	return out;
 }
 
-File Open(const std::string &path, bool silent) { return from_posix_FILE(_Open(path, "rb", silent)); }
-File OpenText(const std::string &path, bool silent) { return from_posix_FILE(_Open(path, "r", silent)); }
-File OpenWrite(const std::string &path) { return from_posix_FILE(_Open(path, "wb")); }
-File OpenWriteText(const std::string &path) { return from_posix_FILE(_Open(path, "w")); }
-File OpenAppendText(const std::string &path) { return from_posix_FILE(_Open(path, "a")); }
-
-bool Close(File file) {
-	if (!files.is_valid(file.ref))
-		return false;
-	fclose(files[file.ref.idx]);
-	files.remove_ref(file.ref);
-	return true;
+//
+File Open(const std::string &path, bool silent) {
+	return from_posix_FILE(Open_(path, "rb", silent));
 }
 
-bool IsValid(File file) { return files.is_valid(file.ref); }
+File OpenText(const std::string &path, bool silent) {
+	return from_posix_FILE(Open_(path, "r", silent));
+}
 
-bool IsEOF(File file) { return files.is_valid(file.ref) ? feof(files[file.ref.idx]) != 0 : true; }
+File OpenWrite(const std::string &path) {
+	return from_posix_FILE(Open_(path, "wb"));
+}
+
+File OpenWriteText(const std::string &path) {
+	return from_posix_FILE(Open_(path, "w"));
+}
+
+File OpenAppendText(const std::string &path) {
+	return from_posix_FILE(Open_(path, "a"));
+}
+
+//
+bool Close(File file) {
+	bool res;
+
+	if (files.is_valid(file.ref)) {
+		fclose(files[file.ref.idx]);
+		files.remove_ref(file.ref);
+		res = true;
+	} else {
+		res = false;
+	}
+
+	return res;
+}
+
+bool IsValid(File file) {
+	return files.is_valid(file.ref);
+}
+
+bool IsEOF(File file) {
+	return files.is_valid(file.ref) ? feof(files[file.ref.idx]) != 0 : true;
+}
 
 size_t GetSize(File file) {
-	if (!files.is_valid(file.ref))
-		return 0;
-	FILE *s = files[file.ref.idx];
-	long t = ftell(s);
-	fseek(s, 0, SEEK_END);
-	long size = ftell(s);
-	fseek(s, t, SEEK_SET);
-	return size;
+	size_t res;
+
+	if (files.is_valid(file.ref)) {
+		FILE *s = files[file.ref.idx];
+		long t = ftell(s);
+		fseek(s, 0, SEEK_END);
+		res = ftell(s);
+		fseek(s, t, SEEK_SET);
+	} else {
+		res = 0;
+	}
+
+	return res;
 }
 
-size_t Read(File file, void *data, size_t size) { return files.is_valid(file.ref) ? fread(data, 1, size, files[file.ref.idx]) : 0; }
+size_t Read(File file, void *data, size_t size) {
+	return files.is_valid(file.ref) ? fread(data, 1, size, files[file.ref.idx]) : 0;
+}
 
-size_t Write(File file, const void *data, size_t size) { return files.is_valid(file.ref) ? fwrite(data, 1, size, files[file.ref.idx]) : 0; }
+size_t Write(File file, const void *data, size_t size) {
+	return files.is_valid(file.ref) ? fwrite(data, 1, size, files[file.ref.idx]) : 0;
+}
 
 bool Seek(File file, ptrdiff_t offset, SeekMode mode) {
 	int _mode;
-	if (mode == SM_Start)
+
+	if (mode == SM_Start) {
 		_mode = SEEK_SET;
-	else if (mode == SM_Current)
+	} else if (mode == SM_Current) {
 		_mode = SEEK_CUR;
-	else
+	} else {
 		_mode = SEEK_END;
-	return files.is_valid(file.ref) ? (fseek(files[file.ref.idx], long(offset), _mode) == 0) : false;
+	}
+
+	bool res;
+
+	if (files.is_valid(file.ref)) {
+		res = fseek(files[file.ref.idx], static_cast<long>(offset), _mode) == 0;
+	} else {
+		res = false;
+	}
+
+	return res;
 }
 
-size_t Tell(File file) { return files.is_valid(file.ref) ? ftell(files[file.ref.idx]) : 0; }
+size_t Tell(File file) {
+	return files.is_valid(file.ref) ? ftell(files[file.ref.idx]) : 0;
+}
 
 void Rewind(File file) {
-	if (files.is_valid(file.ref))
+	if (files.is_valid(file.ref)) {
 		fseek(files[file.ref.idx], 0, SEEK_SET);
+	}
 }
 
 //
 FileInfo GetFileInfo(const std::string &path) {
 	static const FileInfo not_found = {false, 0, 0, 0};
+
+	FileInfo res;
+
 #if _WIN32
 	struct _stat info;
-	const std::wstring wpath = utf8_to_wchar(path);
-	if (_wstat(wpath.c_str(), &info) != 0) {
-		return not_found;
+	if (_wstat(utf8_to_wchar(path).c_str(), &info) == 0) {
+		res = {
+			info.st_mode & S_IFREG ? true : false, static_cast<size_t>(info.st_size), static_cast<time_ns>(info.st_ctime), static_cast<time_ns>(info.st_mtime)};
+	} else {
+		res = not_found;
 	}
 #else
 	struct stat info;
-	if (stat(path.c_str(), &info) != 0)
-		return not_found;
+	if (stat(path.c_str(), &info) == 0) {
+		res = {
+			info.st_mode & S_IFREG ? true : false, static_cast<size_t>(info.st_size), static_cast<time_ns>(info.st_ctime), static_cast<time_ns>(info.st_mtime)};
+	} else {
+		res = not_found;
+	}
 #endif
-	FileInfo out = {info.st_mode & S_IFREG ? true : false, size_t(info.st_size), time_ns(info.st_ctime), time_ns(info.st_mtime)};
-	return out;
+
+	return res;
 }
 
 //
 bool IsFile(const std::string &path) {
+	bool res;
+
 #if _WIN32
 	struct _stat info;
-	const std::wstring wpath = utf8_to_wchar(path);
-	if (_wstat(wpath.c_str(), &info) != 0)
-		return false;
+	if (_wstat(utf8_to_wchar(path).c_str(), &info) == 0) {
+		res = (info.st_mode & S_IFREG) != 0;
+	} else {
+		res = false;
+	}
 #else
 	struct stat info;
-	if (stat(path.c_str(), &info) != 0)
-		return false;
+	if (stat(path.c_str(), &info) == 0) {
+		res = (info.st_mode & S_IFREG) != 0;
+	} else {
+		res = false;
+	}
 #endif
 
-	if (info.st_mode & S_IFREG)
-		return true;
-	return false;
+	return res;
 }
 
 bool Unlink(const std::string &path) {
@@ -150,36 +214,50 @@ bool CopyFile(const std::string &src, const std::string &dst) {
 	const std::wstring wdst = utf8_to_wchar(dst);
 	return ::CopyFileW(wsrc.c_str(), wdst.c_str(), FALSE) ? true : false;
 #else
+	bool res;
+
 	ScopedFile in(Open(src));
-	if (!in)
-		return false;
+	if (in) {
+		ScopedFile out(OpenWrite(dst));
 
-	ScopedFile out(OpenWrite(dst));
+		std::vector<char> data(65536); // 64KB copy
 
-	std::vector<char> data(65536); // 64KB copy
+		res = true;
+		while (!IsEOF(in)) {
+			const size_t size = Read(in, data.data(), data.size());
 
-	while (!IsEOF(in)) {
-		const size_t size = Read(in, data.data(), data.size());
-		if (size == 0)
-			break;
-		if (Write(out, data.data(), size) != size)
-			return false;
+			if (size == 0) {
+				break;
+			}
+
+			if (Write(out, data.data(), size) != size) {
+				res = false;
+				break;
+			}
+		}
+	} else {
+		res = false;
 	}
-	return true;
+
+	return res;
 #endif
 }
 
 //
 bool FileToData(const std::string &path, Data &data, bool silent) {
+	bool res;
 	File file = Open(path, silent);
 
-	if (!IsValid(file)) {
-		return false;
+	if (IsValid(file)) {
+		data.Resize(GetSize(file));
+		Read(file, data.GetData(), data.GetSize());
+		Close(file);
+		res = true;
+	} else {
+		res = false;
 	}
-	data.Resize(GetSize(file));
-	Read(file, data.GetData(), data.GetSize());
-	Close(file);
-	return true;
+
+	return res;
 }
 
 //
@@ -211,6 +289,8 @@ bool WriteString(File file, const std::string &v) {
 	return Write(file, numeric_cast<uint32_t>(len)) && Write(file, v.data(), len) == len;
 }
 
-bool WriteStringAsText(File file, const std::string &v) { return Write(file, v.data(), v.length()) == v.length(); }
+bool WriteStringAsText(File file, const std::string &v) {
+	return Write(file, v.data(), v.length()) == v.length();
+}
 
 } // namespace hg

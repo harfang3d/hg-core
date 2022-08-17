@@ -35,7 +35,7 @@ public:
 
 	//
 	void reserve(size_t count) {
-		__ASSERT__(count < 0x00ffffffU);
+		HG_ASSERT(count < 0x00ffffffU);
 		const uint32_t capacity_ = static_cast<uint32_t>(idx_.size());
 
 		if (count > capacity_) {
@@ -212,7 +212,7 @@ public:
 
 	//
 	uint32_t add(const T &v) {
-		__ASSERT__(size_ < 0x00ffffff);
+		HG_ASSERT(size_ < 0x00ffffff);
 		const size_t capacity_ = capacity();
 
 		if (size_ == capacity_) {
@@ -233,7 +233,7 @@ public:
 
 #if __cpluplus >= 201103L
 	uint32_t add(T &&v) {
-		__ASSERT__(size_ < 0x00ffffff);
+		HG_ASSERT(size_ < 0x00ffffff);
 		const size_t capacity_ = capacity();
 
 		if (size_ == capacity_)
@@ -257,7 +257,7 @@ public:
 
 		{
 			const uint32_t idx = idx_[i];
-			__ASSERT__(!is_free_idx(idx)); // assert entry is in use
+			HG_ASSERT(!is_free_idx(idx)); // assert entry is in use
 			reinterpret_cast<T *>(storage_)[idx].~T(); // destroy object
 		}
 
@@ -392,8 +392,8 @@ private:
 		return idx & 0x80000000U;
 	}
 	static uint32_t make_free_idx(uint32_t free_idx, uint32_t free_skip) {
-		__ASSERT__(free_idx < 0x00ffffffU);
-		__ASSERT__(free_skip < 128U);
+		HG_ASSERT(free_idx < 0x00ffffffU);
+		HG_ASSERT(free_skip < 128U);
 		return 0x80000000U | ((free_skip & 0x7f) << 24) | (free_idx & 0x00ffffffU);
 	}
 	static uint32_t get_free_skip(uint32_t idx) {

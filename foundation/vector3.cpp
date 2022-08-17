@@ -25,7 +25,7 @@ const Vec3 Vec3::Left(-1, 0, 0), Vec3::Right(1, 0, 0), Vec3::Up(0, 1, 0), Vec3::
 
 //
 Vec3::Vec3() : x(0.F), y(0.F), z(0.F) {}
-Vec3::Vec3(const tVec2<int> &v) : x(float(v.x)), y(float(v.y)), z(0.F) {}
+Vec3::Vec3(const tVec2<int> &v) : x(static_cast<float>(v.x)), y(static_cast<float>(v.y)), z(0.F) {}
 Vec3::Vec3(const tVec2<float> &v) : x(v.x), y(v.y), z(0.F) {}
 Vec3::Vec3(const float &v) : x(v), y(v), z(v) {}
 Vec3::Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
@@ -33,9 +33,9 @@ Vec3::Vec3(const Vec4 &v) : x(v.x), y(v.y), z(v.z) {}
 
 //
 int Hash(const Vec3 &v) {
-	const int a = static_cast<int>(v.x * 10.f), b = static_cast<int>(v.y * 10.f), c = static_cast<int>(v.z * 10.f);
+	const int a = static_cast<int>(v.x * 10.F), b = static_cast<int>(v.y * 10.F), c = static_cast<int>(v.z * 10.F);
 	// From Christer Ericson's Realtime Collision Detection.
-	return a * 0x8da6b343 + b * 0xd8163841 + c * 0xcb1ab31f;
+	return a * 0x8DA6B343U + b * 0xD8163841U + c * 0xCB1AB31FU;
 }
 
 //
@@ -89,7 +89,7 @@ Vec3 Max(const Vec3 &a, const Vec3 &b) {
 
 Vec3 Normalize(const Vec3 &v) {
 	const float l = Len(v);
-	return l > 0.f ? v / l : v;
+	return l > 0.F ? v / l : v;
 }
 
 Vec3 Clamp(const Vec3 &v, float min, float max) {
@@ -159,10 +159,11 @@ Vec3 BaseToEuler(const Vec3 &u) {
 	euler.y = _v > 0.00001F ? ASin(u.x / _v) : 0.F;
 
 	if (u.z < 0.F) {
-		if (euler.y < 0.F)
+		if (euler.y < 0.F) {
 			euler.y = -(Pi + euler.y);
-		else
+		} else {
 			euler.y = Pi - euler.y;
+		}
 	}
 
 	euler.z = 0.F;
@@ -181,21 +182,24 @@ Vec3 BaseToEuler(const Vec3 &u, const Vec3 &v) {
 
 	const float vc = Dot(vn, bv);
 
-	if (vc >= 1.F)
+	if (vc >= 1.F) {
 		euler.z = 0.F;
-	else if (vc <= -1.F)
+	} else if (vc <= -1.F) {
 		euler.z = Pi;
-	else
+	} else {
 		euler.z = ACos(vc);
+	}
 
-	if (Dot(Cross(bv, vn), u) <= 0.F)
+	if (Dot(Cross(bv, vn), u) <= 0.F) {
 		euler.z = fmod((Pi + Pi) - euler.z, TwoPi);
+	}
 
 	return euler;
 }
 
 Vec3 Quantize(const Vec3 &v, float qx, float qy, float qz) {
-	return Vec3(qx ? float(int(v.x / qx) * qx) : v.x, qy ? float(int(v.y / qy) * qy) : v.y, qz ? float(int(v.z / qz) * qz) : v.z);
+	return Vec3(qx ? static_cast<float>(static_cast<int>(v.x / qx)) * qx : v.x, qy ? static_cast<float>(static_cast<int>(v.y / qy)) * qy : v.y,
+		qz ? static_cast<float>(static_cast<int>(v.z / qz)) * qz : v.z);
 }
 
 Vec3 Quantize(const Vec3 &v, float q) {

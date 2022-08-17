@@ -15,11 +15,11 @@ Data::Data(const Data &data) : data_(nullptr), size_(0), capacity_(0), has_owner
 	*this = data;
 }
 
-Data::Data(const void *data, size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {
+Data::Data(const uint8_t *data, size_t size) : data_(nullptr), size_(0), capacity_(0), has_ownership(false), cursor(0) {
 	Write(data, size);
 }
 
-Data::Data(void *data, size_t size) : data_(reinterpret_cast<uint8_t *>(data)), size_(size), capacity_(0), has_ownership(false), cursor(0) {}
+Data::Data(uint8_t *data, size_t size) : data_(reinterpret_cast<uint8_t *>(data)), size_(size), capacity_(0), has_ownership(false), cursor(0) {}
 
 Data::~Data() {
 	Free();
@@ -71,11 +71,13 @@ bool Data::Reserve(size_t size) {
 		if (_data_ == nullptr) {
 			res = false;
 		} else {
-			if (data_)
+			if (data_) {
 				std::copy(data_, data_ + size_, _data_);
+			}
 
-			if (has_ownership)
+			if (has_ownership) {
 				delete[] data_;
+			}
 			has_ownership = true;
 
 			data_ = _data_;
@@ -92,8 +94,9 @@ bool Data::Resize(size_t size) {
 	if (Reserve(size)) {
 		size_ = size;
 
-		if (size_ < cursor)
+		if (size_ < cursor) {
 			cursor = size_;
+		}
 
 		res = true;
 	}
@@ -102,22 +105,25 @@ bool Data::Resize(size_t size) {
 }
 
 bool Data::Skip(size_t count) {
-	bool res = false;
+	bool res;
 
 	if (Reserve(cursor + count)) {
 		cursor += count;
 
-		if (cursor > size_)
+		if (cursor > size_) {
 			size_ = cursor;
+		}
 
 		res = true;
+	} else {
+		res = false;
 	}
 
-	return true;
+	return res;
 }
 
 size_t Data::Write(const void *data, size_t size) {
-	size_t res = 0;
+	size_t res;
 
 	if (Reserve(cursor + size)) {
 		std::copy(reinterpret_cast<const uint8_t *>(data), reinterpret_cast<const uint8_t *>(data) + size, data_ + cursor);
@@ -128,6 +134,8 @@ size_t Data::Write(const void *data, size_t size) {
 		}
 
 		res = size;
+	} else {
+		res = 0;
 	}
 
 	return size;
@@ -161,33 +169,38 @@ void Data::Free() {
 
 //
 bool Read(Data &data, std::string &str) {
+	bool res;
+
 	uint16_t size;
-	if (!Read<uint16_t>(data, size)) {
-		return false;
-	}
+	if (Read<uint16_t>(data, size)) {
+		std::vector<char> s_(static_cast<size_t>(size) + 1);
 
-	std::vector<char> s_(size_t(size) + 1);
-	if (data.Read(s_.data(), size) != size) {
-		return false;
-	}
+		if (data.Read(s_.data(), size) == size) {
+			if (size) {
+				str = s_.data();
+			} else {
+				str.clear();
+			}
 
-	if (size) {
-		str = s_.data();
+			res = true;
+		} else {
+			res = false;
+		}
 	} else {
-		str.clear();
+		res = false;
 	}
 
-	return true;
+	return res;
 }
 
 bool Write(Data &data, const std::string &s) {
-	const uint16_t size = uint16_t(s.size());
+	const uint16_t size = static_cast<uint16_t>(s.size());
 	return Write(data, size) && data.Write(s.data(), size) == size;
 }
 
 //
 bool LoadDataFromFile(const std::string &path, Data &data) {
-	bool res = false;
+	bool res;
 
 	const File file = Open(path);
 
@@ -201,13 +214,15 @@ bool LoadDataFromFile(const std::string &path, Data &data) {
 		}
 
 		Close(file);
+	} else {
+		res = false;
 	}
 
 	return res;
 }
 
 bool SaveDataToFile(const std::string &path, const Data &data) {
-	bool res = false;
+	bool res;
 
 	const File file = OpenWrite(path);
 
@@ -216,6 +231,8 @@ bool SaveDataToFile(const std::string &path, const Data &data) {
 		res = wsize == data.GetSize();
 
 		Close(file);
+	} else {
+		res = false;
 	}
 
 	return res;

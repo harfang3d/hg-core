@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 
+#include "foundation/math.h"
+
 namespace hg {
 
 /// RGBA floating point color
@@ -21,15 +23,8 @@ struct Color {
 	static const Color Purple;
 	static const Color Transparent;
 
-	Color() : r(0.f), g(0.f), b(0.f), a(0.f) {}
-	Color(float r_, float g_, float b_, float a_ = 1.f) : r(r_), g(g_), b(b_), a(a_) {}
-
-	inline bool operator==(const Color &v) const {
-		return r == v.r && g == v.g && b == v.b && a == v.a;
-	}
-	inline bool operator!=(const Color &v) const {
-		return r != v.r || g != v.g || b != v.b || a != v.a;
-	}
+	Color() : r(0.F), g(0.F), b(0.F), a(0.F) {}
+	Color(float r_, float g_, float b_, float a_ = 1.F) : r(r_), g(g_), b(b_), a(a_) {}
 
 	inline Color &operator+=(const Color &c) {
 		r += c.r;
@@ -88,7 +83,7 @@ struct Color {
 	}
 
 	inline Color &operator/=(const float k) {
-		float i = 1.0f / k;
+		const float i = 1.F / k;
 		r *= i;
 		g *= i;
 		b *= i;
@@ -97,14 +92,51 @@ struct Color {
 	}
 
 	inline float operator[](int n) const {
-		return (&r)[n];
+		float res;
+
+		if (n == 0) {
+			res = r;
+		} else if (n == 1) {
+			res = g;
+		} else if (n == 2) {
+			res = b;
+		} else if (n == 3) {
+			res = a;
+		} else {
+			res = -1.F;
+		}
+
+		return res;
 	}
+
 	inline float &operator[](int n) {
-		return (&r)[n];
+		float *res;
+
+		if (n == 0) {
+			res = &r;
+		} else if (n == 1) {
+			res = &g;
+		} else if (n == 2) {
+			res = &b;
+		} else if (n == 3) {
+			res = &a;
+		} else {
+			res = nullptr;
+		}
+
+		return *res;
 	}
 
 	float r, g, b, a;
 };
+
+inline bool operator==(const Color &a, const Color &b) {
+	return Equal(a.r, b.r) && Equal(a.g, b.g) && Equal(a.b, b.b) && Equal(a.a, b.a);
+}
+
+inline bool operator!=(const Color &a, const Color &b) {
+	return NotEqual(a.r, b.r) && NotEqual(a.g, b.g) && NotEqual(a.b, b.b) && NotEqual(a.a, b.a);
+}
 
 Color operator+(const Color &a, const Color &b);
 Color operator+(const Color &a, const float v);
@@ -145,7 +177,7 @@ float Dist(const Color &i, const Color &j);
 
 /// Compare two colors.
 bool Equal(const Color &a, const Color &b);
-bool AlmostEqual(const Color &a, const Color &b, const float epsilon = 0.00001f);
+bool AlmostEqual(const Color &a, const Color &b, const float epsilon = 0.00001F);
 
 /// Scale the chroma component of a color, return the result as a new color.
 Color ChromaScale(const Color &c, float k);

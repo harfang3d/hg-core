@@ -186,9 +186,9 @@ Color ToHLS(const Color &c) {
 		const float g_dist = (max - c.g) / diff;
 		const float b_dist = (max - c.b) / diff;
 
-		if (c.r == max) {
+		if (Equal(c.r, max)) {
 			h = b_dist - g_dist;
-		} else if (c.g == max) {
+		} else if (Equal(c.g, max)) {
 			h = 2.F + r_dist - b_dist;
 		} else {
 			h = 4.F + g_dist - r_dist;
@@ -228,16 +228,16 @@ static float QqhToRgb(float q1, float q2, float hue) {
 }
 
 Color FromHLS(const Color &c) {
-	const float p2 = c.g <= 0.5F ? c.g * (1.f + c.b) : c.g + c.b - c.g * c.b;
-	const float p1 = 2.F * c.g - p2;
-
 	float r, g, b;
 
-	if (c.b == 0.F) {
+	if (EqualZero(c.b)) {
 		r = c.g;
 		g = c.g;
 		b = c.g;
 	} else {
+		const float p2 = c.g <= 0.5F ? c.g * (1.F + c.b) : c.g + c.b - c.g * c.b;
+		const float p1 = 2.F * c.g - p2;
+
 		r = QqhToRgb(p1, p2, c.r + 120.F);
 		g = QqhToRgb(p1, p2, c.r);
 		b = QqhToRgb(p1, p2, c.r - 120.F);

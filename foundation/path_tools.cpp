@@ -31,7 +31,7 @@ std::string GetFilePath(const std::string &p) {
 
 	if (i == 0) {
 #if _WIN32
-		__ASSERT__(i > 0);
+		HG_ASSERT(i > 0);
 		return "./"; // a path starting with a slash on windows is a non-sense...
 #else
 		return "/"; // root file

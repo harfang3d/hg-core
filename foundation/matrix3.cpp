@@ -26,21 +26,21 @@ bool Inverse(const Mat3 &m, Mat3 &i) {
 	i.m[2][1] = m.m[0][1] * m.m[2][0] - m.m[0][0] * m.m[2][1];
 	i.m[2][2] = m.m[0][0] * m.m[1][1] - m.m[0][1] * m.m[1][0];
 
-	float k = m.m[0][0] * i.m[0][0] + m.m[0][1] * i.m[1][0] + m.m[0][2] * i.m[2][0];
+	const float k = m.m[0][0] * i.m[0][0] + m.m[0][1] * i.m[1][0] + m.m[0][2] * i.m[2][0];
 
 	bool res = false;
 
 	if (EqualZero(k) == false) {
-		k = 1.F / k;
-		i.m[0][0] *= k;
-		i.m[0][1] *= k;
-		i.m[0][2] *= k;
-		i.m[1][0] *= k;
-		i.m[1][1] *= k;
-		i.m[1][2] *= k;
-		i.m[2][0] *= k;
-		i.m[2][1] *= k;
-		i.m[2][2] *= k;
+		const float ik = 1.F / k;
+		i.m[0][0] *= ik;
+		i.m[0][1] *= ik;
+		i.m[0][2] *= ik;
+		i.m[1][0] *= ik;
+		i.m[1][1] *= ik;
+		i.m[1][2] *= ik;
+		i.m[2][0] *= ik;
+		i.m[2][1] *= ik;
+		i.m[2][2] *= ik;
 		res = true;
 	}
 
@@ -88,7 +88,7 @@ inline void unpack_euler_order(euler_order order, int &i, int &j, int &k, bool &
 
 	repeat = order & REPEAT;
 	odd = ((order & ODD) == ODD);
-	int offset = odd;
+	const int offset = odd;
 	i = (order & AXIS) % 3;
 	j = (i + 1 + offset) % 3;
 	k = (i + 2 - offset) % 3;
@@ -105,8 +105,8 @@ static void ToEuler(const Mat3 &m, euler_order order, float &angle_0, float &ang
 
 	/* Detect repeated indices: */
 	if (repeat) {
-		float s1 = Len(Vec2(m.m[j][i], m.m[k][i]));
-		float c1 = m.m[i][i];
+		const float s1 = Len(Vec2(m.m[j][i], m.m[k][i]));
+		const float c1 = m.m[i][i];
 
 		angle_1 = atan2(s1, c1);
 		if (s1 > tolerance) {
@@ -204,7 +204,7 @@ static Mat3 RotationMat3(float angle_0, float angle_1, float angle_2, euler_orde
 	angle_1 = -angle_1;
 	angle_2 = -angle_2;
 
-	Mat3 m = Mat3::Identity;
+	Mat3 out = Mat3::Identity;
 
 	int i, j, k;
 	bool odd, repeat;
@@ -216,41 +216,41 @@ static Mat3 RotationMat3(float angle_0, float angle_1, float angle_2, euler_orde
 		angle_2 = -angle_2;
 	}
 
-	float s0 = sinf(angle_0);
-	float c0 = cosf(angle_0);
-	float s1 = sinf(angle_1);
-	float c1 = cosf(angle_1);
-	float s2 = sinf(angle_2);
-	float c2 = cosf(angle_2);
+	const float s0 = sinf(angle_0);
+	const float c0 = cosf(angle_0);
+	const float s1 = sinf(angle_1);
+	const float c1 = cosf(angle_1);
+	const float s2 = sinf(angle_2);
+	const float c2 = cosf(angle_2);
 
-	float s0s2 = s0 * s2;
-	float s0c2 = s0 * c2;
-	float c0s2 = c0 * s2;
-	float c0c2 = c0 * c2;
+	const float s0s2 = s0 * s2;
+	const float s0c2 = s0 * c2;
+	const float c0s2 = c0 * s2;
+	const float c0c2 = c0 * c2;
 
 	if (repeat) {
-		m.m[i][i] = c1;
-		m.m[i][j] = s1 * s2;
-		m.m[i][k] = -s1 * c2;
-		m.m[j][i] = s0 * s1;
-		m.m[j][j] = -c1 * s0s2 + c0c2;
-		m.m[j][k] = c1 * s0c2 + c0s2;
-		m.m[k][i] = c0 * s1;
-		m.m[k][j] = -c1 * c0s2 - s0c2;
-		m.m[k][k] = c1 * c0c2 - s0s2;
+		out.m[i][i] = c1;
+		out.m[i][j] = s1 * s2;
+		out.m[i][k] = -s1 * c2;
+		out.m[j][i] = s0 * s1;
+		out.m[j][j] = -c1 * s0s2 + c0c2;
+		out.m[j][k] = c1 * s0c2 + c0s2;
+		out.m[k][i] = c0 * s1;
+		out.m[k][j] = -c1 * c0s2 - s0c2;
+		out.m[k][k] = c1 * c0c2 - s0s2;
 	} else {
-		m.m[i][i] = c1 * c2;
-		m.m[i][j] = c1 * s2;
-		m.m[i][k] = -s1;
-		m.m[j][i] = s1 * s0c2 - c0s2;
-		m.m[j][j] = s1 * s0s2 + c0c2;
-		m.m[j][k] = s0 * c1;
-		m.m[k][i] = s1 * c0c2 + s0s2;
-		m.m[k][j] = s1 * c0s2 - s0c2;
-		m.m[k][k] = c0 * c1;
+		out.m[i][i] = c1 * c2;
+		out.m[i][j] = c1 * s2;
+		out.m[i][k] = -s1;
+		out.m[j][i] = s1 * s0c2 - c0s2;
+		out.m[j][j] = s1 * s0s2 + c0c2;
+		out.m[j][k] = s0 * c1;
+		out.m[k][i] = s1 * c0c2 + s0s2;
+		out.m[k][j] = s1 * c0s2 - s0c2;
+		out.m[k][k] = c0 * c1;
 	}
 
-	return m;
+	return out;
 }
 
 Mat3 RotationMat3(float x, float y, float z, RotationOrder rorder) {
@@ -557,8 +557,8 @@ Vec4 operator*(const Mat3 &m, const Vec4 &v) {
 }
 
 Mat3 operator*(const Mat3 &a, const Mat3 &b) {
-#define __M33M33(__I, __J) a.m[__I][0] * b.m[0][__J] + a.m[__I][1] * b.m[1][__J] + a.m[__I][2] * b.m[2][__J]
-	return Mat3(__M33M33(0, 0), __M33M33(1, 0), __M33M33(2, 0), __M33M33(0, 1), __M33M33(1, 1), __M33M33(2, 1), __M33M33(0, 2), __M33M33(1, 2), __M33M33(2, 2));
+#define M33M33(I, J) a.m[I][0] * b.m[0][J] + a.m[I][1] * b.m[1][J] + a.m[I][2] * b.m[2][J]
+	return Mat3(M33M33(0, 0), M33M33(1, 0), M33M33(2, 0), M33M33(0, 1), M33M33(1, 1), M33M33(2, 1), M33M33(0, 2), M33M33(1, 2), M33M33(2, 2));
 }
 
 Mat3 &Mat3::operator*=(const Mat3 &a) {
@@ -590,16 +590,16 @@ Mat3::Mat3() {
 	m[2][2] = 1.F;
 }
 
-Mat3::Mat3(const float *_m) {
-	m[0][0] = _m[0];
-	m[1][0] = _m[1];
-	m[2][0] = _m[2];
-	m[0][1] = _m[3];
-	m[1][1] = _m[4];
-	m[2][1] = _m[5];
-	m[0][2] = _m[6];
-	m[1][2] = _m[7];
-	m[2][2] = _m[8];
+Mat3::Mat3(const float m_[]) {
+	m[0][0] = m_[0];
+	m[1][0] = m_[1];
+	m[2][0] = m_[2];
+	m[0][1] = m_[3];
+	m[1][1] = m_[4];
+	m[2][1] = m_[5];
+	m[0][2] = m_[6];
+	m[1][2] = m_[7];
+	m[2][2] = m_[8];
 }
 
 Mat3::Mat3(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22) {

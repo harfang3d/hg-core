@@ -84,7 +84,7 @@ void SetS(Mat4 &m, const Vec3 &);
 void SetScale(Mat4 &m, const Vec3 &);
 
 /// Set from float array (ordered per column).
-void Set(Mat4 &m, const float *v);
+void Set(Mat4 &m, const float v[]);
 /// Set values.
 void Set(Mat4 &m, float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22, float m03, float m13, float m23);
 

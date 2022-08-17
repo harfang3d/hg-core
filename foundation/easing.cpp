@@ -15,68 +15,200 @@
 
 namespace hg {
 
-template <EaseFunc Ease> float EaseOut(float t) { return 1.f - Ease(1.f - t); }
+template <EaseFunc Ease> float EaseOut(float t) {
+	return 1.F - Ease(1.F - t);
+}
 
 template <EaseFunc EaseFrom0toH, EaseFunc EaseFromHto1> float EaseMix(float t) {
-	return t < 0.5f ? EaseFrom0toH(2.f * t) * 0.5f : EaseFromHto1(2.f * t - 1.f) * 0.5f + 0.5f;
+	return t < 0.5F ? EaseFrom0toH(2.F * t) * 0.5F : EaseFromHto1(2.F * t - 1.F) * 0.5F + 0.5F;
 }
 
-float EaseLinear(float t) { return t; }
-float EaseStep(float t) { return t < 0.5f ? 0.f : 1.f; }
-float EaseSmoothStep(float t) { return (t * t) * (3.f - 2.f * t); }
-float EaseInQuad(float t) { return (t * t); }
-float EaseOutQuad(float t) { return EaseOut<EaseInQuad>(t); }
-float EaseInOutQuad(float t) { return EaseMix<EaseInQuad, EaseOutQuad>(t); }
-float EaseOutInQuad(float t) { return EaseMix<EaseOutQuad, EaseInQuad>(t); }
-float EaseInCubic(float t) { return t * t * t; }
-float EaseOutCubic(float t) { return EaseOut<EaseInCubic>(t); }
-float EaseInOutCubic(float t) { return EaseMix<EaseInCubic, EaseOutCubic>(t); }
-float EaseOutInCubic(float t) { return EaseMix<EaseOutCubic, EaseInCubic>(t); }
-float EaseInQuart(float t) { return t * t * t * t; }
-float EaseOutQuart(float t) { return EaseOut<EaseInQuart>(t); }
-float EaseInOutQuart(float t) { return EaseMix<EaseInQuart, EaseOutQuart>(t); }
-float EaseOutInQuart(float t) { return EaseMix<EaseOutQuart, EaseInQuart>(t); }
-float EaseInQuint(float t) { return t * t * t * t * t; }
-float EaseOutQuint(float t) { return EaseOut<EaseInQuint>(t); }
-float EaseInOutQuint(float t) { return EaseMix<EaseInQuint, EaseOutQuint>(t); }
-float EaseOutInQuint(float t) { return EaseMix<EaseOutQuint, EaseInQuint>(t); }
-float EaseInSine(float t) { return 1.f - cosf(t * HalfPi); }
-float EaseOutSine(float t) { return EaseOut<EaseInSine>(t); }
-float EaseInOutSine(float t) { return EaseMix<EaseInSine, EaseOutSine>(t); }
-float EaseOutInSine(float t) { return EaseMix<EaseOutSine, EaseInSine>(t); }
-float EaseInExpo(float t) { return powf(2.f, 10.f * (t - 1.f)) - 0.001f; }
-float EaseOutExpo(float t) { return EaseOut<EaseInExpo>(t); }
-float EaseInOutExpo(float t) { return EaseMix<EaseInExpo, EaseOutExpo>(t); }
-float EaseOutInExpo(float t) { return EaseMix<EaseOutExpo, EaseInExpo>(t); }
-float EaseInCirc(float t) { return -(sqrtf(1.f - t * t) - 1.f); }
-float EaseOutCirc(float t) { return EaseOut<EaseInCirc>(t); }
-float EaseInOutCirc(float t) { return EaseMix<EaseInCirc, EaseOutCirc>(t); }
-float EaseOutInCirc(float t) { return EaseMix<EaseOutCirc, EaseInCirc>(t); }
-float EaseOutElastic(float t) { return powf(2.f, -10.f * t) * sinf((t - 0.3f / 4.f) * (2.f * Pi) / 0.3f) + 1.f; }
-float EaseInElastic(float t) { return EaseOut<EaseOutElastic>(t); }
-float EaseInOutElastic(float t) { return EaseMix<EaseInElastic, EaseOutElastic>(t); }
-float EaseOutInElastic(float t) { return EaseMix<EaseOutElastic, EaseInElastic>(t); }
-float EaseInBack(float t) { return EaseInCubic(t) - t * sinf(t * Pi); }
-float EaseOutBack(float t) { return EaseOut<EaseInBack>(t); }
-float EaseInOutBack(float t) { return EaseMix<EaseInBack, EaseOutBack>(t); }
-float EaseOutInBack(float t) { return EaseMix<EaseOutBack, EaseInBack>(t); }
+//
+float EaseLinear(float t) {
+	return t;
+}
 
+float EaseStep(float t) {
+	return t < 0.5F ? 0.F : 1.F;
+}
+
+float EaseSmoothStep(float t) {
+	return (t * t) * (3.F - 2.F * t);
+}
+
+float EaseInQuad(float t) {
+	return (t * t);
+}
+
+float EaseOutQuad(float t) {
+	return EaseOut<EaseInQuad>(t);
+}
+
+float EaseInOutQuad(float t) {
+	return EaseMix<EaseInQuad, EaseOutQuad>(t);
+}
+
+float EaseOutInQuad(float t) {
+	return EaseMix<EaseOutQuad, EaseInQuad>(t);
+}
+
+float EaseInCubic(float t) {
+	return t * t * t;
+}
+
+float EaseOutCubic(float t) {
+	return EaseOut<EaseInCubic>(t);
+}
+
+float EaseInOutCubic(float t) {
+	return EaseMix<EaseInCubic, EaseOutCubic>(t);
+}
+
+float EaseOutInCubic(float t) {
+	return EaseMix<EaseOutCubic, EaseInCubic>(t);
+}
+
+float EaseInQuart(float t) {
+	return t * t * t * t;
+}
+
+float EaseOutQuart(float t) {
+	return EaseOut<EaseInQuart>(t);
+}
+
+float EaseInOutQuart(float t) {
+	return EaseMix<EaseInQuart, EaseOutQuart>(t);
+}
+
+float EaseOutInQuart(float t) {
+	return EaseMix<EaseOutQuart, EaseInQuart>(t);
+}
+
+float EaseInQuint(float t) {
+	return t * t * t * t * t;
+}
+
+float EaseOutQuint(float t) {
+	return EaseOut<EaseInQuint>(t);
+}
+
+float EaseInOutQuint(float t) {
+	return EaseMix<EaseInQuint, EaseOutQuint>(t);
+}
+
+float EaseOutInQuint(float t) {
+	return EaseMix<EaseOutQuint, EaseInQuint>(t);
+}
+
+float EaseInSine(float t) {
+	return 1.F - cosf(t * HalfPi);
+}
+
+float EaseOutSine(float t) {
+	return EaseOut<EaseInSine>(t);
+}
+
+float EaseInOutSine(float t) {
+	return EaseMix<EaseInSine, EaseOutSine>(t);
+}
+
+float EaseOutInSine(float t) {
+	return EaseMix<EaseOutSine, EaseInSine>(t);
+}
+
+float EaseInExpo(float t) {
+	return powf(2.F, 10.F * (t - 1.F)) - 0.001F;
+}
+
+float EaseOutExpo(float t) {
+	return EaseOut<EaseInExpo>(t);
+}
+
+float EaseInOutExpo(float t) {
+	return EaseMix<EaseInExpo, EaseOutExpo>(t);
+}
+
+float EaseOutInExpo(float t) {
+	return EaseMix<EaseOutExpo, EaseInExpo>(t);
+}
+
+float EaseInCirc(float t) {
+	return -(sqrtf(1.F - t * t) - 1.F);
+}
+
+float EaseOutCirc(float t) {
+	return EaseOut<EaseInCirc>(t);
+}
+
+float EaseInOutCirc(float t) {
+	return EaseMix<EaseInCirc, EaseOutCirc>(t);
+}
+
+float EaseOutInCirc(float t) {
+	return EaseMix<EaseOutCirc, EaseInCirc>(t);
+}
+
+float EaseOutElastic(float t) {
+	return powf(2.F, -10.F * t) * sinf((t - 0.3F / 4.F) * (2.F * Pi) / 0.3F) + 1.F;
+}
+
+float EaseInElastic(float t) {
+	return EaseOut<EaseOutElastic>(t);
+}
+
+float EaseInOutElastic(float t) {
+	return EaseMix<EaseInElastic, EaseOutElastic>(t);
+}
+
+float EaseOutInElastic(float t) {
+	return EaseMix<EaseOutElastic, EaseInElastic>(t);
+}
+
+float EaseInBack(float t) {
+	return EaseInCubic(t) - t * sinf(t * Pi);
+}
+
+float EaseOutBack(float t) {
+	return EaseOut<EaseInBack>(t);
+}
+
+float EaseInOutBack(float t) {
+	return EaseMix<EaseInBack, EaseOutBack>(t);
+}
+
+float EaseOutInBack(float t) {
+	return EaseMix<EaseOutBack, EaseInBack>(t);
+}
+
+//
 float EaseOutBounce(float t) {
-	if (4.f / 11.f > t)
-		return 121.f / 16.f * t * t;
+	float res;
 
-	if (8.f / 11.f > t)
-		return 363.f / 40.f * t * t - 99.f / 10.f * t + 17.f / 5.f;
+	if (4.F / 11.F > t) {
+		res = 121.F / 16.F * t * t;
+	} else if (8.F / 11.F > t) {
+		res = 363.F / 40.F * t * t - 99.F / 10.F * t + 17.F / 5.F;
+	} else if (9.F / 10.F > t) {
+		res = 4356.F / 361.F * t * t - 35442.F / 1805.F * t + 16061.F / 1805.F;
+	} else {
+		res = 54.F / 5.F * t * t - 513.F / 25.F * t + 268.F / 25.F;
+	}
 
-	if (9.f / 10.f > t)
-		return 4356.f / 361.f * t * t - 35442.f / 1805.f * t + 16061.f / 1805.f;
-
-	return 54.f / 5.f * t * t - 513.f / 25.f * t + 268.f / 25.f;
+	return res;
 }
 
-float EaseInBounce(float t) { return EaseOut<EaseOutBounce>(t); }
-float EaseInOutBounce(float t) { return EaseMix<EaseInBounce, EaseOutBounce>(t); }
-float EaseOutInBounce(float t) { return EaseMix<EaseOutBounce, EaseInBounce>(t); }
+//
+float EaseInBounce(float t) {
+	return EaseOut<EaseOutBounce>(t);
+}
+
+float EaseInOutBounce(float t) {
+	return EaseMix<EaseInBounce, EaseOutBounce>(t);
+}
+
+float EaseOutInBounce(float t) {
+	return EaseMix<EaseOutBounce, EaseInBounce>(t);
+}
 
 //
 static const EaseFunc Ease_func[E_Count + 1] = {EaseLinear, EaseStep, EaseSmoothStep, EaseInQuad, EaseOutQuad, EaseInOutQuad, EaseOutInQuad, EaseInCubic,
@@ -85,6 +217,8 @@ static const EaseFunc Ease_func[E_Count + 1] = {EaseLinear, EaseStep, EaseSmooth
 	EaseInOutCirc, EaseOutInCirc, EaseInElastic, EaseOutElastic, EaseInOutElastic, EaseOutInElastic, EaseInBack, EaseOutBack, EaseInOutBack, EaseOutInBack,
 	EaseInBounce, EaseOutBounce, EaseInOutBounce, EaseOutInBounce, EaseLinear};
 
-EaseFunc GetEaseFunc(Easing easing) { return Ease_func[easing]; }
+EaseFunc GetEaseFunc(Easing easing) {
+	return Ease_func[easing];
+}
 
 } // namespace hg

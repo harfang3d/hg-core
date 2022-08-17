@@ -113,7 +113,7 @@ void ModelBuilder::AddPolygon(const std::vector<VtxIdxType> &idxs) {
 void ModelBuilder::AddBoneIdx(uint16_t idx) {
 	ModelBuilder::List &list = lists.back();
 	list.bones_table.push_back(idx);
-	__ASSERT__(list.bones_table.size() <= max_skinned_model_matrix_count);
+	HG_ASSERT(list.bones_table.size() <= max_skinned_model_matrix_count);
 }
 
 //

@@ -23,10 +23,10 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask = DE_Al
 
 size_t GetDirSize(const std::string &path);
 
-bool MkDir(const std::string &path, int permissions = 01777, bool verbose = false);
+bool MkDir(const std::string &path, int permissions = 1023, bool verbose = false); // 01777
 bool RmDir(const std::string &path, bool verbose = false);
 
-bool MkTree(const std::string &path, int permissions = 01777, bool verbose = false);
+bool MkTree(const std::string &path, int permissions = 1023, bool verbose = false); // 01777
 bool RmTree(const std::string &path, bool verbose = false);
 
 bool IsDir(const std::string &path);

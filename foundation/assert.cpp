@@ -2,17 +2,21 @@
 
 #include "foundation/assert.h"
 
-#include <cassert>
 #include <fmt/ostream.h>
 #include <iostream>
 
+#include "extern/debug-trap.h"
+
 namespace hg {
 
-static void generic_trigger_assert(const std::string &, int, const std::string &, const std::string &condition, const std::string &message) {
-	fmt::print(std::cerr, "Assertion failed: {}\n", condition);
-	if (!message.empty())
+static void generic_trigger_assert(const std::string &source, int line, const std::string &function, const std::string &condition, const std::string &message) {
+	fmt::print(std::cerr, "Assertion failed in {} at {}:{}: {}\n", function, source, line, condition);
+
+	if (!message.empty()) {
 		fmt::print(std::cerr, "    Reason: {}\n", message);
-	assert(false);
+	}
+
+	psnip_trap();
 }
 
 void (*trigger_assert)(

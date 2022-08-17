@@ -1533,7 +1533,7 @@ int GetPipelineProgramVariantCount(const std::vector<PipelineProgramFeature> &fe
 }
 
 int GetPipelineProgramVariantIndex(const std::vector<PipelineProgramFeature> &feats, const std::vector<int> &states) {
-	__ASSERT__(feats.size() == states.size());
+	HG_ASSERT(feats.size() == states.size());
 
 	int k = 1, idx = 0;
 	for (size_t i = 0; i < feats.size(); ++i) {
@@ -1545,7 +1545,7 @@ int GetPipelineProgramVariantIndex(const std::vector<PipelineProgramFeature> &fe
 }
 
 std::string GetPipelineProgramVariantName(const std::string &name, const std::vector<PipelineProgramFeature> &feats, const std::vector<int> &states) {
-	__ASSERT__(feats.size() == states.size());
+	HG_ASSERT(feats.size() == states.size());
 
 	std::vector<std::string> variant_tags;
 	variant_tags.reserve(feats.size() + 2);
@@ -2400,7 +2400,7 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, Mode
 			if (idx_type_size == 0)
 				break; // EOLists
 
-			__ASSERT_MSG__(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
+			HG_ASSERT_MSG(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
 		}
 
 		// index buffer
@@ -2748,7 +2748,7 @@ static void _RenderDisplayLists(bgfx::ViewId view_id, const std::vector<DisplayL
 	const auto i_mtx = bgfx::setTransform(mtxs, uint16_t(mtx_count));
 
 	const auto lists_size = lists.size();
-	__ASSERT__(lists_size == depths.size());
+	HG_ASSERT(lists_size == depths.size());
 
 	for (size_t i = 0; i < lists_size; ++i) {
 		bgfx::setTransform(i_mtx);
@@ -2780,7 +2780,7 @@ static void _DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<Model
 	uint32_t mtx_idx = 0xffffffff, i_mtx = 0xffffffff; // last set_matrix
 
 	const auto dl_size = display_lists.size();
-	__ASSERT__(depths == nullptr || dl_size == depths->size());
+	HG_ASSERT(depths == nullptr || dl_size == depths->size());
 
 	for (size_t i = 0; i < dl_size; ++i) {
 		const auto &dl = display_lists[i];
@@ -2799,7 +2799,7 @@ static void _DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<Model
 		}
 
 		const auto &mdl = res.models.Get_unsafe_(dl.mdl_idx);
-		__ASSERT__(dl.mat != nullptr);
+		HG_ASSERT(dl.mat != nullptr);
 
 		_RenderPipelineStageDisplayList(view_id, mdl.lists[dl.lst_idx], *dl.mat, pipeline_config_idx, res, values, textures, depths ? (*depths)[i] : 0);
 	}
@@ -2829,12 +2829,12 @@ static void _DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vecto
 	bgfxMatrix4 _mtx[max_skinned_model_matrix_count] = {0};
 
 	const auto dl_size = display_lists.size();
-	__ASSERT__(depths == nullptr || dl_size == depths->size());
+	HG_ASSERT(depths == nullptr || dl_size == depths->size());
 
 	for (size_t i = 0; i < dl_size; ++i) {
 		const auto &dl = display_lists[i];
 
-		__ASSERT__(dl.bone_count <= max_skinned_model_matrix_count);
+		HG_ASSERT(dl.bone_count <= max_skinned_model_matrix_count);
 
 		const auto &mdl = res.models.Get_unsafe_(dl.mdl_idx);
 
@@ -2850,7 +2850,7 @@ static void _DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vecto
 			bgfx::setUniform(u_previous_model, _mtx, dl.bone_count);
 		}
 
-		__ASSERT__(dl.mat != nullptr);
+		HG_ASSERT(dl.mat != nullptr);
 
 		_RenderPipelineStageDisplayList(view_id, mdl.lists[dl.lst_idx], *dl.mat, pipeline_config_idx, res, values, textures, depths ? (*depths)[i] : 0);
 	}
@@ -3026,125 +3026,125 @@ Vertices &Vertices::Begin(size_t i) {
 
 	vtx_attr_flag = 0;
 
-	__ASSERT__(idx == -1);
+	HG_ASSERT(idx == -1);
 	idx = numeric_cast<int>(i);
 	return *this;
 }
 
 Vertices &Vertices::SetPos(const Vec3 &pos) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&pos.x, false, bgfx::Attrib::Position, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Position;
 	return *this;
 }
 
 Vertices &Vertices::SetNormal(const Vec3 &normal) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&normal.x, true, bgfx::Attrib::Normal, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Normal;
 	return *this;
 }
 
 Vertices &Vertices::SetTangent(const Vec3 &tangent) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&tangent.x, true, bgfx::Attrib::Tangent, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Tangent;
 	return *this;
 }
 
 Vertices &Vertices::SetBinormal(const Vec3 &binormal) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&binormal.x, true, bgfx::Attrib::Bitangent, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Bitangent;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord0(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord0, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord0;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord1(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord1, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord1;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord2(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord2, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord2;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord3(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord3, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord3;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord4(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord4, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord4;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord5(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord5, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord5;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord6(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord6, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord6;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord7(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord7, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord7;
 	return *this;
 }
 
 Vertices &Vertices::SetColor0(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color0, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color0;
 	return *this;
 }
 
 Vertices &Vertices::SetColor1(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color1, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color1;
 	return *this;
 }
 
 Vertices &Vertices::SetColor2(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color2, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color2;
 	return *this;
 }
 
 Vertices &Vertices::SetColor3(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color3, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color3;
 	return *this;
 }
 
 void Vertices::End(bool validate) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 
 	if (validate) {
 		static const std::string &attr_name[bgfx::Attrib::Count] = {"Position", "Normal", "Tangent", "Bitangent", "Color0", "Color1", "Color2", "Color3", "Indices",

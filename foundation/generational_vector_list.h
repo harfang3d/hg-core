@@ -10,23 +10,31 @@ namespace hg {
 
 struct gen_ref {
 	uint32_t idx, gen;
-	gen_ref() : idx(0xffffffff), gen(0xffffffff) {}
+	gen_ref() : idx(0xffffffffU), gen(0xffffffffU) {}
 };
 
 static const gen_ref invalid_gen_ref;
 
-inline bool operator==(gen_ref a, gen_ref b) { return a.idx == b.idx && a.gen == b.gen; }
-inline bool operator!=(gen_ref a, gen_ref b) { return a.idx != b.idx || a.gen != b.gen; }
+inline bool operator==(gen_ref a, gen_ref b) {
+	return a.idx == b.idx && a.gen == b.gen;
+}
 
-inline bool operator<(gen_ref a, gen_ref b) { return a.gen == b.gen ? a.idx < b.idx : a.gen < b.gen; }
+inline bool operator!=(gen_ref a, gen_ref b) {
+	return a.idx != b.idx || a.gen != b.gen;
+}
+
+inline bool operator<(gen_ref a, gen_ref b) {
+	return a.gen == b.gen ? a.idx < b.idx : a.gen < b.gen;
+}
 
 template <typename T> class generational_vector_list : public vector_list<T> {
 public:
 	gen_ref add_ref(const T &v) {
 		gen_ref ref;
 		ref.idx = vector_list<T>::add(v);
-		if (ref.idx >= generations.size())
-			generations.resize(size_t(ref.idx) + 64);
+		if (ref.idx >= generations.size()) {
+			generations.resize(static_cast<size_t>(ref.idx) + 64);
+		}
 		ref.gen = generations[ref.idx];
 		return ref;
 	}
@@ -51,7 +59,7 @@ public:
 		const uint32_t idx = this->first();
 		gen_ref ref;
 		ref.idx = idx;
-		ref.gen = idx == 0xffffffff ? 0xffffffff : generations[idx];
+		ref.gen = idx == 0xffffffffU ? 0xffffffffU : generations[idx];
 		return ref;
 	}
 
@@ -59,24 +67,34 @@ public:
 		const uint32_t idx = this->next(ref.idx);
 		gen_ref next_ref;
 		next_ref.idx = idx;
-		next_ref.gen = idx == 0xffffffff ? 0xffffffff : generations[idx];
+		next_ref.gen = idx == 0xffffffffU ? 0xffffffffU : generations[idx];
 		return next_ref;
 	}
 
-	T &get_safe(gen_ref ref, T &dflt) { return is_valid(ref) ? (*this)[ref.idx] : dflt; }
-	const T &get_safe(gen_ref ref, const T &dflt) const { return is_valid(ref) ? (*this)[ref.idx] : dflt; }
-
-	gen_ref get_ref(uint32_t idx) const {
-		if (this->is_used(idx) && idx < generations.size()) {
-			gen_ref ref;
-			ref.idx = idx;
-			ref.gen = generations[idx];
-			return ref;
-		}
-		return invalid_gen_ref;
+	T &get_safe(gen_ref ref, T &dflt) {
+		return is_valid(ref) ? (*this)[ref.idx] : dflt;
 	}
 
-	bool is_valid(gen_ref ref) const { return this->is_used(ref.idx) && ref.idx < generations.size() && ref.gen == generations[ref.idx]; }
+	const T &get_safe(gen_ref ref, const T &dflt) const {
+		return is_valid(ref) ? (*this)[ref.idx] : dflt;
+	}
+
+	gen_ref get_ref(uint32_t idx) const {
+		gen_ref ref;
+
+		if (this->is_used(idx) && idx < generations.size()) {
+			ref.idx = idx;
+			ref.gen = generations[idx];
+		} else {
+			ref = invalid_gen_ref;
+		}
+
+		return ref;
+	}
+
+	bool is_valid(gen_ref ref) const {
+		return this->is_used(ref.idx) && ref.idx < generations.size() && ref.gen == generations[ref.idx];
+	}
 
 	void clear() {
 		vector_list<T>::clear();

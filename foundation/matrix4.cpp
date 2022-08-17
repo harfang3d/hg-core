@@ -163,9 +163,11 @@ void SetColumn(Mat4 &m, unsigned int n, const Vec3 &v) {
 Vec3 GetX(const Mat4 &m) {
 	return GetColumn(m, 0);
 }
+
 Vec3 GetY(const Mat4 &m) {
 	return GetColumn(m, 1);
 }
+
 Vec3 GetZ(const Mat4 &m) {
 	return GetColumn(m, 2);
 }
@@ -173,6 +175,7 @@ Vec3 GetZ(const Mat4 &m) {
 Vec3 GetT(const Mat4 &m) {
 	return GetColumn(m, 3);
 }
+
 Vec3 GetTranslation(const Mat4 &m) {
 	return GetT(m);
 }
@@ -190,6 +193,7 @@ Vec3 GetRotation(const Mat4 &m, RotationOrder order) {
 Vec3 GetS(const Mat4 &m) {
 	return Vec3(Len(GetX(m)), Len(GetY(m)), Len(GetZ(m)));
 }
+
 Vec3 GetScale(const Mat4 &m) {
 	return GetS(m);
 }
@@ -207,9 +211,11 @@ Mat3 GetRotationMatrix(const Mat4 &m) {
 void SetX(Mat4 &m, const Vec3 &v) {
 	SetColumn(m, 0, v);
 }
+
 void SetY(Mat4 &m, const Vec3 &v) {
 	SetColumn(m, 1, v);
 }
+
 void SetZ(Mat4 &m, const Vec3 &v) {
 	SetColumn(m, 2, v);
 }
@@ -217,6 +223,7 @@ void SetZ(Mat4 &m, const Vec3 &v) {
 void SetT(Mat4 &m, const Vec3 &v) {
 	SetTranslation(m, v);
 }
+
 void SetTranslation(Mat4 &m, const Vec3 &v) {
 	SetColumn(m, 3, v);
 }
@@ -235,6 +242,7 @@ void SetScale(Mat4 &m, const Vec3 &v) {
 Mat4 TransformationMat4(const Vec3 &p, const Mat3 &r) {
 	return TransformationMat4(p, r, Vec3::One);
 }
+
 Mat4 TransformationMat4(const Vec3 &p, const Mat3 &r, const Vec3 &s) {
 	return Mat4(r.m[0][0] * s.x, r.m[1][0] * s.x, r.m[2][0] * s.x, r.m[0][1] * s.y, r.m[1][1] * s.y, r.m[2][1] * s.y, r.m[0][2] * s.z, r.m[1][2] * s.z,
 		r.m[2][2] * s.z, p.x, p.y, p.z);
@@ -243,6 +251,7 @@ Mat4 TransformationMat4(const Vec3 &p, const Mat3 &r, const Vec3 &s) {
 Mat4 TransformationMat4(const Vec3 &p, const Vec3 &e) {
 	return TransformationMat4(p, e, Vec3::One);
 }
+
 Mat4 TransformationMat4(const Vec3 &p, const Vec3 &e, const Vec3 &s) {
 	return TransformationMat4(p, RotationMat3(e), s);
 }
@@ -396,12 +405,15 @@ Mat4 Normalize(const Mat4 &m) {
 Mat4 TranslationMat4(const Vec3 &t) {
 	return Mat4(1.F, 0.F, 0.F, 0.F, 1.F, 0.F, 0.F, 0.F, 1.F, t.x, t.y, t.z);
 }
+
 Mat4 RotationMat4(const Vec3 &e, RotationOrder r) {
 	return Mat4(RotationMat3(e, r));
 }
+
 Mat4 ScaleMat4(const Vec3 &s) {
 	return Mat4(s.x, 0.F, 0.F, 0.F, s.y, 0.F, 0.F, 0.F, s.z, 0.F, 0.F, 0.F);
 }
+
 Mat4 ScaleMat4(float s) {
 	return Mat4(s, 0.F, 0.F, 0.F, s, 0.F, 0.F, 0.F, s, 0.F, 0.F, 0.F);
 }
@@ -410,6 +422,7 @@ Mat4 ScaleMat4(float s) {
 Mat4 Mat4LookAt(const Vec3 &p, const Vec3 &at, const Vec3 &s) {
 	return TransformationMat4(p, Mat3LookAt(at - p), s);
 }
+
 Mat4 Mat4LookAtUp(const Vec3 &p, const Vec3 &at, const Vec3 &up, const Vec3 &s) {
 	return TransformationMat4(p, Mat3LookAt(at - p, up), s);
 }
@@ -417,12 +430,13 @@ Mat4 Mat4LookAtUp(const Vec3 &p, const Vec3 &at, const Vec3 &up, const Vec3 &s) 
 Mat4 Mat4LookToward(const Vec3 &p, const Vec3 &d, const Vec3 &s) {
 	return TransformationMat4(p, Mat3LookAt(d), s);
 }
+
 Mat4 Mat4LookTowardUp(const Vec3 &p, const Vec3 &d, const Vec3 &up, const Vec3 &s) {
 	return TransformationMat4(p, Mat3LookAt(d, up), s);
 }
 
 //
-void Set(Mat4 &m, const float *_m) {
+void Set(Mat4 &m, const float _m[]) {
 	m.m[0][0] = _m[0];
 	m.m[1][0] = _m[1];
 	m.m[2][0] = _m[2];
@@ -454,18 +468,18 @@ void Set(Mat4 &m, float m00, float m10, float m20, float m01, float m11, float m
 
 //
 Mat4::Mat4() {
-	m[0][0] = 1;
-	m[1][0] = 0;
-	m[2][0] = 0;
-	m[0][1] = 0;
-	m[1][1] = 1;
-	m[2][1] = 0;
-	m[0][2] = 0;
-	m[1][2] = 0;
-	m[2][2] = 1;
-	m[0][3] = 0;
-	m[1][3] = 0;
-	m[2][3] = 0;
+	m[0][0] = 1.F;
+	m[1][0] = 0.F;
+	m[2][0] = 0.F;
+	m[0][1] = 0.F;
+	m[1][1] = 1.F;
+	m[2][1] = 0.F;
+	m[0][2] = 0.F;
+	m[1][2] = 0.F;
+	m[2][2] = 1.F;
+	m[0][3] = 0.F;
+	m[1][3] = 0.F;
+	m[2][3] = 0.F;
 }
 
 Mat4::Mat4(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22, float m03, float m13, float m23) {
@@ -482,9 +496,9 @@ Mat4::Mat4(const Mat3 &o) {
 	m[0][2] = o.m[0][2];
 	m[1][2] = o.m[1][2];
 	m[2][2] = o.m[2][2];
-	m[0][3] = 0;
-	m[1][3] = 0;
-	m[2][3] = 0;
+	m[0][3] = 0.F;
+	m[1][3] = 0.F;
+	m[2][3] = 0.F;
 }
 
 Mat4::Mat4(const float *v) {
@@ -499,19 +513,19 @@ void Mat4ToFloat16Transposed(const Mat4 &m, float t[16]) {
 	t[0] = m.m[0][0];
 	t[1] = m.m[1][0];
 	t[2] = m.m[2][0];
-	t[3] = 0.f;
+	t[3] = 0.F;
 	t[4] = m.m[0][1];
 	t[5] = m.m[1][1];
 	t[6] = m.m[2][1];
-	t[7] = 0.f;
+	t[7] = 0.F;
 	t[8] = m.m[0][2];
 	t[9] = m.m[1][2];
 	t[10] = m.m[2][2];
-	t[11] = 0.f;
+	t[11] = 0.F;
 	t[12] = m.m[0][3];
 	t[13] = m.m[1][3];
 	t[14] = m.m[2][3];
-	t[15] = 1.f;
+	t[15] = 1.F;
 }
 
 //

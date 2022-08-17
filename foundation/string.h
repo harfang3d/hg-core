@@ -11,36 +11,64 @@
 namespace hg {
 
 #if __cplusplus >= 201103L
+
 enum case_sensitivity { insensitive, sensitive };
+
 #else
+
 struct case_sensitivity {
 	enum value_t { insensitive, sensitive } value;
 	case_sensitivity(const case_sensitivity::value_t &v) : value(v) {}
 };
 
-inline bool operator==(const case_sensitivity &a, const case_sensitivity &b) { return a.value == b.value; }
-inline bool operator!=(const case_sensitivity &a, const case_sensitivity &b) { return a.value != b.value; }
+inline bool operator==(const case_sensitivity &a, const case_sensitivity &b) {
+	return a.value == b.value;
+}
+
+inline bool operator!=(const case_sensitivity &a, const case_sensitivity &b) {
+	return a.value != b.value;
+}
+
 #endif
 
-inline char to_lower(char c) { return c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c; }
+inline char to_lower(char c) {
+	return c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c;
+}
 
-static bool case_sensitive_eq_func(const char &a, const char &b) { return a == b; }
-static bool case_insensitive_eq_func(const char &a, const char &b) { return to_lower(a) == to_lower(b); }
+static bool case_sensitive_eq_func(const char &a, const char &b) {
+	return a == b;
+}
+
+static bool case_insensitive_eq_func(const char &a, const char &b) {
+	return to_lower(a) == to_lower(b);
+}
 
 inline bool starts_with(const std::string &value, const std::string &prefix, case_sensitivity sensitivity = case_sensitivity::sensitive) {
-	if (prefix.size() > value.size())
-		return false;
+	bool res = false;
 
-	return sensitivity == case_sensitivity::sensitive ? equal(prefix.begin(), prefix.end(), value.begin(), case_sensitive_eq_func)
-													  : equal(prefix.begin(), prefix.end(), value.begin(), case_insensitive_eq_func);
+	if (prefix.size() <= value.size()) {
+		if (sensitivity == case_sensitivity::sensitive) {
+			res = equal(prefix.begin(), prefix.end(), value.begin(), case_sensitive_eq_func);
+		} else {
+			res = equal(prefix.begin(), prefix.end(), value.begin(), case_insensitive_eq_func);
+		}
+	}
+
+	return res;
 }
 
 inline bool ends_with(const std::string &value, const std::string &suffix, case_sensitivity sensitivity = case_sensitivity::sensitive) {
-	if (suffix.size() > value.size())
-		return false;
+	bool res = false;
 
-	return sensitivity == case_sensitivity::sensitive ? equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_sensitive_eq_func)
-													  : equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_insensitive_eq_func);
+	if (suffix.size() <= value.size()) {
+		if (sensitivity == case_sensitivity::sensitive) {
+			res = equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_sensitive_eq_func);
+		} else {
+			res = equal(suffix.rbegin(), suffix.rend(), value.rbegin(), case_insensitive_eq_func);
+		}
+	}
+
+	return res;
 }
 
 /// In-place replace all occurrences of 'what' by 'by'. Returns the number of occurrence replaced.
@@ -61,42 +89,47 @@ std::string reduce(const std::string &str, const std::string &fill = " ", const 
 
 /// Join several std::strings with a separator std::string.
 template <typename T> std::string join(T begin_it, T end_it, const std::string &separator) {
+	std::string res;
+
 	const ptrdiff_t count = std::distance(begin_it, end_it);
 
-	if (count <= 0)
-		return std::string();
-	if (count == 1)
-		return *begin_it;
+	if (count > 0) {
+		if (count == 1) {
+			res = *begin_it;
+		} else {
+			--end_it;
 
-	--end_it;
+			res.reserve((64 + 2) * count);
 
-	std::string out;
-	out.reserve((64 + 2) * count);
+			for (T i = begin_it; i != end_it; ++i) {
+				res += *i;
+				res += separator;
+			}
 
-	for (T i = begin_it; i != end_it; ++i) {
-		out += *i;
-		out += separator;
+			res += *end_it;
+		}
 	}
 
-	out += *end_it;
-	return out;
+	return res;
 }
 
 template <typename T> std::string join(T begin_it, T end_it, const std::string &separator, const std::string &last_separator) {
+	std::string res;
+
 	const ptrdiff_t count = std::distance(begin_it, end_it);
 
-	if (count <= 0)
-		return std::string();
-	if (count == 1)
-		return *begin_it;
+	if (count > 0) {
+		if (count == 1) {
+			res = *begin_it;
+		} else {
+			const T e = end_it - 1;
 
-	T e = end_it - 1;
+			res = join(begin_it, e, separator) + last_separator;
+			res += *e;
+		}
+	}
 
-	std::string out;
-	out = join(begin_it, e, separator) + last_separator;
-	out += *e;
-
-	return out;
+	return res;
 }
 
 bool contains(const std::string &in, const std::string &what);

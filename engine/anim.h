@@ -293,7 +293,7 @@ template <typename AnimTrack, typename T> size_t SimplifyAnimTrackT(AnimTrack &t
 	if (track.keys.size() == 2 && CompareKeyValue(track.keys[0].v, track.keys[1].v, epsilon))
 		track.keys.pop_back();
 
-	__ASSERT__(track.keys.size() <= track_ref.keys.size());
+	HG_ASSERT(track.keys.size() <= track_ref.keys.size());
 	return track_ref.keys.size() - track.keys.size();
 }
 
