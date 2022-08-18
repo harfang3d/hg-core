@@ -95,7 +95,7 @@ Vec4 operator*(const Mat44 &m, const Vec4 &v) {
 		v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3], v.x * m.m[3][0] + v.y * m.m[3][1] + v.z * m.m[3][2] + v.w * m.m[3][3]);
 }
 
-void TransformVec3(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec3 *__restrict in, unsigned int count) {
+void TransformVec3(const Mat44 &m, Vec4 out[], const Vec3 in[], unsigned int count) {
 	for (unsigned int i = 0; i < count; ++i) {
 		const float x = in[i].x, y = in[i].y, z = in[i].z;
 		out[i].x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2] + m.m[0][3];
@@ -105,7 +105,7 @@ void TransformVec3(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec3 *
 	}
 }
 
-void TransformVec4(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec4 *__restrict in, unsigned int count) {
+void TransformVec4(const Mat44 &m, Vec4 out[], const Vec4 in[], unsigned int count) {
 	for (unsigned int i = 0; i < count; ++i) {
 		const float x = in[i].x, y = in[i].y, z = in[i].z, w = in[i].w;
 		out[i].x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2] + w * m.m[0][3];
@@ -159,15 +159,16 @@ Mat44 Inverse(const Mat44 &m, bool &result) {
 
 	Mat44 out;
 
-	if (det == 0.f) {
+	if (EqualZero(det)) {
 		out = Mat44::Identity;
 
 		result = false;
 	} else {
-		det = 1.f / det;
+		det = 1.F / det;
 
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < 16; i++) {
 			reinterpret_cast<float *>(out.m)[i] = inv[i] * det;
+		}
 
 		result = true;
 	}
@@ -205,22 +206,22 @@ void SetColumn(Mat44 &m, unsigned int n, const Vec4 &v) {
 
 //
 Mat44::Mat44() {
-	m[0][0] = 1.f;
-	m[1][0] = 0.f;
-	m[2][0] = 0.f;
-	m[3][0] = 0.f;
-	m[0][1] = 0.f;
-	m[1][1] = 1.f;
-	m[2][1] = 0.f;
-	m[3][1] = 0.f;
-	m[0][2] = 0.f;
-	m[1][2] = 0.f;
-	m[2][2] = 1.f;
-	m[3][2] = 0.f;
-	m[0][3] = 0.f;
-	m[1][3] = 0.f;
-	m[2][3] = 0.f;
-	m[3][3] = 1.f;
+	m[0][0] = 1.F;
+	m[1][0] = 0.F;
+	m[2][0] = 0.F;
+	m[3][0] = 0.F;
+	m[0][1] = 0.F;
+	m[1][1] = 1.F;
+	m[2][1] = 0.F;
+	m[3][1] = 0.F;
+	m[0][2] = 0.F;
+	m[1][2] = 0.F;
+	m[2][2] = 1.F;
+	m[3][2] = 0.F;
+	m[0][3] = 0.F;
+	m[1][3] = 0.F;
+	m[2][3] = 0.F;
+	m[3][3] = 1.F;
 }
 
 Mat44::Mat44(float m00, float m10, float m20, float m30, float m01, float m11, float m21, float m31, float m02, float m12, float m22, float m32, float m03,
@@ -259,10 +260,10 @@ Mat44::Mat44(const Mat4 &m_) {
 	m[2][2] = m_.m[2][2];
 	m[2][3] = m_.m[2][3];
 
-	m[3][0] = 0.f;
-	m[3][1] = 0.f;
-	m[3][2] = 0.f;
-	m[3][3] = 1.f;
+	m[3][0] = 0.F;
+	m[3][1] = 0.F;
+	m[3][2] = 0.F;
+	m[3][3] = 1.F;
 }
 
 } // namespace hg

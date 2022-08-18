@@ -51,6 +51,7 @@ public:
 	size_t size() const {
 		return size_;
 	}
+
 	size_t capacity() const {
 		return idx_.size();
 	}
@@ -206,6 +207,7 @@ public:
 	const_iterator begin() const {
 		return const_iterator(this, first());
 	}
+
 	const_iterator end() const {
 		return const_iterator(this, invalid_idx);
 	}
@@ -370,9 +372,10 @@ private:
 	void reserve_storage_(size_t capacity) {
 		if (capacity > storage_capacity_) {
 			void *new_storage_ = malloc(sizeof(T) * capacity);
-			transfer_storage((T *)new_storage_, sizeof(T) * capacity);
-			for (uint32_t i = first(); i != invalid_idx; i = next(i))
+			transfer_storage(reinterpret_cast<T *>(new_storage_), sizeof(T) * capacity);
+			for (uint32_t i = first(); i != invalid_idx; i = next(i)) {
 				reinterpret_cast<T *>(storage_)[i].~T();
+			}
 			free(storage_);
 			storage_ = new_storage_;
 			storage_capacity_ = capacity;
@@ -391,14 +394,17 @@ private:
 	static bool is_free_idx(uint32_t idx) {
 		return idx & 0x80000000U;
 	}
+
 	static uint32_t make_free_idx(uint32_t free_idx, uint32_t free_skip) {
 		HG_ASSERT(free_idx < 0x00ffffffU);
 		HG_ASSERT(free_skip < 128U);
 		return 0x80000000U | ((free_skip & 0x7f) << 24) | (free_idx & 0x00ffffffU);
 	}
+
 	static uint32_t get_free_skip(uint32_t idx) {
 		return (idx >> 24) & 0x7f;
 	}
+
 	static uint32_t get_free_idx(uint32_t idx) {
 		return idx & 0x00ffffff;
 	}

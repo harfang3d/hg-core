@@ -93,9 +93,7 @@ bool IntersectRay(const MinMax &mm, const Vec3 &o, const Vec3 &d) {
 bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 &itr, Vec3 *n) {
 	bool res = false;
 
-	uint32_t oc1, oc2;
-
-	oc1 = cc_oc(mm.mn, mm.mx, p1);
+	const uint32_t oc1 = cc_oc(mm.mn, mm.mx, p1);
 
 	if (oc1 == ClipNone) {
 		if (n) {
@@ -105,7 +103,7 @@ bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 
 		itr = p1;
 		res = true; // point inside bounding box
 	} else {
-		oc2 = ss_oc(direction);
+		const uint32_t oc2 = ss_oc(direction);
 
 		if ((oc1 & oc2) > ClipNone) {
 			// same side -> res = false dumdum
@@ -127,7 +125,7 @@ bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 
 				itr.y = p1.y + x2 * direction.y / x1;
 				itr.z = p1.z + x2 * direction.z / x1;
 
-				if (itr.y <= mm.mx.y && itr.y >= mm.mn.y && itr.z <= mm.mx.z && itr.z >= mm.mn.z) {
+				if ((itr.y <= mm.mx.y) && (itr.y >= mm.mn.y) && (itr.z <= mm.mx.z) && (itr.z >= mm.mn.z)) {
 					res = true;
 				}
 			}
@@ -150,7 +148,7 @@ bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 
 					itr.x = p1.x + y2 * direction.x / y1;
 					itr.z = p1.z + y2 * direction.z / y1;
 
-					if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.z <= mm.mx.z && itr.z >= mm.mn.z) {
+					if ((itr.x <= mm.mx.x) && (itr.x >= mm.mn.x) && (itr.z <= mm.mx.z) && (itr.z >= mm.mn.z)) {
 						res = true;
 					}
 				}
@@ -174,7 +172,7 @@ bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 
 					itr.x = p1.x + z2 * direction.x / z1;
 					itr.y = p1.y + z2 * direction.y / z1;
 
-					if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.y <= mm.mx.y && itr.y >= mm.mn.y) {
+					if ((itr.x <= mm.mx.x) && (itr.x >= mm.mn.x) && (itr.y <= mm.mx.y) && (itr.y >= mm.mn.y)) {
 						res = true;
 					}
 				}
@@ -185,87 +183,107 @@ bool ClassifyLine(const MinMax &mm, const Vec3 &p1, const Vec3 &direction, Vec3 
 	return res;
 }
 
-
 bool ClassifySegment(const MinMax &mm, const Vec3 &p1, const Vec3 &p2, Vec3 &itr, Vec3 *n) {
-	uint32_t oc1, oc2;
+	bool res = false;
 
-	oc1 = cc_oc(mm.mn, mm.mx, p1);
+	const uint32_t oc1 = cc_oc(mm.mn, mm.mx, p1);
+
 	if (oc1 == ClipNone) { // point inside bounding box
-		if (n)
-			*n = Vec3(0, 0, 0);
+		if (n) {
+			*n = Vec3(0.F, 0.F, 0.F);
+		}
+
 		itr = p1;
-		return true;
-	}
+		res = true;
+	} else {
+		const uint32_t oc2 = cc_oc(mm.mn, mm.mx, p2);
 
-	oc2 = cc_oc(mm.mn, mm.mx, p2);
-	if (oc2 == ClipNone) { // point inside bounding box
-		itr = p2;
-		return true;
-	}
-
-	if ((oc1 & oc2) > ClipNone)
-		return false; // on the same side
-
-	if (oc1 & (ClipRight | ClipLeft)) {
-		if (oc1 & ClipRight) {
-			if (n)
-				*n = Vec3(1, 0, 0);
-			itr.x = mm.mx.x;
+		if (oc2 == ClipNone) { // point inside bounding box
+			itr = p2;
+			res = true;
 		} else {
-			if (n)
-				*n = Vec3(-1, 0, 0);
-			itr.x = mm.mn.x;
+			if ((oc1 & oc2) > ClipNone) {
+				// on the same side
+			} else {
+				if (oc1 & (ClipRight | ClipLeft)) {
+					if (oc1 & ClipRight) {
+						if (n) {
+							*n = Vec3(1.F, 0.F, 0.F);
+						}
+						itr.x = mm.mx.x;
+					} else {
+						if (n) {
+							*n = Vec3(-1.F, 0.F, 0.F);
+						}
+						itr.x = mm.mn.x;
+					}
+
+					const float x1 = p2.x - p1.x, x2 = itr.x - p1.x;
+					itr.y = p1.y + x2 * (p2.y - p1.y) / x1;
+					itr.z = p1.z + x2 * (p2.z - p1.z) / x1;
+
+					if ((itr.y <= mm.mx.y) && (itr.y >= mm.mn.y) && (itr.z <= mm.mx.z) && (itr.z >= mm.mn.z)) {
+						res = true;
+					}
+				}
+
+				if (res == false) {
+					if (oc1 & (ClipTop | ClipBottom)) {
+						if (oc1 & ClipTop) {
+							if (n) {
+								*n = Vec3(0.F, 1.F, 0.F);
+							}
+							itr.y = mm.mx.y;
+						} else {
+							if (n) {
+								*n = Vec3(0.F, -1.F, 0.F);
+							}
+							itr.y = mm.mn.y;
+						}
+
+						const float y1 = p2.y - p1.y, y2 = itr.y - p1.y;
+						itr.x = p1.x + y2 * (p2.x - p1.x) / y1;
+						itr.z = p1.z + y2 * (p2.z - p1.z) / y1;
+
+						if ((itr.x <= mm.mx.x) && (itr.x >= mm.mn.x) && (itr.z <= mm.mx.z) && (itr.z >= mm.mn.z)) {
+							res = true;
+						}
+					}
+
+					if (res == false) {
+						if (oc1 & (ClipFront | ClipBack)) {
+							if (oc1 & ClipBack) {
+								if (n) {
+									*n = Vec3(0.F, 0.F, 1.F);
+								}
+								itr.z = mm.mx.z;
+							} else {
+								if (n) {
+									*n = Vec3(0.F, 0.F, -1.F);
+								}
+								itr.z = mm.mn.z;
+							}
+
+							const float z1 = p2.z - p1.z, z2 = itr.z - p1.z;
+							itr.x = p1.x + z2 * (p2.x - p1.x) / z1;
+							itr.y = p1.y + z2 * (p2.y - p1.y) / z1;
+
+							if ((itr.x <= mm.mx.x) && (itr.x >= mm.mn.x) && (itr.y <= mm.mx.y) && (itr.y >= mm.mn.y)) {
+								res = true;
+							}
+						}
+					}
+				}
+			}
 		}
-
-		float x1 = p2.x - p1.x, x2 = itr.x - p1.x;
-		itr.y = p1.y + x2 * (p2.y - p1.y) / x1;
-		itr.z = p1.z + x2 * (p2.z - p1.z) / x1;
-
-		if (itr.y <= mm.mx.y && itr.y >= mm.mn.y && itr.z <= mm.mx.z && itr.z >= mm.mn.z)
-			return true;
 	}
 
-	if (oc1 & (ClipTop | ClipBottom)) {
-		if (oc1 & ClipTop) {
-			if (n)
-				*n = Vec3(0, 1, 0);
-			itr.y = mm.mx.y;
-		} else {
-			if (n)
-				*n = Vec3(0, -1, 0);
-			itr.y = mm.mn.y;
-		}
-		float y1 = p2.y - p1.y, y2 = itr.y - p1.y;
-		itr.x = p1.x + y2 * (p2.x - p1.x) / y1;
-		itr.z = p1.z + y2 * (p2.z - p1.z) / y1;
-
-		if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.z <= mm.mx.z && itr.z >= mm.mn.z)
-			return true;
-	}
-
-	if (oc1 & (ClipFront | ClipBack)) {
-		if (oc1 & ClipBack) {
-			if (n)
-				*n = Vec3(0, 0, 1);
-			itr.z = mm.mx.z;
-		} else {
-			if (n)
-				*n = Vec3(0, 0, -1);
-			itr.z = mm.mn.z;
-		}
-		float z1 = p2.z - p1.z, z2 = itr.z - p1.z;
-		itr.x = p1.x + z2 * (p2.x - p1.x) / z1;
-		itr.y = p1.y + z2 * (p2.y - p1.y) / z1;
-
-		if (itr.x <= mm.mx.x && itr.x >= mm.mn.x && itr.y <= mm.mx.y && itr.y >= mm.mn.y)
-			return true;
-	}
-	return false;
+	return res;
 }
 
 MinMax operator*(const Mat4 &m, const MinMax &mm) {
-	Vec3 p0 = m * mm.mn;
-	Vec3 p1 = m * mm.mx;
+	const Vec3 p0 = m * mm.mn;
+	const Vec3 p1 = m * mm.mx;
 	return MinMax(Min(p0, p1), Max(p0, p1));
 }
 
@@ -281,8 +299,8 @@ void GetMinMaxVertices(const MinMax &minmax, Vec3 out[8]) {
 }
 
 void ComputeMinMaxBoundingSphere(const MinMax &minmax, Vec3 &origin, float &radius) {
-	origin = (minmax.mn + minmax.mx) * 0.5f;
-	radius = Dist(minmax.mn, minmax.mx) * 0.5f;
+	origin = (minmax.mn + minmax.mx) * 0.5F;
+	radius = Dist(minmax.mn, minmax.mx) * 0.5F;
 }
 
 } // namespace hg
