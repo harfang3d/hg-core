@@ -301,7 +301,50 @@ static void test_anim_float_track() {
 	TEST_CHECK((track.keys[0].t == time_from_ms(100)) && (track.keys[0].v == 0.f));
 }
 
-void test_misc() {
+static InstanceAnimKey SetKey(AnimTrackT<InstanceAnimKey> &track, int64_t ms, const std::string &name, AnimLoopMode mode, float scale) {
+	InstanceAnimKey key;
+	key.anim_name = name;
+	key.loop_mode = mode;
+	key.t_scale = scale;
+	SetKey(track, time_from_ms(ms), key);
+
+	return key;
+}
+
+static bool operator==(InstanceAnimKey &k0, InstanceAnimKey &k1) {
+	return (k0.anim_name == k1.anim_name) && (k0.loop_mode == k1.loop_mode) && (k0.t_scale == k1.t_scale);
+}
+
+static void test_anim_instance_track() {
+	AnimTrackT<InstanceAnimKey> track;
+
+	InstanceAnimKey k0 = SetKey(track, 100, "000", ALM_Once, 1.f);
+	InstanceAnimKey k1 = SetKey(track, 200, "001", ALM_Infinite, 0.5f);
+	InstanceAnimKey k2 = SetKey(track, 300, "002", ALM_Loop, 2.f);
+
+	InstanceAnimKey value;
+	TEST_CHECK(Evaluate(AnimTrackT<InstanceAnimKey>(), 0, value) == false);
+		
+	TEST_CHECK(Evaluate(track, time_from_ms(0), value) == true);
+	TEST_CHECK(value == k0);
+
+	TEST_CHECK(Evaluate(track, time_from_ms(100), value) == true);
+	TEST_CHECK(value == k0);
+
+	TEST_CHECK(Evaluate(track, time_from_ms(150), value) == true);
+	TEST_CHECK(value == k0);
+
+	TEST_CHECK(Evaluate(track, time_from_ms(260), value) == true);
+	TEST_CHECK(value == k1);
+
+	TEST_CHECK(Evaluate(track, time_from_ms(300), value) == true);
+	TEST_CHECK(value == k2);
+
+	TEST_CHECK(Evaluate(track, time_from_ms(400), value) == true);
+	TEST_CHECK(value == k2);
+}
+
+static void test_misc() {
 	Vec3 axis = Normalize(Vec3::One);
 	Quaternion q0 = QuaternionFromAxisAngle(Deg(300.f), axis);
 	Quaternion q1 = QuaternionFromAxisAngle(Deg(-60.f), axis);
@@ -322,6 +365,7 @@ void test_anim() {
 	test_anim_int_track();
 	test_anim_vec3_track();
 	test_anim_float_track();
+	test_anim_instance_track();
 	test_misc();
 
 	Anim anim;
@@ -350,8 +394,6 @@ void test_anim() {
 	TEST_CHECK(anim.bool_tracks.size() == 1);
 
 	// [todo]
-	// InstanceAnimKey 
-	// void ResampleAnim(Anim & anim, time_ns old_start, time_ns old_end, time_ns new_start, time_ns new_end, time_ns frame_duration);
 	// void ReverseAnim(Anim & anim, time_ns t_start, time_ns t_end);
 	// void QuantizeAnim(Anim & anim, time_ns t_step);
 }
