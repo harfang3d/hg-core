@@ -42,4 +42,5 @@ if(HG_ENABLE_PVS_MISRA)
 	include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
 
 	pvs_studio_add_target(TARGET foundation.analyze ALL FORMAT sarif-vscode ANALYZE foundation MODE MISRA:1,2 LOG foundation.sarif CONVERTER_ARGS -m misra)
+	pvs_studio_add_target(TARGET engine.analyze ALL FORMAT sarif-vscode ANALYZE engine MODE MISRA:1,2 LOG engine.sarif CONVERTER_ARGS -m misra)
 endif()

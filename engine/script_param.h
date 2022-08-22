@@ -9,15 +9,15 @@ namespace hg {
 enum ScriptParamType { SPT_Null, SPT_Int, SPT_Float, SPT_String, SPT_Bool, SPT_Enum };
 
 struct ScriptParam {
-	ScriptParam() : type(SPT_Null), iv(0) {}
+	ScriptParam() : type(SPT_Null), bv(false), iv(0), fv(0.F) {}
 
 	ScriptParamType type;
 
-	union {
+//	union {
 		bool bv;
 		int iv;
 		float fv;
-	};
+//	};
 
 	std::string sv;
 };

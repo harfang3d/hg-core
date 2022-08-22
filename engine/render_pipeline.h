@@ -245,7 +245,11 @@ std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromAssets(const 
 enum VertexAttribute { VA_Position, VA_Normal, VA_Tangent, VA_Bitangent, VA_Color, VA_BoneIndices, VA_BoneWeights, VA_UV0, VA_UV1, VA_Count };
 
 struct ShaderLayout {
-	ShaderLayout() { std::fill(attrib, attrib + SG_MAX_VERTEX_ATTRIBUTES, VA_Count); }
+	ShaderLayout() {
+		for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+			attrib[i] = VA_Count;
+		}
+	}
 
 	uint8_t attrib[SG_MAX_VERTEX_ATTRIBUTES]; // VertexAttribute
 };
@@ -254,11 +258,22 @@ struct VertexLayout {
 	VertexLayout();
 
 	void Set(VertexAttribute semantic, sg_vertex_format format, size_t offset);
-	bool Has(VertexAttribute attr) const { return attrib[attr].format != SG_VERTEXFORMAT_INVALID; }
 
-	sg_vertex_format GetFormat(VertexAttribute attr) const { return sg_vertex_format(attrib[attr].format); }
-	size_t GetOffset(VertexAttribute attr) const { return size_t(attrib[attr].offset); }
-	size_t GetStride() const { return stride; }
+	bool Has(VertexAttribute attr) const {
+		return attrib[attr].format != SG_VERTEXFORMAT_INVALID;
+	}
+
+	sg_vertex_format GetFormat(VertexAttribute attr) const {
+		return static_cast<sg_vertex_format>(attrib[attr].format);
+	}
+
+	size_t GetOffset(VertexAttribute attr) const {
+		return static_cast<size_t>(attrib[attr].offset);
+	}
+
+	size_t GetStride() const {
+		return stride;
+	}
 
 	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
 	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
@@ -296,8 +311,8 @@ static const TextureRef InvalidTextureRef;
 static const ModelRef InvalidModelRef;
 
 //
-static const float default_shadow_bias = 0.0001f;
-static const Vec4 default_pssm_split = Vec4(10.f, 50.f, 100.f, 500.f);
+static const float default_shadow_bias = 0.0001F;
+static const Vec4 default_pssm_split = Vec4(10.F, 50.F, 100.F, 500.F);
 
 #if 1
 
@@ -317,7 +332,9 @@ struct ShaderUniforms {
 };
 
 struct Shader { // 20B
-	Shader() { shader.id = SG_INVALID_ID; }
+	Shader() {
+		shader.id = SG_INVALID_ID;
+	}
 
 	sg_shader shader;
 
@@ -448,7 +465,11 @@ UniformSetTexture MakeUniformSetTexture(const std::string &name, const Texture &
 
 //
 struct UniformData { // stored in material, links to Shader.uniforms
-	UniformData() { std::fill(offset, offset + SG_MAX_UB_MEMBERS, 0); }
+	UniformData() {
+		for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+			offset[i] = 0;
+		}
+	}
 
 	uint16_t offset[SG_MAX_UB_MEMBERS];
 	std::vector<int8_t> data;
@@ -456,7 +477,10 @@ struct UniformData { // stored in material, links to Shader.uniforms
 
 int GetUniformDataIndex(const std::string &name, const Shader &shader);
 
-template <typename T> T GetUniformDataValue(const UniformData &data, const int index) { return *reinterpret_cast<T *>(&data.data[data.offset[index]]); }
+template <typename T> T GetUniformDataValue(const UniformData &data, const int index) {
+	return *reinterpret_cast<T *>(&data.data[data.offset[index]]);
+}
+
 template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
 	*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
 }
@@ -465,7 +489,6 @@ const void *GetUniformDataPtr(const UniformData &data);
 size_t GetUniformDataSize(const UniformData &data);
 
 void SetupShaderUniformData(const Shader &shader, UniformData &data);
-
 
 //
 static const int MF_EnableSkinning = 0x01;
@@ -619,7 +642,9 @@ struct ModelLoad {
 
 struct PipelineResources {
 	PipelineResources() : programs(Destroy), textures(Destroy), materials(Destroy), models(Destroy) {}
-	~PipelineResources() { DestroyAll(); }
+	~PipelineResources() {
+		DestroyAll();
+	}
 
 	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
 	ResourceCache<Texture, TextureRef> textures;
@@ -788,7 +813,9 @@ typedef std::vector<uint16_t> Indices;
 struct Vertices {
 	Vertices(const VertexLayout &layout, size_t count);
 
-	const VertexLayout &GetDecl() const { return layout; }
+	const VertexLayout &GetDecl() const {
+		return layout;
+	}
 
 	Vertices &Begin(size_t i);
 	Vertices &SetPos(const Vec3 &pos);
@@ -814,11 +841,21 @@ struct Vertices {
 	void Reserve(size_t count);
 	void Resize(size_t count);
 
-	const void *GetData() const { return data.data(); }
+	const void *GetData() const {
+		return data.data();
+	}
 
-	size_t GetSize() const { return data.size(); }
-	size_t GetCount() const { return data.size() / layout.GetStride(); }
-	size_t GetCapacity() const { return data.capacity() / layout.GetStride(); }
+	size_t GetSize() const {
+		return data.size();
+	}
+
+	size_t GetCount() const {
+		return data.size() / layout.GetStride();
+	}
+
+	size_t GetCapacity() const {
+		return data.capacity() / layout.GetStride();
+	}
 
 private:
 	VertexLayout layout;

@@ -172,11 +172,15 @@ template <typename T> bool EvaluateHermite(const AnimTrackHermiteT<T> &track, ti
 
 //
 template <typename Key> struct CompareKeyTimeIsLess {
-	bool operator()(const Key &a, const Key &b) { return a.t < b.t; }
+	bool operator()(const Key &a, const Key &b) {
+		return a.t < b.t;
+	}
 };
 
 template <typename Key> struct CompareKeyTimeIsEqual {
-	bool operator()(const Key &a, const Key &b) { return a.t == b.t; }
+	bool operator()(const Key &a, const Key &b) {
+		return a.t == b.t;
+	}
 };
 
 template <typename Track> void SortAnimTrackKeys(Track &track) {
@@ -189,8 +193,12 @@ template <typename Track> void ConformAnimTrackKeys(Track &track) {}
 void ConformAnimTrackKeys(AnimTrackT<Quaternion> &track);
 
 //
-template <typename T> bool Evaluate(const AnimTrackT<T> &track, time_ns t, T &v) { return EvaluateLinear<AnimTrackT<T>, T>(track, t, v); }
-template <typename T> bool Evaluate(const AnimTrackHermiteT<T> &track, time_ns t, T &v) { return EvaluateHermite<T>(track, t, v); }
+template <typename T> bool Evaluate(const AnimTrackT<T> &track, time_ns t, T &v) {
+	return EvaluateLinear<AnimTrackT<T>, T>(track, t, v);
+}
+template <typename T> bool Evaluate(const AnimTrackHermiteT<T> &track, time_ns t, T &v) {
+	return EvaluateHermite<T>(track, t, v);
+}
 
 template <> bool Evaluate(const AnimTrackT<bool> &track, time_ns t, bool &v);
 template <> bool Evaluate(const AnimTrackT<std::string> &track, time_ns t, std::string &v);
@@ -254,9 +262,13 @@ void ResampleAnim(Anim &anim, time_ns old_start, time_ns old_end, time_ns new_st
 void ReverseAnim(Anim &anim, time_ns t_start, time_ns t_end);
 void QuantizeAnim(Anim &anim, time_ns t_step);
 
-static bool CompareKeyValue(const Vec3 &v_a, const Vec3 &v_b, float epsilon) { return Len(v_a - v_b) <= epsilon; }
+static bool CompareKeyValue(const Vec3 &v_a, const Vec3 &v_b, float epsilon) {
+	return Len(v_a - v_b) <= epsilon;
+}
 
-static bool CompareKeyValue(const Quaternion &v_a, const Quaternion &v_b, float epsilon) { return Abs(ACos(Dot(v_a, v_b))) <= epsilon * 0.5f; }
+static bool CompareKeyValue(const Quaternion &v_a, const Quaternion &v_b, float epsilon) {
+	return Abs(ACos(Dot(v_a, v_b))) <= epsilon * 0.5f;
+}
 
 static bool CompareKeyValue(const Color &v_a, const Color &v_b, float epsilon) {
 	return Max(Abs(v_a.r - v_b.r), Max(Abs(v_a.g - v_b.g), Max(Abs(v_a.b - v_b.b), Abs(v_a.a - v_b.a)))) <= epsilon;
@@ -290,8 +302,9 @@ template <typename AnimTrack, typename T> size_t SimplifyAnimTrackT(AnimTrack &t
 	}
 
 	// erase last key if it's the same as the first and there's just the two of them
-	if (track.keys.size() == 2 && CompareKeyValue(track.keys[0].v, track.keys[1].v, epsilon))
+	if (track.keys.size() == 2 && CompareKeyValue(track.keys[0].v, track.keys[1].v, epsilon)) {
 		track.keys.pop_back();
+	}
 
 	HG_ASSERT(track.keys.size() <= track_ref.keys.size());
 	return track_ref.keys.size() - track.keys.size();

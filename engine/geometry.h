@@ -90,9 +90,9 @@ std::vector<VertexToVertex> ComputeVertexToVertex(const Geometry &geo, const std
 //
 std::vector<Vec3> ComputePolygonNormal(const Geometry &geo);
 
-std::vector<Vec3> ComputeVertexNormal(const Geometry &geo, const std::vector<VertexToPolygon> &vtx_to_pol, float max_smoothing_angle = Deg(60.f));
+std::vector<Vec3> ComputeVertexNormal(const Geometry &geo, const std::vector<VertexToPolygon> &vtx_to_pol, float max_smoothing_angle = Deg(60.F));
 std::vector<Geometry::TangentFrame> ComputeVertexTangent(
-	const Geometry &geo, const std::vector<Vec3> &vtx_normal, uint32_t uv_index = 0, float max_smoothing_angle = Deg(60.f));
+	const Geometry &geo, const std::vector<Vec3> &vtx_normal, uint32_t uv_index = 0, float max_smoothing_angle = Deg(60.F));
 
 void ReverseTangentFrame(Geometry &geo, bool T, bool B);
 

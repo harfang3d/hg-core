@@ -69,7 +69,7 @@ struct Transform {
 
 //
 struct CameraZRange {
-	CameraZRange() : znear(0.01f), zfar(1000.f) {}
+	CameraZRange() : znear(0.01F), zfar(1000.F) {}
 	float znear, zfar;
 };
 

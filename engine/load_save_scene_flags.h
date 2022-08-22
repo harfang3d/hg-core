@@ -29,6 +29,6 @@ static const uint32_t LSSF_Silent = 0xb0000; // do not log errors
 
 static const uint32_t LSSF_QueueResourceLoads = LSSF_QueueTextureLoads | LSSF_QueueModelLoads;
 
-static const uint32_t LSSF_OptionsMask = 0xffff0000;
+static const uint32_t LSSF_OptionsMask = 0xffff0000U;
 
 } // namespace hg

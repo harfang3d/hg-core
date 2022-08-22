@@ -1,8 +1,8 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
+#include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
 #include "foundation/rw_interface.h"
-#include "foundation/file.h"
 
 #include "engine/assets_rw_interface.h"
 
@@ -12,15 +12,22 @@
 namespace hg {
 
 bool LoadJson(const Reader &ir, const Handle &h, rapidjson::Document &doc) {
-	if (!ir.is_valid(h))
-		return false;
+	bool res;
 
-	std::string str;
-	if (!Read(ir, h, str))
-		return false;
+	if (ir.is_valid(h)) {
+		std::string str;
 
-	doc.Parse(str);
-	return true;
+		if (Read(ir, h, str)) {
+			doc.Parse(str);
+			res = true;
+		} else {
+			res = false;
+		}
+	} else {
+		res = false;
+	}
+
+	return res;
 }
 
 bool LoadJsonFromFile(const std::string &path, rapidjson::Document &doc) {
