@@ -359,7 +359,7 @@ static void test_misc() {
 	TEST_CHECK(CompareKeyValue(Color(0.7f, 0.2f, 0.1f), Color(0.69f, 0.18f, 0.11f), 0.02f) == true);	
 }
 
-static void test_reverse() {
+static void test_anim_reverse() {
 	Anim anim;
 	anim.t_start = time_from_ms(200);
 	anim.t_end = time_from_ms(700);
@@ -539,7 +539,7 @@ static void anim_clear(Anim& anim) {
 	anim.instance_anim_track.keys.clear();
 }
 
-static void test_has_keys() {
+static void test_anim_has_keys() {
 	Anim anim;
 	anim.t_start = time_from_ms(200);
 	anim.t_end = time_from_ms(700);
@@ -606,6 +606,143 @@ static void test_has_keys() {
 	TEST_CHECK(AnimHasKeys(anim) == true);
 }
 
+static void test_anim_resample() {
+	Anim anim;
+	anim.t_start = time_from_ms(500);
+	anim.t_end = time_from_ms(1500);
+	
+	anim.bool_tracks.resize(1);
+	SetKey(anim.bool_tracks[0], time_from_ms(600), true);
+	SetKey(anim.bool_tracks[0], time_from_ms(740), false);
+
+	anim.int_tracks.resize(1);
+	SetKey(anim.int_tracks[0], time_from_ms(820), 1);
+	SetKey(anim.int_tracks[0], time_from_ms(860), 2);
+	SetKey(anim.int_tracks[0], time_from_ms(980), 3);
+	SetKey(anim.int_tracks[0], time_from_ms(1020), 4);
+
+	anim.float_tracks.resize(1);
+	SetKey(anim.float_tracks[0], time_from_ms(512), 0.f);
+
+	anim.vec2_tracks.resize(3);
+	SetKey(anim.vec2_tracks[0], time_from_ms(850), Vec2::Zero);
+	SetKey(anim.vec2_tracks[1], time_from_ms(860), Vec2::One);
+	SetKey(anim.vec2_tracks[2], time_from_ms(870), -Vec2::One);
+
+	anim.vec3_tracks.resize(1);
+	SetKey(anim.vec3_tracks[0], time_from_ms(850), Vec3::One);
+	SetKey(anim.vec3_tracks[0], time_from_ms(860), Vec3::Zero);
+
+	anim.vec4_tracks.resize(1);
+	SetKey(anim.vec4_tracks[0], time_from_ms(1240), Vec4::One);
+
+	anim.quat_tracks.resize(1);
+	SetKey(anim.quat_tracks[0], time_from_ms(1240), Quaternion::Identity);
+
+	anim.color_tracks.resize(1);
+	SetKey(anim.color_tracks[0], time_from_ms(1111), Color::Green);
+
+	anim.string_tracks.resize(1);
+	SetKey(anim.string_tracks[0], time_from_ms(1111), "A");
+
+	InstanceAnimKey k0 = SetKey(anim.instance_anim_track, 500, "000", ALM_Loop, 2.f);
+	InstanceAnimKey k1 = SetKey(anim.instance_anim_track, 1500, "001", ALM_Once, 1.f);
+
+	time_ns start = time_from_ms(0), end = time_from_ms(2000);
+	ResampleAnim(anim, anim.t_start, anim.t_end, start, end, time_from_ms(100));
+	
+	TEST_CHECK(anim.t_start == start);
+	TEST_CHECK(anim.t_end == end);
+
+	if (TEST_CHECK(anim.bool_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.bool_tracks[0].keys.size() == 2)) {
+			TEST_CHECK(anim.bool_tracks[0].keys[0].t == time_from_ms(200));
+			TEST_CHECK(anim.bool_tracks[0].keys[0].v == true);
+
+			TEST_CHECK(anim.bool_tracks[0].keys[1].t == time_from_ms(500));
+			TEST_CHECK(anim.bool_tracks[0].keys[1].v == false);
+		}
+	}
+
+	if (TEST_CHECK(anim.int_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.int_tracks[0].keys.size() == 3)) {
+			TEST_CHECK(anim.int_tracks[0].keys[0].t == time_from_ms(600));
+			TEST_CHECK(anim.int_tracks[0].keys[0].v == 1);
+
+			TEST_CHECK(anim.int_tracks[0].keys[1].t == time_from_ms(700));
+			TEST_CHECK(anim.int_tracks[0].keys[1].v == 2);
+
+			TEST_CHECK(anim.int_tracks[0].keys[2].t == time_from_ms(1000));
+			TEST_CHECK(anim.int_tracks[0].keys[2].v == 3);
+		}
+	}
+
+	if (TEST_CHECK(anim.float_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.float_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.float_tracks[0].keys[0].t == time_from_ms(0));
+			TEST_CHECK(anim.float_tracks[0].keys[0].v == 0.f);
+		}
+	}
+
+	if (TEST_CHECK(anim.vec2_tracks.size() == 3)) {
+		if (TEST_CHECK(anim.vec2_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.vec2_tracks[0].keys[0].t == time_from_ms(700));
+			TEST_CHECK(anim.vec2_tracks[0].keys[0].v == Vec2::Zero);
+		}
+		if (TEST_CHECK(anim.vec2_tracks[1].keys.size() == 1)) {
+			TEST_CHECK(anim.vec2_tracks[1].keys[0].t == time_from_ms(700));
+			TEST_CHECK(anim.vec2_tracks[1].keys[0].v == Vec2::One);
+		}
+		if (TEST_CHECK(anim.vec2_tracks[2].keys.size() == 1)) {
+			TEST_CHECK(anim.vec2_tracks[2].keys[0].t == time_from_ms(700));
+			TEST_CHECK(anim.vec2_tracks[2].keys[0].v == -Vec2::One);
+		}
+	}
+
+	if (TEST_CHECK(anim.vec3_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.vec3_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.vec3_tracks[0].keys[0].t == time_from_ms(700));
+			TEST_CHECK(anim.vec3_tracks[0].keys[0].v == Vec3::One);
+		}
+	}
+
+	if (TEST_CHECK(anim.vec4_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.vec4_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.vec4_tracks[0].keys[0].t == time_from_ms(1500));
+			TEST_CHECK(anim.vec4_tracks[0].keys[0].v == Vec4::One);
+		}
+	}
+	
+	if (TEST_CHECK(anim.quat_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.quat_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.quat_tracks[0].keys[0].t == time_from_ms(1500));
+			TEST_CHECK(anim.quat_tracks[0].keys[0].v == Quaternion::Identity);
+		}
+	}
+
+	if (TEST_CHECK(anim.color_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.color_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.color_tracks[0].keys[0].t == time_from_ms(1200));
+			TEST_CHECK(anim.color_tracks[0].keys[0].v == Color::Green);
+		}
+	}
+
+	if (TEST_CHECK(anim.string_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.string_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.string_tracks[0].keys[0].t == time_from_ms(1200));
+			TEST_CHECK(anim.string_tracks[0].keys[0].v == "A");
+		}
+	}
+
+	if (TEST_CHECK(anim.instance_anim_track.keys.size() == 2)) {
+		TEST_CHECK(anim.instance_anim_track.keys[0].t == start);
+		TEST_CHECK(anim.instance_anim_track.keys[0].v == k0);
+
+		TEST_CHECK(anim.instance_anim_track.keys[1].t == end);
+		TEST_CHECK(anim.instance_anim_track.keys[1].v == k1);
+	}
+}
+
 void test_anim() {
 	test_anim_bool_track();
 	test_anim_string_track();
@@ -613,8 +750,9 @@ void test_anim() {
 	test_anim_vec3_track();
 	test_anim_float_track();
 	test_anim_instance_track();
-	test_has_keys();
-	test_reverse();
+	test_anim_has_keys();
+	test_anim_reverse();
+	test_anim_resample();
 	test_misc();
 
 	Anim anim;
@@ -642,5 +780,7 @@ void test_anim() {
 	DeleteEmptyAnimTracks(anim);
 	TEST_CHECK(anim.bool_tracks.size() == 1);
 
-	// void QuantizeAnim(Anim & anim, time_ns t_step);
+	// [todo]
+	// QuantizeAnim
+	// ConformAnimTrackKeys
 }
