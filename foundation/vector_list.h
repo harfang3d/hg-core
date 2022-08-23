@@ -112,7 +112,7 @@ public:
 		}
 		inline iterator operator++(int) {
 			iterator tmp = *this;
-			i = c->next();
+			i = c->next(i);
 			return tmp;
 		}
 
