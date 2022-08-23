@@ -1,4 +1,5 @@
 set(TEST_FOUNDATION_SRCS
+	foundation/cext.cpp
 	foundation/os.cpp
 	foundation/math.cpp
 	foundation/rand.cpp
@@ -46,7 +47,7 @@ target_link_libraries(tests PUBLIC engine foundation)
 target_include_directories(tests PUBLIC extern/acutest)
 
 if(HG_ENABLE_COVERAGE)
-	 set(COVERAGE_EXCLUDES
+	set(COVERAGE_EXCLUDES
 		"foundation/assert.*" 
 		"foundation/profiler.*" 
 		"foundation/extern/*" 
@@ -55,7 +56,9 @@ if(HG_ENABLE_COVERAGE)
 		"samples/*" 
 		"tests/*" 
 		"/usr/*"
-	 )
+		"/c/msys64/*"
+	)
+
 	setup_target_for_coverage_lcov(
 		NAME coverage
 		BASE_DIR "${PROJECT_SOURCE_DIR}"

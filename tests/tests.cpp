@@ -2,6 +2,7 @@
 #include "acutest.h"
 
 // foundation tests
+extern void test_cext();
 extern void test_os();
 extern void test_math();
 extern void test_rand();
@@ -44,6 +45,7 @@ extern void test_scene();
 
 //
 TEST_LIST = {
+	{"foundation.cext", test_cext},
 	{"foundation.os", test_os},
 	{"foundation.math", test_math},
 	{"foundation.rand", test_rand},
