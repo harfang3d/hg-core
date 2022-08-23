@@ -743,6 +743,193 @@ static void test_anim_resample() {
 	}
 }
 
+static void test_anim_quantize() {
+	Anim anim;
+	anim.t_start = time_from_ms(0);
+	anim.t_end = time_from_ms(2000);
+
+	anim.bool_tracks.resize(2);
+	SetKey(anim.bool_tracks[0], time_from_ms(180), false);
+	SetKey(anim.bool_tracks[0], time_from_ms(10), true);
+	SetKey(anim.bool_tracks[1], time_from_ms(760), false);
+	SetKey(anim.bool_tracks[1], time_from_ms(1024), true);
+
+	anim.int_tracks.resize(1);
+	SetKey(anim.int_tracks[0], time_from_ms(720),  1);
+	SetKey(anim.int_tracks[0], time_from_ms(500),  2);
+	SetKey(anim.int_tracks[0], time_from_ms(1080), 3);
+	SetKey(anim.int_tracks[0], time_from_ms(360),  4);
+
+	anim.float_tracks.resize(1);
+	SetKey(anim.float_tracks[0], time_from_ms(555), 0.f);
+
+	anim.vec2_tracks.resize(3);
+	SetKey(anim.vec2_tracks[0], time_from_ms(850), Vec2(1.f, 0.f));
+	SetKey(anim.vec2_tracks[1], time_from_ms(860), Vec2(0.f, 2.f));
+	SetKey(anim.vec2_tracks[2], time_from_ms(870), Vec2(3.f, 3.f));
+
+	anim.vec3_tracks.resize(1);
+	SetKey(anim.vec3_tracks[0], time_from_ms(880), Vec3::Front);
+	SetKey(anim.vec3_tracks[0], time_from_ms(860), Vec3::Up);
+	SetKey(anim.vec3_tracks[0], time_from_ms(840), Vec3::Right);
+
+	anim.vec4_tracks.resize(5);
+	SetKey(anim.vec4_tracks[0], time_from_ms(1240), Vec4::One);
+
+	anim.quat_tracks.resize(1);
+	SetKey(anim.quat_tracks[0], time_from_ms(140), Quaternion(1.f, 0.f, 0.f, 0.f));
+	SetKey(anim.quat_tracks[0], time_from_ms(280), Quaternion(0.f, 1.f, 0.f, 0.f));
+	SetKey(anim.quat_tracks[0], time_from_ms(390), Quaternion(0.f, 0.f, 1.f, 0.f));
+	
+	anim.color_tracks.resize(2);
+	SetKey(anim.color_tracks[0], time_from_ms(1111), Color::Green);
+	SetKey(anim.color_tracks[1], time_from_ms(500), Color::Blue);
+	SetKey(anim.color_tracks[1], time_from_ms(980), Color::Red);
+	SetKey(anim.color_tracks[1], time_from_ms(916), Color::Orange);
+
+	anim.string_tracks.resize(1);
+	SetKey(anim.string_tracks[0], time_from_ms(404), "A");
+
+	InstanceAnimKey k0 = SetKey(anim.instance_anim_track, 500, "000", ALM_Loop, 2.f);
+	InstanceAnimKey k1 = SetKey(anim.instance_anim_track, 1500, "001", ALM_Once, 1.f);
+
+	QuantizeAnim(anim, time_from_ms(200));
+
+	if (TEST_CHECK(anim.instance_anim_track.keys.size() == 2)) {
+		TEST_CHECK(anim.instance_anim_track.keys[0].t == time_from_ms(400));
+		TEST_CHECK(anim.instance_anim_track.keys[0].v == k0);
+
+		TEST_CHECK(anim.instance_anim_track.keys[1].t == time_from_ms(1400));
+		TEST_CHECK(anim.instance_anim_track.keys[1].v == k1);
+	}
+	
+	if (TEST_CHECK(anim.string_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.string_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.string_tracks[0].keys[0].t == time_from_ms(400));
+			TEST_CHECK(anim.string_tracks[0].keys[0].v == "A");
+		}
+	}
+
+	if (TEST_CHECK(anim.color_tracks.size() == 2)) {
+		if (TEST_CHECK(anim.color_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.color_tracks[0].keys[0].t == time_from_ms(1000));
+			TEST_CHECK(anim.color_tracks[0].keys[0].v == Color::Green);
+		}
+
+		if (TEST_CHECK(anim.color_tracks[1].keys.size() == 2)) {
+			TEST_CHECK(anim.color_tracks[1].keys[0].t == time_from_ms(400));
+			TEST_CHECK(anim.color_tracks[1].keys[0].v == Color::Blue);
+
+			TEST_CHECK(anim.color_tracks[1].keys[1].t == time_from_ms(800));
+			TEST_CHECK(anim.color_tracks[1].keys[1].v == Color::Orange);
+		}
+	}
+
+	if (TEST_CHECK(anim.quat_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.quat_tracks[0].keys.size() == 2)) {
+			TEST_CHECK(anim.quat_tracks[0].keys[0].t == time_from_ms(0));
+			TEST_CHECK(anim.quat_tracks[0].keys[0].v == Quaternion(1.f, 0.f, 0.f, 0.f));
+
+			TEST_CHECK(anim.quat_tracks[0].keys[1].t == time_from_ms(200));
+			TEST_CHECK(anim.quat_tracks[0].keys[1].v == Quaternion(0.f, 1.f, 0.f, 0.f));
+		}
+	}
+	
+	if (TEST_CHECK(anim.vec4_tracks.size() == 5)) {
+		if (TEST_CHECK(anim.vec4_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.vec4_tracks[0].keys[0].t == time_from_ms(1200));
+			TEST_CHECK(anim.vec4_tracks[0].keys[0].v == Vec4::One);
+		}
+	}
+
+	if (TEST_CHECK(anim.vec3_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.vec3_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.vec3_tracks[0].keys[0].t == time_from_ms(800));
+			TEST_CHECK(anim.vec3_tracks[0].keys[0].v == Vec3::Right);
+		}
+	}
+
+	if (TEST_CHECK(anim.vec2_tracks.size() == 3)) {
+		if (TEST_CHECK(anim.vec2_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.vec2_tracks[0].keys[0].t == time_from_ms(800));
+			TEST_CHECK(anim.vec2_tracks[0].keys[0].v == Vec2(1.f, 0.f));
+		}
+		if (TEST_CHECK(anim.vec2_tracks[1].keys.size() == 1)) {
+			TEST_CHECK(anim.vec2_tracks[1].keys[0].t == time_from_ms(800));
+			TEST_CHECK(anim.vec2_tracks[1].keys[0].v == Vec2(0.f, 2.f));
+		}
+		if (TEST_CHECK(anim.vec2_tracks[2].keys.size() == 1)) {
+			TEST_CHECK(anim.vec2_tracks[2].keys[0].t == time_from_ms(800));
+			TEST_CHECK(anim.vec2_tracks[2].keys[0].v == Vec2(3.f, 3.f));
+		}
+	}
+
+	if (TEST_CHECK(anim.float_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.float_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.float_tracks[0].keys[0].t == time_from_ms(400));
+			TEST_CHECK(anim.float_tracks[0].keys[0].v == 0.f);
+		}
+	}
+
+	if (TEST_CHECK(anim.int_tracks.size() == 1)) {
+		if (TEST_CHECK(anim.int_tracks[0].keys.size() == 4)) {
+			TEST_CHECK(anim.int_tracks[0].keys[0].t == time_from_ms(200));
+			TEST_CHECK(anim.int_tracks[0].keys[0].v == 4);
+
+			TEST_CHECK(anim.int_tracks[0].keys[1].t == time_from_ms(400));
+			TEST_CHECK(anim.int_tracks[0].keys[1].v == 2);
+
+			TEST_CHECK(anim.int_tracks[0].keys[2].t == time_from_ms(600));
+			TEST_CHECK(anim.int_tracks[0].keys[2].v == 1);
+
+			TEST_CHECK(anim.int_tracks[0].keys[3].t == time_from_ms(1000));
+			TEST_CHECK(anim.int_tracks[0].keys[3].v == 3);
+		}
+	}
+
+	if (TEST_CHECK(anim.bool_tracks.size() == 2)) {
+		if (TEST_CHECK(anim.bool_tracks[0].keys.size() == 1)) {
+			TEST_CHECK(anim.bool_tracks[0].keys[0].t == time_from_ms(0));
+			TEST_CHECK(anim.bool_tracks[0].keys[0].v == true);
+		}
+		if (TEST_CHECK(anim.bool_tracks[1].keys.size() == 2)) {
+			TEST_CHECK(anim.bool_tracks[1].keys[0].t == time_from_ms(600));
+			TEST_CHECK(anim.bool_tracks[1].keys[0].v == false);
+
+			TEST_CHECK(anim.bool_tracks[1].keys[1].t == time_from_ms(1000));
+			TEST_CHECK(anim.bool_tracks[1].keys[1].v == true);
+		}
+	}
+}
+
+static void test_anim_conform() {
+	AnimTrackT<Quaternion> track;
+
+	Quaternion q0 = QuaternionFromAxisAngle(Deg(30.f), Vec3::Up);
+	Quaternion q1 = QuaternionFromAxisAngle(TwoPi + Deg(60.f), Vec3::Right);
+	Quaternion q2 = QuaternionFromAxisAngle(Deg(1080.f), Vec3::Right);
+	Quaternion q3 = QuaternionFromAxisAngle(Deg(60.f), Vec3::Right);
+	Quaternion q4 = QuaternionFromAxisAngle(Deg(0.f), Vec3::Right);
+	
+	SetKey(track, time_from_ms(0), q0);
+	SetKey(track, time_from_ms(100), q1);
+	SetKey(track, time_from_ms(200), q2);
+
+	ConformAnimTrackKeys(track);
+
+	if (TEST_CHECK(track.keys.size() == 3)) {
+		TEST_CHECK(TestEqual(track.keys[1].v.x, q3.x));
+		TEST_CHECK(TestEqual(track.keys[1].v.y, q3.y));
+		TEST_CHECK(TestEqual(track.keys[1].v.z, q3.z));
+		TEST_CHECK(TestEqual(track.keys[1].v.w, q3.w));
+
+		TEST_CHECK(TestEqual(track.keys[2].v.x, q4.x));
+		TEST_CHECK(TestEqual(track.keys[2].v.y, q4.y));
+		TEST_CHECK(TestEqual(track.keys[2].v.z, q4.z));
+		TEST_CHECK(TestEqual(track.keys[2].v.w, q4.w));
+	}
+}
+
 void test_anim() {
 	test_anim_bool_track();
 	test_anim_string_track();
@@ -753,6 +940,8 @@ void test_anim() {
 	test_anim_has_keys();
 	test_anim_reverse();
 	test_anim_resample();
+	test_anim_quantize();
+	test_anim_conform();
 	test_misc();
 
 	Anim anim;
@@ -779,8 +968,4 @@ void test_anim() {
 
 	DeleteEmptyAnimTracks(anim);
 	TEST_CHECK(anim.bool_tracks.size() == 1);
-
-	// [todo]
-	// QuantizeAnim
-	// ConformAnimTrackKeys
 }
