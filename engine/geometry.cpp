@@ -19,11 +19,15 @@ namespace hg {
 
 uint8_t GetModelBinaryFormatVersion() { return 2; }
 
-static size_t _Count0(size_t v, const Geometry::Polygon &pol) { return v + pol.vtx_count; };
-size_t ComputeBindingCount(const Geometry &geo) { return std::accumulate(geo.pol.begin(), geo.pol.end(), size_t(0), _Count0); }
+static size_t Count0(size_t v, const Geometry::Polygon &pol) { return v + pol.vtx_count; };
+size_t ComputeBindingCount(const Geometry &geo) {
+	return std::accumulate(geo.pol.begin(), geo.pol.end(), static_cast<size_t>(0), Count0);
+}
 
-static size_t _Count1(size_t v, const Geometry::Polygon &pol) { return v + (pol.vtx_count > 2 ? pol.vtx_count - 2 : 0); }
-size_t ComputeTriangleCount(const Geometry &geo) { return std::accumulate(geo.pol.begin(), geo.pol.end(), size_t(0), _Count1); }
+static size_t Count1(size_t v, const Geometry::Polygon &pol) { return v + (pol.vtx_count > 2 ? pol.vtx_count - 2 : 0); }
+size_t ComputeTriangleCount(const Geometry &geo) {
+	return std::accumulate(geo.pol.begin(), geo.pol.end(), static_cast<size_t>(0), Count1);
+}
 
 std::vector<uint32_t> ComputePolygonIndex(const Geometry &geo) {
 	std::vector<uint32_t> out;
@@ -44,8 +48,9 @@ std::vector<VertexToPolygon> ComputeVertexToPolygon(const Geometry &geo) {
 	size_t tt = 0;
 	for (size_t c = 0; c < geo.pol.size(); ++c) {
 		const Geometry::Polygon &pol = geo.pol[c];
-		for (uint8_t j = 0; j < pol.vtx_count; ++j)
+		for (uint8_t j = 0; j < pol.vtx_count; ++j) {
 			++vtx_to_pol[geo.binding[tt + j]].pol_count;
+		}
 		tt += pol.vtx_count;
 	}
 
@@ -72,10 +77,10 @@ std::vector<VertexToPolygon> ComputeVertexToPolygon(const Geometry &geo) {
 std::vector<VertexToVertex> ComputeVertexToVertex(const Geometry &geo, const std::vector<VertexToPolygon> &vtx_to_pol) {
 	std::vector<VertexToVertex> vtx_to_vtx(geo.vtx.size());
 
-	static const int __VertexToVertexTempListSize = 1024;
-	std::array<VertexToVertex::PolygonVertex, __VertexToVertexTempListSize> tmp_vtx_to_vtx;
+	static const int VertexToVertexTempListSize = 1024;
+	std::array<VertexToVertex::PolygonVertex, VertexToVertexTempListSize> tmp_vtx_to_vtx;
 
-	for (int pass = 0; pass < 2; ++pass)
+	for (int pass = 0; pass < 2; ++pass) {
 		for (size_t v = 0; v < geo.vtx.size(); ++v) {
 			vtx_to_vtx[v].vtx_count = 0;
 
@@ -86,29 +91,31 @@ std::vector<VertexToVertex> ComputeVertexToVertex(const Geometry &geo, const std
 				const Geometry::Polygon &pol = geo.pol[pol_index];
 
 				int ci = 0;
-				for (; ci < pol.vtx_count; ++ci)
-					if (geo.binding[tt + ci] == v)
+				for (; ci < pol.vtx_count; ++ci) {
+					if (geo.binding[tt + ci] == v) {
 						break;
-
+					}
+				}
 				for (int _c = ci - 1; _c <= ci + 1; _c += 2) {
 					int vtx_index = _c;
-					if (vtx_index < 0)
+					if (vtx_index < 0) {
 						vtx_index += pol.vtx_count;
-					if (vtx_index >= pol.vtx_count)
+					}
+					if (vtx_index >= pol.vtx_count) {
 						vtx_index -= pol.vtx_count;
-
+					}
 					// invalidate already registered candidate
 					bool insert = true;
-					for (size_t nl = 0; nl < vtx_vtx_count; ++nl)
-						if (tmp_vtx_to_vtx[nl].pol_index == pol_index && tmp_vtx_to_vtx[nl].vtx_index == uint32_t(vtx_index)) {
+					for (size_t nl = 0; nl < vtx_vtx_count; ++nl) {
+						if (tmp_vtx_to_vtx[nl].pol_index == pol_index && tmp_vtx_to_vtx[nl].vtx_index == static_cast<uint32_t>(vtx_index)) {
 							insert = false;
 							break;
 						}
-
+					}
 					if (insert) {
-						if (vtx_vtx_count == __VertexToVertexTempListSize) {
+						if (vtx_vtx_count == VertexToVertexTempListSize) {
 							warn("Temporary list exceeded, vertex to vertex LUT corrupted");
-							vtx_vtx_count = __VertexToVertexTempListSize - 1;
+							vtx_vtx_count = VertexToVertexTempListSize - 1;
 						}
 
 						tmp_vtx_to_vtx[vtx_vtx_count].pol_index = pol_index;
@@ -127,10 +134,11 @@ std::vector<VertexToVertex> ComputeVertexToVertex(const Geometry &geo, const std
 			}
 
 			// allocate vertex container for this vertex
-			if (pass == 0)
+			if (pass == 0) {
 				vtx_to_vtx[v].vtx.reserve(vtx_vtx_count);
+			}
 		}
-
+	}
 	return vtx_to_vtx;
 }
 
@@ -172,9 +180,11 @@ std::vector<Vec3> ComputeVertexNormal(const Geometry &geo, const std::vector<Ver
 			for (uint16_t cg = 0; cg < vtx_to_pol[gv].pol_count; ++cg) {
 				const uint32_t cc = vtx_to_pol[gv].pol_index[cg];
 
-				if (cc != cp)
-					if (Dot(pol_normal[cp], pol_normal[cc]) >= msa)
+				if (cc != cp) {
+					if (Dot(pol_normal[cp], pol_normal[cc]) >= msa) {
 						normal += pol_normal[cc];
+					}
+				}
 			}
 			out[ttp++] = Normalize(normal);
 		}
@@ -198,7 +208,7 @@ struct SMikkTSpaceContextData {
 
 static int MikkT_getNumFace(const SMikkTSpaceContext *pContext) {
 	const SMikkTSpaceContextData *data = reinterpret_cast<SMikkTSpaceContextData *>(pContext->m_pUserData);
-	return int(data->geo.pol.size());
+	return static_cast<int>(data->geo.pol.size());
 }
 
 static int MikkT_getNumVerticesOfFace(const SMikkTSpaceContext *pContext, const int iFace) {
@@ -232,8 +242,8 @@ static void MikkT_getTexCoord(const SMikkTSpaceContext *pContext, float fvTexcOu
 		fvTexcOut[0] = UV.x;
 		fvTexcOut[1] = UV.y;
 	} else {
-		fvTexcOut[0] = 0.f;
-		fvTexcOut[1] = 0.f;
+		fvTexcOut[0] = 0.F;
+		fvTexcOut[1] = 0.F;
 	}
 }
 
@@ -291,16 +301,16 @@ void SmoothVertexColor(Geometry &geo, const std::vector<uint32_t> &pol_index, co
 		for (uint8_t nv = 0; nv < pol.vtx_count; ++nv) {
 			const size_t imv = geo.binding[tt + nv], iv = tt + nv;
 
-			out[iv] = geo.color[iv] * 4.f;
+			out[iv] = geo.color[iv] * 4.F;
 
-			float nrgb = 4.f;
-			for (uint16_t nvv = 0; nvv < vtx_to_vtx[imv].vtx_count; ++nvv)
+			float nrgb = 4.F;
+			for (uint16_t nvv = 0; nvv < vtx_to_vtx[imv].vtx_count; ++nvv) {
 				if (geo.pol[vtx_to_vtx[imv].vtx[nvv].pol_index].material == geo.pol[np].material) {
 					out[iv] += geo.color[pol_index[vtx_to_vtx[imv].vtx[nvv].pol_index] + vtx_to_vtx[imv].vtx[nvv].vtx_index];
-					nrgb += 1.f;
+					nrgb += 1.F;
 				}
-
-			out[iv] /= float(nrgb);
+			}
+			out[iv] /= static_cast<float>(nrgb);
 		}
 
 		tt += pol.vtx_count;
@@ -316,56 +326,56 @@ void SmoothVertexColor(Geometry &geo, const std::vector<uint32_t> &pol_index, co
 //
 static bool validation_error(int &error_count, const std::string &msg) {
 	warn(msg);
-
+	bool ok = true;
 	if (++error_count == 32) {
 		warn("Too many errors in geometry, aborting validation");
-		return false;
+		ok = false;
 	}
-
-	return true;
+	return ok;
 }
 
 bool Validate(const Geometry &geo) {
 	const size_t binding_count = ComputeBindingCount(geo);
 	int error_count = 0;
 
-	if (geo.binding.size() != binding_count)
-		if (!validation_error(error_count, "Invalid polygon vertex index count"))
-			return false;
-
-	if (!geo.color.empty() && (geo.color.size() != binding_count))
-		if (!validation_error(error_count, "Invalid vertex color count"))
-			return false;
-
-	if (!geo.normal.empty() && (geo.normal.size() != binding_count))
-		if (!validation_error(error_count, "Invalid vertex normal count"))
-			return false;
-
-	if (!geo.tangent.empty() && (geo.tangent.size() != binding_count))
-		if (!validation_error(error_count, "Invalid tangent frame count"))
-			return false;
-
-	for (size_t i = 0; i < geo.uv.size(); i++) {
-		if (!geo.uv[i].empty() && (geo.uv[i].size() != binding_count))
-			if (!validation_error(error_count, "Invalid UV count"))
-				return false;
+	bool ok = true;
+	if (geo.binding.size() != binding_count) {
+		ok = validation_error(error_count, "Invalid polygon vertex index count");
 	}
-	for (size_t i = 0; i < geo.binding.size(); i++) {
-		if (geo.binding[i] >= geo.vtx.size())
-			if (!validation_error(error_count, "Invalid reference to non-existing vertex"))
-				return false;
+	if (ok && (!geo.color.empty() && (geo.color.size() != binding_count))) {
+		ok = validation_error(error_count, "Invalid vertex color count");
+	}
+	if (ok && (!geo.normal.empty() && (geo.normal.size() != binding_count))) {
+		ok = validation_error(error_count, "Invalid vertex normal count");
+	}
+	if (ok && (!geo.tangent.empty() && (geo.tangent.size() != binding_count))) {
+		ok = validation_error(error_count, "Invalid tangent frame count");
+	}
+	for (size_t i = 0; ok && (i < geo.uv.size()); i++) {
+		if (!geo.uv[i].empty() && (geo.uv[i].size() != binding_count)) {
+			ok = validation_error(error_count, "Invalid UV count");
+		}
+	}
+	for (size_t i = 0; ok && (i < geo.binding.size()); i++) {
+		if (geo.binding[i] >= geo.vtx.size()) {
+			ok = validation_error(error_count, "Invalid reference to non-existing vertex");
+		}
 	}
 
-	const size_t bone_count = geo.bind_pose.size();
+	if (ok) {
+		const size_t bone_count = geo.bind_pose.size();
 
-	for (size_t j = 0; j < geo.skin.size(); j++) {
-		const Geometry::Skin &s = geo.skin[j];
-		for (uint16_t i = 0; i < 4; i++)
-			if (s.index[i] >= bone_count)
-				if (!validation_error(error_count, "Invalid reference to non-existing bone"))
-					return false;
+		for (size_t j = 0; ok && (j < geo.skin.size()); j++) {
+			const Geometry::Skin &s = geo.skin[j];
+			for (uint16_t i = 0; ok && (i < 4); i++) {
+				if (s.index[i] >= bone_count) {
+					ok = validation_error(error_count, "Invalid reference to non-existing bone");
+				}
+			}
+		}
 	}
-	return error_count == 0;
+
+	return ok ? (error_count == 0) : false;
 }
 
 //
@@ -384,59 +394,57 @@ struct Skin_v1 { // 8B
 Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name) {
 	Geometry geo;
 
-	if (!ir.is_valid(h)) {
-		warn(fmt::format("Cannot load geometry '{}', invalid file handle", name));
-		return geo;
-	}
+	if (ir.is_valid(h)) {
+		if (Read<uint32_t>(ir, h) == HarfangMagic) {
+			if (Read<uint8_t>(ir, h) == /*GeometryMarker*/ ModelMarker) {
+				/*
+					version 0: initial
+					version 1: add skin weights & bind pose
+					version 2: added arbitrary number of bones
+				*/
+				const uint32_t version = Read<uint32_t>(ir, h);
+				if (version <= 2) {
 
-	if (Read<uint32_t>(ir, h) != HarfangMagic) {
-		warn(fmt::format("Cannot load geometry '{}', invalid magic marker", name));
-		return geo;
-	}
+					ReadStdVector(ir, h, geo.vtx);
+					ReadStdVector(ir, h, geo.pol);
+					ReadStdVector(ir, h, geo.binding);
 
-	if (Read<uint8_t>(ir, h) != /*GeometryMarker*/ ModelMarker) {
-		warn(fmt::format("Cannot load geometry '{}', invalid geometry marker", name));
-		return geo;
-	}
+					ReadStdVector(ir, h, geo.normal);
+					ReadStdVector(ir, h, geo.color);
 
-	/*
-		version 0: initial
-		version 1: add skin weights & bind pose
-		version 2: added arbitrary number of bones
-	*/
-	const uint32_t version = Read<uint32_t>(ir, h);
-	if (version > 2) {
-		warn(fmt::format("Cannot load geometry '{}', unsupported version", name));
-		return geo;
-	}
+					ReadStdVector(ir, h, geo.tangent);
 
-	ReadStdVector(ir, h, geo.vtx);
-	ReadStdVector(ir, h, geo.pol);
-	ReadStdVector(ir, h, geo.binding);
+					for (size_t i = 0; i < geo.uv.size(); i++) {
+						ReadStdVector(ir, h, geo.uv[i]);
+					}
 
-	ReadStdVector(ir, h, geo.normal);
-	ReadStdVector(ir, h, geo.color);
-
-	ReadStdVector(ir, h, geo.tangent);
-
-	for (size_t i = 0; i < geo.uv.size(); i++)
-		ReadStdVector(ir, h, geo.uv[i]);
-
-	if (version > 0) {
-		if (version == 1) {
-			std::vector<Skin_v1> skin1;
-			ReadStdVector(ir, h, skin1);
-			geo.skin.resize(skin1.size());
-			for (size_t i = 0; i < skin1.size(); ++i)
-				for (size_t j = 0; j < 4; ++j) {
-					geo.skin[i].index[j] = skin1[i].index[j];
-					geo.skin[i].weight[j] = skin1[i].weight[j];
+					if (version > 0) {
+						if (version == 1) {
+							std::vector<Skin_v1> skin1;
+							ReadStdVector(ir, h, skin1);
+							geo.skin.resize(skin1.size());
+							for (size_t i = 0; i < skin1.size(); ++i) {
+								for (size_t j = 0; j < 4; ++j) {
+									geo.skin[i].index[j] = skin1[i].index[j];
+									geo.skin[i].weight[j] = skin1[i].weight[j];
+								}
+							}
+						} else {
+							ReadStdVector(ir, h, geo.skin);
+						}
+						ReadStdVector(ir, h, geo.bind_pose);
+					}
+				} else {
+					warn(fmt::format("Cannot load geometry '{}', unsupported version", name));
 				}
+			} else {
+				warn(fmt::format("Cannot load geometry '{}', invalid geometry marker", name));
+			}
 		} else {
-			ReadStdVector(ir, h, geo.skin);
+			warn(fmt::format("Cannot load geometry '{}', invalid magic marker", name));
 		}
-
-		ReadStdVector(ir, h, geo.bind_pose);
+	} else {
+		warn(fmt::format("Cannot load geometry '{}', invalid file handle", name));
 	}
 	return geo;
 }
@@ -444,39 +452,41 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 Geometry LoadGeometryFromFile(const std::string &path) { return LoadGeometry(g_file_reader, ScopedReadHandle(g_file_read_provider, path), path); }
 
 template <typename T> void WriteStdVector(const Writer &iw, const Handle &h, const std::vector<T> &v) {
-	Write(iw, h, uint32_t(v.size()));
+	Write(iw, h, numeric_cast<uint32_t>(v.size()));
 	iw.write(h, v.data(), v.size() * sizeof(T));
 }
 
 bool SaveGeometry(const Writer &iw, const Handle &h, const Geometry &geo) {
-	if (!iw.is_valid(h))
-		return false;
+	bool ret = false;
+	if (iw.is_valid(h)) {
 
-	Write(iw, h, HarfangMagic);
-	Write(iw, h, GeometryMarker);
+		Write(iw, h, HarfangMagic);
+		Write(iw, h, GeometryMarker);
 
-	/*
-		version 0: initial
-		version 1: add skin weights & bind pose
-		version 2: added arbitrary number of bones
-	*/
-	Write<uint32_t>(iw, h, 2); // version
+		/*
+			version 0: initial
+			version 1: add skin weights & bind pose
+			version 2: added arbitrary number of bones
+		*/
+		Write<uint32_t>(iw, h, 2); // version
 
-	WriteStdVector(iw, h, geo.vtx);
-	WriteStdVector(iw, h, geo.pol);
-	WriteStdVector(iw, h, geo.binding);
+		WriteStdVector(iw, h, geo.vtx);
+		WriteStdVector(iw, h, geo.pol);
+		WriteStdVector(iw, h, geo.binding);
 
-	WriteStdVector(iw, h, geo.normal);
-	WriteStdVector(iw, h, geo.color);
+		WriteStdVector(iw, h, geo.normal);
+		WriteStdVector(iw, h, geo.color);
 
-	WriteStdVector(iw, h, geo.tangent);
+		WriteStdVector(iw, h, geo.tangent);
 
-	for (size_t i = 0; i < geo.uv.size(); i++)
-		WriteStdVector(iw, h, geo.uv[i]);
-
-	WriteStdVector(iw, h, geo.skin);
-	WriteStdVector(iw, h, geo.bind_pose);
-	return true;
+		for (size_t i = 0; i < geo.uv.size(); i++) {
+			WriteStdVector(iw, h, geo.uv[i]);
+		}
+		WriteStdVector(iw, h, geo.skin);
+		WriteStdVector(iw, h, geo.bind_pose);
+		ret = true;
+	}
+	return ret;
 }
 
 bool SaveGeometryToFile(const std::string &path, const Geometry &geo) {
@@ -490,22 +500,23 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 	const uint32_t i_vtx = geo.binding[i_bind + i_vtp];
 	vtx.pos = geo.vtx[i_vtx];
 
-	if (!geo.normal.empty())
+	if (!geo.normal.empty()) {
 		vtx.normal = geo.normal[i_bind + i_vtp];
-
+	}
 	if (!geo.tangent.empty()) {
 		vtx.tangent = geo.tangent[i_bind + i_vtp].T;
 		vtx.binormal = geo.tangent[i_bind + i_vtp].B;
 	}
 
-	if (!geo.color.empty())
+	if (!geo.color.empty()) {
 		vtx.color0 = geo.color[i_bind + i_vtp];
-
-	for (size_t i = 0; i < geo.uv.size(); ++i)
-		if (!geo.uv[i].empty())
+	}
+	for (size_t i = 0; i < geo.uv.size(); ++i) {
+		if (!geo.uv[i].empty()) {
 			*(&vtx.uv0 + i) = geo.uv[i][i_bind + i_vtp];
-
-	if (!geo.skin.empty())
+		}
+	}
+	if (!geo.skin.empty()) {
 		for (int i = 0; i < 4; ++i) {
 			uint16_t bone_idx = geo.skin[i_vtx].index[i];
 			std::map<uint16_t, uint16_t>::const_iterator bone_map_it = bone_map.find(bone_idx);
@@ -513,7 +524,7 @@ static Vertex PreparePolygonVertex(const Geometry &geo, size_t i_bind, size_t i_
 			vtx.index[i] = numeric_cast<uint8_t>(bone_map_it->second);
 			vtx.weight[i] = unpack_float(geo.skin[i_vtx].weight[i]);
 		}
-
+	}
 	return vtx;
 }
 
@@ -548,13 +559,13 @@ VertexLayout ComputeGeometryVertexLayout(const Geometry &geo) {
 		layout.Set(VA_BoneWeights, SG_VERTEXFORMAT_UBYTE4N, offset);
 		offset += 4;
 	}
-
-	for (size_t i = 0; i < geo.uv.size() && i < 2; ++i)
+	
+	for (size_t i = 0; i < geo.uv.size() && i < 2; ++i) {
 		if (!geo.uv[i].empty()) {
-			layout.Set(VertexAttribute(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2, offset);
+			layout.Set(static_cast<VertexAttribute>(VA_UV0 + i), SG_VERTEXFORMAT_FLOAT2, offset);
 			offset += 8;
 		}
-
+	}
 	return layout;
 }
 
@@ -562,8 +573,9 @@ uint8_t GetMaterialCount(const Geometry &geo) {
 	uint8_t count = 0;
 	for (size_t i = 0; i < geo.pol.size(); i++) {
 		const Geometry::Polygon &p = geo.pol[i];
-		if (p.material >= count)
+		if (p.material >= count) {
 			count = p.material + 1;
+		}
 	}
 	return count;
 }
@@ -612,7 +624,7 @@ static void GeometryToModelBuilder(const Geometry &geo, ModelBuilder &builder) {
 								const uint16_t bone_idx = geo.skin[i_vtx].index[i];
 
 								if (bone_map.find(bone_idx) == bone_map.end()) {
-									uint16_t redir_idx = uint16_t(bone_map.size());
+									uint16_t redir_idx = static_cast<uint16_t>(bone_map.size());
 
 									if (redir_idx < max_skinned_model_matrix_count) {
 										bone_map[bone_idx] = redir_idx;
@@ -633,8 +645,9 @@ static void GeometryToModelBuilder(const Geometry &geo, ModelBuilder &builder) {
 							}
 						}
 
-						for (size_t j = 0; j < bone_indices_to_add.size(); j++)
+						for (size_t j = 0; j < bone_indices_to_add.size(); j++) {
 							builder.AddBoneIdx(bone_indices_to_add[i]);
+						}
 					}
 				}
 
@@ -667,41 +680,42 @@ Model GeometryToModel(const Geometry &geo, const VertexLayout &layout, ModelOpti
 	return model;
 }
 
-static void on_end_list(const VertexLayout &, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<int8_t> &vtx,
+static void on_end_list(const VertexLayout &layout, const MinMax &minmax, const std::vector<VtxIdxType> &idx32, const std::vector<int8_t> &vtx,
 	const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
+	unused(layout);
 	const File &file = *reinterpret_cast<File *>(userdata);
 
 	uint8_t idx_type_size = 2;
 
-	for (size_t i = 0; i < idx32.size(); i++)
+	for (size_t i = 0; i < idx32.size(); i++) {
 		if (idx32[i] > 65535) {
 			idx_type_size = 4;
 			break;
 		}
-
+	}
 	Write<uint8_t>(file, idx_type_size); // version 2: indices size in bytes
 
 	size_t idx_size;
 
 	if (idx_type_size == 4) {
 		idx_size = idx32.size() * sizeof(uint32_t);
-		Write(file, uint32_t(idx_size));
+		Write(file, numeric_cast<uint32_t>(idx_size));
 		Write(file, idx32.data(), idx_size); // 32 bit index buffer
 	} else {
 		std::vector<uint16_t> idx16(idx32.size());
-		for (size_t i = 0; i < idx32.size(); ++i)
+		for (size_t i = 0; i < idx32.size(); ++i) {
 			idx16[i] = idx32[i];
-
+		}
 		idx_size = idx16.size() * sizeof(uint16_t);
-		Write(file, uint32_t(idx_size));
+		Write(file, numeric_cast<uint32_t>(idx_size));
 		Write(file, idx16.data(), idx_size); // 16 bit index buffer
 	}
 
 	const size_t vtx_size = vtx.size();
-	Write(file, uint32_t(vtx_size));
+	Write(file, numeric_cast<uint32_t>(vtx_size));
 	Write(file, vtx.data(), vtx_size); // vertex buffer
 
-	Write(file, uint32_t(bones_table.size()));
+	Write(file, numeric_cast<uint32_t>(bones_table.size()));
 	Write(file, bones_table.data(), bones_table.size() * sizeof(bones_table[0])); // bones table
 
 	Write(file, minmax);
@@ -711,34 +725,36 @@ static void on_end_list(const VertexLayout &, const MinMax &minmax, const std::v
 };
 
 bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, const VertexLayout &layout, ModelOptimisationLevel optimisation_level) {
+	bool ret = false;
 	ScopedFile file(OpenWrite(path));
-	if (!file)
-		return false;
+	if (file) {
+		Write(file, HarfangMagic);
+		Write(file, ModelMarker);
 
-	Write(file, HarfangMagic);
-	Write(file, ModelMarker);
+		/*
+			version 0: initial
+			version 1: add bind poses
+			version 2: add indices size
+		*/
+		const uint8_t version = GetModelBinaryFormatVersion();
+		Write(file, version); // version
+		Write(file, layout); // vertex layout
 
-	/*
-		version 0: initial
-		version 1: add bind poses
-		version 2: add indices size
-	*/
-	const uint8_t version = GetModelBinaryFormatVersion();
-	Write(file, version); // version
-	Write(file, layout); // vertex layout
+		ModelBuilder builder;
+		GeometryToModelBuilder(geo, builder);
 
-	ModelBuilder builder;
-	GeometryToModelBuilder(geo, builder);
+		builder.Make(layout, on_end_list, &file.f, optimisation_level);
 
-	builder.Make(layout, on_end_list, &file.f, optimisation_level);
+		Write<uint8_t>(file, 0); // EOLists
 
-	Write<uint8_t>(file, 0); // EOLists
+		Write(file, numeric_cast<uint32_t>(geo.bind_pose.size())); // version 1: add bind poses
+		for (size_t i = 0; i < geo.bind_pose.size(); i++) {
+			Write(file, geo.bind_pose[i]);
+		}
 
-	Write(file, numeric_cast<uint32_t>(geo.bind_pose.size())); // version 1: add bind poses
-	for (size_t i = 0; i < geo.bind_pose.size(); i++)
-		Write(file, geo.bind_pose[i]);
-
-	return true;
+		ret = true;
+	}
+	return ret;
 }
 
 } // namespace hg
