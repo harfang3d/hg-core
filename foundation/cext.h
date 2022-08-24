@@ -24,7 +24,7 @@ template <typename T> inline bool asbool(const T &v) {
 }
 
 #define forever while (true)
-#define unused(ARG)
+#define unused(ARG) (void)(ARG)
 
 /// Set 'variable' value if it does not compare equal to 'value', return true if 'variable' was modified.
 template <typename T> inline bool set_if_not_equal(T &variable, const T &value) {
@@ -342,13 +342,13 @@ template <class CastType, class Type> CastType numeric_cast(Type v) {
 
 	bool r;
 	if (std::is_signed<CastType>::value && !std::is_signed<Type>::value) { // int/size_t
-		r = size_t(v) <= size_t(mx);
+		r = static_cast<size_t>(v) <= static_cast<size_t>(mx);
 	} else if (!std::is_signed<CastType>::value && std::is_signed<Type>::value) {
-		r = v >= 0 && size_t(v) <= size_t(mx);
+		r = v >= 0 && static_cast<size_t>(v) <= static_cast<size_t>(mx);
 	} else if (std::is_signed<CastType>::value && std::is_signed<Type>::value) {
-		r = ptrdiff_t(v) >= ptrdiff_t(mn) && ptrdiff_t(v) <= ptrdiff_t(mx);
+		r = static_cast<ptrdiff_t>(v) >= static_cast<ptrdiff_t>(mn) && static_cast<ptrdiff_t>(v) <= static_cast<ptrdiff_t>(mx);
 	} else { // both non-signed
-		r = size_t(v) >= size_t(mn) && size_t(v) <= size_t(mx);
+		r = static_cast<size_t>(v) >= static_cast<size_t>(mn) && static_cast<size_t>(v) <= static_cast<size_t>(mx);
 	}
 
 	if (!r) {

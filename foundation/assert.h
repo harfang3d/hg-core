@@ -15,23 +15,26 @@ extern void (*trigger_assert)(const std::string &source, int line, const std::st
 
 #if defined(ALWAYS_ENABLE_ASSERT) || defined(_DEBUG) || defined(MIXED_RELEASE)
 
-#define HG_ASSERT(_EXP_)                                                                                                                                      \
-	do {                                                                                                                                                       \
-		if (!(_EXP_))                                                                                                                                          \
-			hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, "");                                                                             \
+#define HG_ASSERT(_EXP_)                                                                                                                                    \
+	do {                                                                                                                                                    \
+		if (!(_EXP_)) {                                                                                                                                     \
+			hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, "");																				\
+		}																																					\
 	} while (0)
 
-#define HG_ASSERT_IF(_CND_, _EXP_)                                                                                                                            \
-	do {                                                                                                                                                       \
-		if (_CND_)                                                                                                                                             \
-			if (!(_EXP_))                                                                                                                                      \
-				hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, "");                                                                         \
+#define HG_ASSERT_IF(_CND_, _EXP_)																															\
+	do {																																					\
+		if (_CND_)                                                                                                                                          \
+			if (!(_EXP_)) {                                                                                                                                 \
+				hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, "");																			\
+			}																																				\
 	} while (0)
 
-#define HG_ASSERT_MSG(_EXP_, _MSG_)                                                                                                                           \
-	do {                                                                                                                                                       \
-		if (!(_EXP_))                                                                                                                                          \
-			hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, _MSG_);                                                                               \
+#define HG_ASSERT_MSG(_EXP_, _MSG_)																															\
+	do {                                                                                                                                                    \
+		if (!(_EXP_)) {                                                                                                                                     \
+			hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, #_EXP_, _MSG_);                                                                            \
+		}																																					\
 	} while (0)
 
 #define HG_ASSERT_ALWAYS(_MSG_) hg::trigger_assert(__FILE__, __LINE__, __FUNCTION__, "ALWAYS", _MSG_)
