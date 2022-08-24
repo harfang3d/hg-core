@@ -53,33 +53,36 @@ static const int InvalidKeyIdx = -1;
 
 // AnimTrackT is expected to be sorted
 template <typename AnimTrack> int GetKey(const AnimTrack &track, time_ns t) {
+	int res = InvalidKeyIdx;
+
 	const size_t key_count = track.keys.size();
-	if (key_count == 0)
-		return InvalidKeyIdx;
 
-	// FIXME below a certain number of keys a linear search might be faster
+	if (key_count > 0) {
+		// FIXME below a certain number of keys a linear search might be faster
+		int lo = 0, hi = numeric_cast<int>(key_count) - 1;
 
-	int lo = 0, hi = numeric_cast<int>(key_count) - 1;
+		while ((res == InvalidKeyIdx) && (mid != lo)) {
+			const int mid = (lo + hi) / 2;
 
-	while (true) {
-		const int mid = (lo + hi) / 2;
-
-		if (track.keys[mid].t == t)
-			return mid; // match
-
-		if (mid == lo) { // won't converge any further
-			if (track.keys[hi].t == t)
-				return hi; // match
-			break;
+			if (track.keys[mid].t == t) {
+				res = mid; // exact match
+			} else {
+				if (mid == lo) { // won't converge any further
+					if (track.keys[hi].t == t) {
+						res = hi; // exact match
+					}
+				} else {
+					if (t < track.keys[mid].t) {
+						hi = mid;
+					} else {
+						lo = mid;
+					}
+				}
+			}
 		}
-
-		if (t < track.keys[mid].t)
-			hi = mid;
-		else
-			lo = mid;
 	}
 
-	return InvalidKeyIdx;
+	return res;
 }
 
 template <typename AnimTrack, typename T> void SetKey(AnimTrack &track, time_ns t, const T &v) {
@@ -89,9 +92,12 @@ template <typename AnimTrack, typename T> void SetKey(AnimTrack &track, time_ns 
 		track.keys[idx].v = v;
 	} else {
 		typename std::deque<typename AnimTrack::Key>::iterator i = track.keys.begin();
-		for (; i != track.keys.end(); ++i)
-			if (i->t > t)
+
+		for (; i != track.keys.end(); ++i) {
+			if (i->t > t) {
 				break;
+			}
+		}
 
 		typename AnimTrack::Key key;
 		key.t = t;
@@ -103,8 +109,9 @@ template <typename AnimTrack, typename T> void SetKey(AnimTrack &track, time_ns 
 template <typename AnimTrack> void DeleteKey(AnimTrack &track, time_ns t) {
 	const int idx = GetKey(track, t);
 
-	if (idx != InvalidKeyIdx)
+	if (idx != InvalidKeyIdx) {
 		track.keys.erase(track.keys.begin() + idx);
+	}
 }
 
 //
@@ -112,62 +119,87 @@ template <typename AnimTrack, typename T> bool GetIntervalKeys(const AnimTrack &
 	const int key_count = numeric_cast<int>(track.keys.size());
 
 	int i = 0;
-	for (; i < key_count; ++i)
-		if (track.keys[i].t > t)
+	for (; i < key_count; ++i) {
+		if (track.keys[i].t > t) {
 			break;
+		}
+	}
+
+	bool res;
 
 	if (i == 0) {
 		kf0 = 0;
-		return false;
+		res = false;
 	} else if (i == key_count) {
 		kf0 = i - 1;
-		return false;
+		res = false;
+	} else {
+		kf0 = i - 1;
+		kf1 = i;
+		res = true;
 	}
 
-	kf0 = i - 1;
-	kf1 = i;
-	return true;
+	return res;
 }
 
 template <typename AnimTrack, typename T> bool EvaluateStep(const AnimTrack &track, time_ns t, T &v) {
-	if (track.keys.empty())
-		return false;
+	bool res;
 
-	int kf0, kf1;
-	GetIntervalKeys<AnimTrack, T>(track, t, kf0, kf1);
-	v = track.keys[kf0].v;
+	if (track.keys.empty()) {
+		res = false;
+	} else {
+		int kf0, kf1;
+		GetIntervalKeys<AnimTrack, T>(track, t, kf0, kf1);
+		v = track.keys[kf0].v;
+		res = true;
+	}
 
-	return true;
+	return res;
 }
 
 template <typename AnimTrack, typename T> bool EvaluateLinear(const AnimTrack &track, time_ns t, T &v) {
-	if (track.keys.empty())
-		return false;
+	bool res;
 
-	int kf0, kf1;
-	if (GetIntervalKeys<AnimTrack, T>(track, t, kf0, kf1)) {
-		const float k = time_to_sec_f(t - track.keys[kf0].t) / time_to_sec_f(track.keys[kf1].t - track.keys[kf0].t);
-		v = LinearInterpolate(track.keys[kf0].v, track.keys[kf1].v, k);
+	if (track.keys.empty()) {
+		res = false;
 	} else {
-		v = track.keys[kf0].v;
+		int kf0, kf1;
+
+		if (GetIntervalKeys<AnimTrack, T>(track, t, kf0, kf1)) {
+			const float k = time_to_sec_f(t - track.keys[kf0].t) / time_to_sec_f(track.keys[kf1].t - track.keys[kf0].t);
+			v = LinearInterpolate(track.keys[kf0].v, track.keys[kf1].v, k);
+		} else {
+			v = track.keys[kf0].v;
+		}
+
+		res = true;
 	}
-	return true;
+
+	return res;
 }
 
 template <typename T> bool EvaluateHermite(const AnimTrackHermiteT<T> &track, time_ns t, T &v) {
-	if (track.keys.empty())
-		return false;
+	bool res;
 
-	int kf1, kf2;
-
-	if (GetIntervalKeys<AnimTrackHermiteT<T>, T>(track, t, kf1, kf2)) {
-		const float u = time_to_sec_f(t - track.keys[kf1].t) / time_to_sec_f(track.keys[kf2].t - track.keys[kf1].t);
-		const int kf0 = Max<int>(kf1 - 1, 0), kf3 = Min<int>(kf2 + 1, numeric_cast<int>(track.keys.size()) - 1);
-		v = HermiteInterpolate(track.keys[kf0].v, track.keys[kf1].v, track.keys[kf2].v, track.keys[kf3].v, u, track.keys[kf1].tension, track.keys[kf1].bias);
+	if (track.keys.empty()) {
+		res = false;
 	} else {
-		v = track.keys[kf1].v;
+		int kf1, kf2;
+
+		if (GetIntervalKeys<AnimTrackHermiteT<T>, T>(track, t, kf1, kf2)) {
+			const float u = time_to_sec_f(t - track.keys[kf1].t) / time_to_sec_f(track.keys[kf2].t - track.keys[kf1].t);
+			const int kf0 = Max<int>(kf1 - 1, 0), kf3 = Min<int>(kf2 + 1, numeric_cast<int>(track.keys.size()) - 1);
+
+			v = HermiteInterpolate(
+				track.keys[kf0].v, track.keys[kf1].v, track.keys[kf2].v, track.keys[kf3].v, u, track.keys[kf1].tension, track.keys[kf1].bias);
+		} else {
+			v = track.keys[kf1].v;
+		}
+
+		res = true;
 	}
-	return true;
+
+	return res;
 }
 
 //
@@ -196,6 +228,7 @@ void ConformAnimTrackKeys(AnimTrackT<Quaternion> &track);
 template <typename T> bool Evaluate(const AnimTrackT<T> &track, time_ns t, T &v) {
 	return EvaluateLinear<AnimTrackT<T>, T>(track, t, v);
 }
+
 template <typename T> bool Evaluate(const AnimTrackHermiteT<T> &track, time_ns t, T &v) {
 	return EvaluateHermite<T>(track, t, v);
 }
@@ -205,7 +238,7 @@ template <> bool Evaluate(const AnimTrackT<std::string> &track, time_ns t, std::
 
 //
 struct InstanceAnimKey {
-	InstanceAnimKey() : loop_mode(ALM_Once), t_scale(1.f) {}
+	InstanceAnimKey() : loop_mode(ALM_Once), t_scale(1.F) {}
 	std::string anim_name;
 	AnimLoopMode loop_mode;
 	float t_scale;
@@ -246,15 +279,16 @@ template <typename Track> void ResampleAnimTrack(Track &track, time_ns old_start
 	// resample/quantize
 	for (typename std::deque<typename Track::Key>::iterator i = track.keys.begin(); i != track.keys.end(); ++i) {
 		i->t = ((i->t - old_start) * scale) / 1000000 + new_start;
-		i->t = time_ns((i->t + frame_duration / 2) / frame_duration) * frame_duration;
+		i->t = static_cast<time_ns>((i->t + frame_duration / 2) / frame_duration) * frame_duration;
 	}
 
 	// remove duplicate timecode
 	for (typename std::deque<typename Track::Key>::iterator i = track.keys.begin(); i != track.keys.end();) {
-		if ((i != track.keys.begin()) && (i->t == (i - 1)->t))
+		if ((i != track.keys.begin()) && (i->t == (i - 1)->t)) {
 			i = track.keys.erase(i);
-		else
+		} else {
 			++i;
+		}
 	}
 }
 
@@ -267,7 +301,7 @@ static bool CompareKeyValue(const Vec3 &v_a, const Vec3 &v_b, float epsilon) {
 }
 
 static bool CompareKeyValue(const Quaternion &v_a, const Quaternion &v_b, float epsilon) {
-	return Abs(ACos(Dot(v_a, v_b))) <= epsilon * 0.5f;
+	return Abs(ACos(Dot(v_a, v_b))) <= epsilon * 0.5F;
 }
 
 static bool CompareKeyValue(const Color &v_a, const Color &v_b, float epsilon) {
@@ -288,10 +322,12 @@ template <typename AnimTrack, typename T> size_t SimplifyAnimTrackT(AnimTrack &t
 		} else {
 			const typename std::deque<typename AnimTrack::Key> &prev = track_ref.keys[last_copied];
 			const typename std::deque<typename AnimTrack::Key> &next = track_ref.keys[i + 1];
+
 			for (int j = last_copied + 1; j <= i; j++) {
 				const typename AnimTrack::Key &src_key = track_ref.keys[j];
 				T interpolated;
 				Evaluate(track, src_key.t, interpolated);
+
 				if (!CompareKeyValue(interpolated, src_key.v, epsilon)) {
 					track.keys.push_back(src_key);
 					last_copied = i;

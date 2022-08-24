@@ -27,22 +27,10 @@ namespace hg {
 
 class Scene;
 
-
-
-
-
 struct BoundDisplayList { // links DisplayList to object and its materials
 	sg_pipeline pipeline; // links list attributes to shader inputs
 	sg_bindings bindings; // links list buffers and material resources to shader inputs
 };
-
-
-
-
-
-
-
-
 
 //
 struct NodesChildren {
@@ -213,7 +201,10 @@ public:
 	// node
 	Node CreateNode(std::string name = std::string());
 	void DestroyNode(NodeRef ref);
-	void DestroyNode(const Node &node) { DestroyNode(node.ref); }
+
+	void DestroyNode(const Node &node) {
+		DestroyNode(node.ref);
+	}
 
 	Node GetNode(const std::string &name) const;
 	Node GetNode(NodeRef ref) const;
@@ -222,9 +213,14 @@ public:
 	std::vector<NodeRef> GetNodeChildRefs(NodeRef ref) const;
 
 	std::vector<Node> GetNodeChildren(NodeRef ref) const;
-	std::vector<Node> GetNodeChildren(const Node &node) const { return GetNodeChildren(node.ref); }
 
-	NodeRef GetNodeRef(uint32_t idx) const { return nodes.get_ref(idx); }
+	std::vector<Node> GetNodeChildren(const Node &node) const {
+		return GetNodeChildren(node.ref);
+	}
+
+	NodeRef GetNodeRef(uint32_t idx) const {
+		return nodes.get_ref(idx);
+	}
 
 	size_t GetNodeCount() const;
 	size_t GetAllNodeCount() const;
@@ -242,19 +238,34 @@ public:
 
 	void ReserveNodes(size_t count);
 
-	bool IsValidNodeRef(NodeRef ref) const { return nodes.is_valid(ref); }
+	bool IsValidNodeRef(NodeRef ref) const {
+		return nodes.is_valid(ref);
+	}
 
 	void EnableNode(NodeRef ref);
 	void DisableNode(NodeRef ref);
 
-	bool IsNodeEnabled(NodeRef ref) const { return nodes.is_valid(ref) ? !(nodes[ref.idx].flags & (NF_Disabled | NF_InstanceDisabled)) : false; }
-	bool IsNodeItselfEnabled(NodeRef ref) const { return nodes.is_valid(ref) ? !(nodes[ref.idx].flags & NF_Disabled) : false; }
+	bool IsNodeEnabled(NodeRef ref) const {
+		return nodes.is_valid(ref) ? !(nodes[ref.idx].flags & (NF_Disabled | NF_InstanceDisabled)) : false;
+	}
+
+	bool IsNodeItselfEnabled(NodeRef ref) const {
+		return nodes.is_valid(ref) ? !(nodes[ref.idx].flags & NF_Disabled) : false;
+	}
 
 	bool IsChildOf(NodeRef ref, NodeRef parent) const;
-	bool IsChildOf(const Node &node, const Node &parent) const { return IsChildOf(node.ref, parent.ref); }
 
-	bool IsRoot(NodeRef ref) const { return IsChildOf(ref, InvalidNodeRef); }
-	bool IsRoot(const Node &node) const { return IsChildOf(node.ref, InvalidNodeRef); }
+	bool IsChildOf(const Node &node, const Node &parent) const {
+		return IsChildOf(node.ref, parent.ref);
+	}
+
+	bool IsRoot(NodeRef ref) const {
+		return IsChildOf(ref, InvalidNodeRef);
+	}
+
+	bool IsRoot(const Node &node) const {
+		return IsChildOf(node.ref, InvalidNodeRef);
+	}
 
 	NodeRef IsInstantiatedBy(NodeRef ref) const;
 
@@ -264,7 +275,9 @@ public:
 	// transform component
 	Transform CreateTransform();
 	void DestroyTransform(ComponentRef ref);
-	void DestroyTransform(const Transform &t) { DestroyTransform(t.ref); }
+	void DestroyTransform(const Transform &t) {
+		DestroyTransform(t.ref);
+	}
 	Vec3 GetTransformPos(ComponentRef ref) const;
 	void SetTransformPos(ComponentRef ref, const Vec3 &v);
 	Vec3 GetTransformRot(ComponentRef ref) const;
@@ -289,12 +302,17 @@ public:
 
 	void ReserveTransforms(size_t count);
 
-	bool IsValidTransformRef(ComponentRef ref) const { return transforms.is_valid(ref); }
+	bool IsValidTransformRef(ComponentRef ref) const {
+		return transforms.is_valid(ref);
+	}
 
 	ComponentRef GetNodeTransformRef(NodeRef ref) const;
 	void SetNodeTransform(NodeRef ref, ComponentRef cref);
 	Transform GetNodeTransform(NodeRef ref) const;
-	void SetNodeTransform(NodeRef ref, const Transform &v) { SetNodeTransform(ref, v.ref); }
+
+	void SetNodeTransform(NodeRef ref, const Transform &v) {
+		SetNodeTransform(ref, v.ref);
+	}
 
 	Mat4 GetNodeWorldMatrix(NodeRef ref) const;
 	/// Set node world matrix.
@@ -318,7 +336,9 @@ public:
 	/// Create a new Node with a Transform and Camera components.
 	Camera CreateCamera();
 	void DestroyCamera(ComponentRef ref);
-	void DestroyCamera(const Camera &c) { DestroyCamera(c.ref); }
+	void DestroyCamera(const Camera &c) {
+		DestroyCamera(c.ref);
+	}
 	float GetCameraZNear(ComponentRef ref) const;
 	void SetCameraZNear(ComponentRef ref, float v);
 	float GetCameraZFar(ComponentRef ref) const;
@@ -337,17 +357,23 @@ public:
 
 	void ReserveCameras(size_t count);
 
-	bool IsValidCameraRef(ComponentRef ref) const { return cameras.is_valid(ref); }
+	bool IsValidCameraRef(ComponentRef ref) const {
+		return cameras.is_valid(ref);
+	}
 
 	ComponentRef GetNodeCameraRef(NodeRef ref) const;
 	void SetNodeCamera(NodeRef ref, ComponentRef cref);
 	Camera GetNodeCamera(NodeRef ref) const;
-	void SetNodeCamera(NodeRef ref, const Camera &v) { SetNodeCamera(ref, v.ref); }
+	void SetNodeCamera(NodeRef ref, const Camera &v) {
+		SetNodeCamera(ref, v.ref);
+	}
 
 	// object component
 	Object CreateObject();
 	void DestroyObject(ComponentRef ref);
-	void DestroyObject(const Object &o) { DestroyObject(o.ref); }
+	void DestroyObject(const Object &o) {
+		DestroyObject(o.ref);
+	}
 	ModelRef GetObjectModel(ComponentRef ref) const;
 	void SetObjectModel(ComponentRef ref, const ModelRef &v);
 	size_t GetObjectMaterialCount(ComponentRef ref) const;
@@ -371,19 +397,25 @@ public:
 
 	void ReserveObjects(size_t count);
 
-	bool IsValidObjectRef(ComponentRef ref) const { return objects.is_valid(ref); }
+	bool IsValidObjectRef(ComponentRef ref) const {
+		return objects.is_valid(ref);
+	}
 
 	ComponentRef GetNodeObjectRef(NodeRef ref) const;
 	void SetNodeObject(NodeRef ref, ComponentRef cref);
 	Object GetNodeObject(NodeRef ref) const;
-	void SetNodeObject(NodeRef ref, const Object &v) { SetNodeObject(ref, v.ref); }
+	void SetNodeObject(NodeRef ref, const Object &v) {
+		SetNodeObject(ref, v.ref);
+	}
 
 	std::vector<hg::Material *> GetMaterialsWithName(const std::string &name);
 
 	// light component
 	Light CreateLight();
 	void DestroyLight(ComponentRef ref);
-	void DestroyLight(const Light &l) { DestroyLight(l.ref); }
+	void DestroyLight(const Light &l) {
+		DestroyLight(l.ref);
+	}
 	LightType GetLightType(ComponentRef ref) const;
 	void SetLightType(ComponentRef ref, LightType v);
 	LightShadowType GetLightShadowType(ComponentRef ref) const;
@@ -437,17 +469,23 @@ public:
 	std::vector<Node> GetLights() const;
 
 	void ReserveLights(size_t count);
-	bool IsValidLightRef(ComponentRef ref) const { return lights.is_valid(ref); }
+	bool IsValidLightRef(ComponentRef ref) const {
+		return lights.is_valid(ref);
+	}
 
 	ComponentRef GetNodeLightRef(NodeRef ref) const;
 	void SetNodeLight(NodeRef ref, ComponentRef cref);
 	Light GetNodeLight(NodeRef ref) const;
-	void SetNodeLight(NodeRef ref, const Light &v) { SetNodeLight(ref, v.ref); }
+	void SetNodeLight(NodeRef ref, const Light &v) {
+		SetNodeLight(ref, v.ref);
+	}
 
 	// rigid body component
 	RigidBody CreateRigidBody();
 	void DestroyRigidBody(ComponentRef ref);
-	void DestroyRigidBody(const RigidBody &r) { DestroyRigidBody(r.ref); }
+	void DestroyRigidBody(const RigidBody &r) {
+		DestroyRigidBody(r.ref);
+	}
 
 	RigidBodyType GetRigidBodyType(ComponentRef ref) const;
 	void SetRigidBodyType(ComponentRef ref, RigidBodyType type);
@@ -455,9 +493,13 @@ public:
 	ComponentRef GetNodeRigidBodyRef(NodeRef ref) const;
 	void SetNodeRigidBody(NodeRef ref, ComponentRef cref);
 	RigidBody GetNodeRigidBody(NodeRef ref) const;
-	void SetNodeRigidBody(NodeRef ref, const RigidBody &v) { SetNodeRigidBody(ref, v.ref); }
+	void SetNodeRigidBody(NodeRef ref, const RigidBody &v) {
+		SetNodeRigidBody(ref, v.ref);
+	}
 
-	bool IsValidRigidBodyRef(ComponentRef ref) const { return rigid_bodies.is_valid(ref); }
+	bool IsValidRigidBodyRef(ComponentRef ref) const {
+		return rigid_bodies.is_valid(ref);
+	}
 
 	float GetRigidBodyLinearDamping(ComponentRef ref) const;
 	void SetRigidBodyLinearDamping(ComponentRef ref, float damping);
@@ -474,7 +516,9 @@ public:
 	// collision component
 	Collision CreateCollision();
 	void DestroyCollision(ComponentRef ref);
-	void DestroyCollision(const Collision &s) { DestroyCollision(s.ref); }
+	void DestroyCollision(const Collision &s) {
+		DestroyCollision(s.ref);
+	}
 
 	Mat4 GetCollisionLocalTransform(ComponentRef ref) const;
 	void SetCollisionLocalTransform(ComponentRef ref, const Mat4 &local);
@@ -511,14 +555,20 @@ public:
 	void RemoveNodeCollision(NodeRef ref, ComponentRef cref);
 	void RemoveNodeCollision(NodeRef ref, size_t idx);
 
-	bool IsValidCollisionRef(ComponentRef ref) const { return collisions.is_valid(ref); }
+	bool IsValidCollisionRef(ComponentRef ref) const {
+		return collisions.is_valid(ref);
+	}
 
 	// instance component
 	Instance CreateInstance();
 	void DestroyInstance(ComponentRef ref);
-	void DestroyInstance(const Instance &i) { DestroyInstance(i.ref); }
+	void DestroyInstance(const Instance &i) {
+		DestroyInstance(i.ref);
+	}
 
-	bool IsValidInstanceRef(ComponentRef ref) const { return instances.is_valid(ref); }
+	bool IsValidInstanceRef(ComponentRef ref) const {
+		return instances.is_valid(ref);
+	}
 
 	void SetInstancePath(ComponentRef ref, const std::string &path);
 	std::string GetInstancePath(ComponentRef ref) const;
@@ -534,7 +584,9 @@ public:
 	Instance GetNodeInstance(NodeRef ref) const;
 	ComponentRef GetNodeInstanceRef(NodeRef ref) const;
 	void SetNodeInstance(NodeRef ref, ComponentRef cref);
-	void SetNodeInstance(NodeRef ref, const Instance &instance) { SetNodeInstance(ref, instance.ref); }
+	void SetNodeInstance(NodeRef ref, const Instance &instance) {
+		SetNodeInstance(ref, instance.ref);
+	}
 
 	bool NodeSetupInstance(NodeRef ref, const Reader &ir, const ReadProvider &ip, PipelineResources &resources, const PipelineInfo &pipeline,
 		uint32_t flags = LSSF_AllNodeFeatures, int recursion_level = 1);
@@ -557,7 +609,9 @@ public:
 	Script CreateScript();
 	Script CreateScript(const std::string &path);
 	void DestroyScript(ComponentRef ref);
-	void DestroyScript(const Script &s) { DestroyScript(s.ref); }
+	void DestroyScript(const Script &s) {
+		DestroyScript(s.ref);
+	}
 	Script GetScript(ComponentRef ref) const;
 
 	void SetScriptPath(ComponentRef ref, const std::string &path);
@@ -577,7 +631,9 @@ public:
 	void RemoveNodeScript(NodeRef ref, size_t idx);
 
 	void ReserveScripts(size_t count);
-	bool IsValidScriptRef(ComponentRef ref) const { return scripts.is_valid(ref); }
+	bool IsValidScriptRef(ComponentRef ref) const {
+		return scripts.is_valid(ref);
+	}
 
 	std::vector<Script> GetScripts() const;
 	std::vector<ComponentRef> GetScriptRefs() const;
@@ -586,11 +642,19 @@ public:
 	void SetScript(size_t slot_idx, const Script &script);
 	Script GetScript(size_t slot_idx) const;
 
-	const std::vector<ComponentRef> &GetSceneScripts() const { return scene_scripts; }
-	const std::map<NodeRef, std::vector<ComponentRef> > &GetNodeScripts() const { return node_scripts; }
+	const std::vector<ComponentRef> &GetSceneScripts() const {
+		return scene_scripts;
+	}
+	const std::map<NodeRef, std::vector<ComponentRef> > &GetNodeScripts() const {
+		return node_scripts;
+	}
 
-	const std::map<ComponentRef, std::set<NodeRef> > &GetScriptsDetachedFromNodes() const { return scripts_detached_from_nodes; }
-	const std::set<ComponentRef> &GetScriptsDetachedFromScene() const { return scripts_detached_from_scene; }
+	const std::map<ComponentRef, std::set<NodeRef> > &GetScriptsDetachedFromNodes() const {
+		return scripts_detached_from_nodes;
+	}
+	const std::set<ComponentRef> &GetScriptsDetachedFromScene() const {
+		return scripts_detached_from_scene;
+	}
 	void ClearScriptsDetachedFrom();
 
 	/// Holds the canvas properties of a scene, see the `canvas` member of class Scene.
@@ -621,15 +685,23 @@ public:
 
 	// scene state
 	Node GetCurrentCamera() const;
-	void SetCurrentCamera(NodeRef ref) { current_camera = ref; }
-	void SetCurrentCamera(const Node &n) { current_camera = n.ref; }
+	void SetCurrentCamera(NodeRef ref) {
+		current_camera = ref;
+	}
+	void SetCurrentCamera(const Node &n) {
+		current_camera = n.ref;
+	}
 
 	ViewState ComputeCurrentCameraViewState(const Vec2 &aspect_ratio) const;
 	ViewState ComputeCameraViewState(NodeRef ref, const Vec2 &aspect_ratio) const;
 
-	const std::vector<Mat4> &GetTransformWorldMatrices() const { return transform_worlds; }
+	const std::vector<Mat4> &GetTransformWorldMatrices() const {
+		return transform_worlds;
+	}
 	void StorePreviousTransformWorldMatrices();
-	const std::vector<Mat4> &GetPreviousTransformWorldMatrices() const { return previous_transform_worlds; }
+	const std::vector<Mat4> &GetPreviousTransformWorldMatrices() const {
+		return previous_transform_worlds;
+	}
 
 	Mat4 GetTransformWorldMatrix(const uint32_t transform_idx) const;
 	Mat4 GetPreviousTransformWorldMatrix(const uint32_t transform_idx) const;
@@ -651,13 +723,17 @@ public:
 	// low-level animation
 	AnimRef AddAnim(Anim anim);
 	void DestroyAnim(AnimRef ref);
-	bool IsValidAnim(AnimRef ref) const { return anims.is_valid(ref); }
+	bool IsValidAnim(AnimRef ref) const {
+		return anims.is_valid(ref);
+	}
 
 	std::vector<AnimRef> GetAnims() const;
 	Anim *GetAnim(AnimRef ref);
 	const Anim *GetAnim(AnimRef ref) const;
 
-	AnimRef GetAnimRef(uint32_t idx) const { return anims.get_ref(idx); }
+	AnimRef GetAnimRef(uint32_t idx) const {
+		return anims.get_ref(idx);
+	}
 
 	BoundToSceneAnim BindSceneAnim(AnimRef ref) const;
 	void EvaluateBoundAnim(const BoundToSceneAnim &bound_anim, time_ns t);
@@ -667,7 +743,9 @@ public:
 	// scene animation
 	SceneAnimRef AddSceneAnim(SceneAnim anim);
 	void DestroySceneAnim(SceneAnimRef ref);
-	bool IsValidSceneAnim(SceneAnimRef ref) const { return scene_anims.is_valid(ref); }
+	bool IsValidSceneAnim(SceneAnimRef ref) const {
+		return scene_anims.is_valid(ref);
+	}
 
 	std::vector<SceneAnimRef> GetSceneAnims() const;
 
@@ -738,8 +816,12 @@ private:
 
 	generational_vector_list<Node_> nodes;
 
-	inline Node_ *GetNode_(NodeRef ref) { return nodes.is_valid(ref) ? &nodes[ref.idx] : nullptr; }
-	inline const Node_ *GetNode_(NodeRef ref) const { return nodes.is_valid(ref) ? &nodes[ref.idx] : nullptr; }
+	inline Node_ *GetNode_(NodeRef ref) {
+		return nodes.is_valid(ref) ? &nodes[ref.idx] : nullptr;
+	}
+	inline const Node_ *GetNode_(NodeRef ref) const {
+		return nodes.is_valid(ref) ? &nodes[ref.idx] : nullptr;
+	}
 
 	NodeRef GetNodeEx_(const std::vector<NodeRef> &refs, const std::string &path) const;
 
@@ -757,7 +839,9 @@ private:
 			node_->components[I] = cref;
 	}
 
-	template <typename T> inline T *GetComponent_(generational_vector_list<T> &l, ComponentRef ref) { return l.is_valid(ref) ? &l.value(ref.idx) : nullptr; }
+	template <typename T> inline T *GetComponent_(generational_vector_list<T> &l, ComponentRef ref) {
+		return l.is_valid(ref) ? &l.value(ref.idx) : nullptr;
+	}
 
 	template <typename T> inline const T *GetComponent_(const generational_vector_list<T> &l, ComponentRef ref) const {
 		return l.is_valid(ref) ? &l.value(ref.idx) : nullptr;

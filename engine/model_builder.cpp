@@ -14,22 +14,27 @@ ModelBuilder::ModelBuilder() {
 	lists.resize(1);
 }
 
-size_t ModelBuilder::GetCurrentListIndexCount() const { return lists.back().idx.size(); }
+size_t ModelBuilder::GetCurrentListIndexCount() const {
+	return lists.back().idx.size();
+}
 
 bool ModelBuilder::EndList(uint16_t material) {
+	bool res;
+
 	ModelBuilder::List &list = lists.back();
 
 	if (list.idx.empty()) {
 		list.vtx.clear();
 		list.bones_table.clear();
 		list.vtx_lookup.clear();
-		return false;
+		res = false;
+	} else {
+		lists.back().mat = material; // close current list, store material
+		NewList();
+		res = true;
 	}
 
-	lists.back().mat = material; // close current list, store material
-	NewList();
-
-	return true;
+	return res;
 }
 
 static uint64_t fnv1a64(const void *buf, size_t len) {
@@ -53,7 +58,7 @@ static bool operator==(const Vertex &a, const Vertex &b) {
 		a.uv0 == b.uv0 && a.uv1 == b.uv1 && a.uv2 == b.uv2 && a.uv3 == b.uv3 && a.uv4 == b.uv4 && a.uv5 == b.uv5 && a.uv6 == b.uv6 && a.uv7 == b.uv7;
 	const bool c = a.color0 == b.color0 && a.color1 == b.color1 && a.color2 == b.color2 && a.color3 == b.color3;
 	const bool i = a.index[0] == b.index[0] && a.index[1] == b.index[1] && a.index[2] == b.index[2] && a.index[3] == b.index[3];
-	const bool w = a.weight[0] == b.weight[0] && a.weight[1] == b.weight[1] && a.weight[2] == b.weight[2] && a.weight[3] == b.weight[3];
+	const bool w = Equal(a.weight[0], b.weight[0]) && Equal(a.weight[1], b.weight[1]) && Equal(a.weight[2], b.weight[2]) && Equal(a.weight[3], b.weight[3]);
 	return a.pos == b.pos && a.normal == b.normal && a.tangent == b.tangent && a.binormal == b.binormal && uv && c && i && w;
 }
 
@@ -66,7 +71,7 @@ VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
 	const std::map<uint64_t, VtxIdxType>::iterator i_vtx = list.vtx_lookup.find(hash);
 
 	if (i_vtx == list.vtx_lookup.end()) {
-		list.vtx_lookup[hash] = VtxIdxType(idx); // store hash
+		list.vtx_lookup[hash] = static_cast<VtxIdxType>(idx); // store hash
 		list.vtx.push_back(vtx); // commit candidate
 	} else {
 		const VtxIdxType hashed_idx = i_vtx->second;
@@ -77,13 +82,15 @@ VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
 			++hash_collision;
 
 			std::vector<Vertex>::iterator i = std::find(list.vtx.begin(), list.vtx.end(), vtx);
-			if (i != list.vtx.end())
+			if (i != list.vtx.end()) {
 				idx = std::distance(list.vtx.begin(), i);
-			else
+			} else {
 				list.vtx.push_back(vtx); // commit candidate
+			}
 		}
 	}
-	return VtxIdxType(idx);
+
+	return static_cast<VtxIdxType>(idx);
 }
 
 //
@@ -101,13 +108,15 @@ void ModelBuilder::AddQuad(VtxIdxType a, VtxIdxType b, VtxIdxType c, VtxIdxType 
 }
 
 void ModelBuilder::AddPolygon(const VtxIdxType *idxs, size_t n) {
-	for (size_t i = 1; i < n - 1; ++i)
+	for (size_t i = 1; i < n - 1; ++i) {
 		AddTriangle(idxs[0], idxs[i], idxs[i + 1]);
+	}
 }
 
 void ModelBuilder::AddPolygon(const std::vector<VtxIdxType> &idxs) {
-	for (int i = 1; i < idxs.size() - 1; ++i)
+	for (int i = 1; i < idxs.size() - 1; ++i) {
 		AddTriangle(idxs[0], idxs[i], idxs[i + 1]);
+	}
 }
 
 void ModelBuilder::AddBoneIdx(uint16_t idx) {
@@ -126,8 +135,10 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 	size_t vtx_count = 0;
 	for (size_t i = 0; i < lists.size(); i++) {
 		const List &list = lists[i];
-		if (list.idx.empty() || list.vtx.empty())
+
+		if (list.idx.empty() || list.vtx.empty()) {
 			continue;
+		}
 
 		MinMax minmax;
 
@@ -138,25 +149,37 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 			const Vertex &vtx = list.vtx[j];
 			decl.PackVertex(VA_Position, &vtx.pos.x, 3, p_vtx);
 
-			if (decl.Has(VA_Normal))
+			if (decl.Has(VA_Normal)) {
 				decl.PackVertex(VA_Normal, &vtx.normal.x, 3, p_vtx);
-			if (decl.Has(VA_Tangent))
+			}
+
+			if (decl.Has(VA_Tangent)) {
 				decl.PackVertex(VA_Tangent, &vtx.tangent.x, 3, p_vtx);
-			if (decl.Has(VA_Bitangent))
+			}
+
+			if (decl.Has(VA_Bitangent)) {
 				decl.PackVertex(VA_Bitangent, &vtx.binormal.x, 3, p_vtx);
+			}
 
-			if (decl.Has(VA_Color))
+			if (decl.Has(VA_Color)) {
 				decl.PackVertex(VA_Color, &vtx.color0.r, 4, p_vtx);
+			}
 
-			if (decl.Has(VA_UV0))
+			if (decl.Has(VA_UV0)) {
 				decl.PackVertex(VA_UV0, &vtx.uv0.x, 2, p_vtx);
-			if (decl.Has(VA_UV1))
-				decl.PackVertex(VA_UV1, &vtx.uv1.x, 2, p_vtx);
+			}
 
-			if (decl.Has(VA_BoneIndices))
+			if (decl.Has(VA_UV1)) {
+				decl.PackVertex(VA_UV1, &vtx.uv1.x, 2, p_vtx);
+			}
+
+			if (decl.Has(VA_BoneIndices)) {
 				decl.PackVertex(VA_BoneIndices, vtx.index, 4, p_vtx);
-			if (decl.Has(VA_BoneWeights))
+			}
+
+			if (decl.Has(VA_BoneWeights)) {
 				decl.PackVertex(VA_BoneWeights, vtx.weight, 4, p_vtx);
+			}
 
 			minmax.mn = Min(minmax.mn, vtx.pos); // update list minmax
 			minmax.mx = Max(minmax.mx, vtx.pos);
@@ -165,13 +188,12 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 			p_vtx += stride;
 		}
 
-		if (verbose)
+		if (verbose) {
 			debug(fmt::format("End list {} indexes, {} vertices, material index {}", list.idx.size(), list.vtx.size(), list.mat));
+		}
 
 		//
-		if (optimisation_level == MOL_None) {
-			on_end_list(decl, minmax, list.idx, vtx_data, list.bones_table, list.mat, userdata);
-		} else if (optimisation_level == MOL_Minimal) {
+		if (optimisation_level == MOL_Minimal) {
 			std::vector<uint32_t> idx(list.idx.size());
 			meshopt_optimizeVertexCache(idx.data(), list.idx.data(), list.idx.size(), list.vtx.size());
 
@@ -179,25 +201,30 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 		} else if (optimisation_level == MOL_Full) {
 			std::vector<uint32_t> idx_a(list.idx.size()), idx_b(list.idx.size());
 			meshopt_optimizeVertexCache(idx_a.data(), list.idx.data(), list.idx.size(), list.vtx.size());
-			meshopt_optimizeOverdraw(idx_b.data(), idx_a.data(), list.idx.size(), reinterpret_cast<float *>(vtx_data.data()), list.vtx.size(), stride, 1.05f);
+			meshopt_optimizeOverdraw(idx_b.data(), idx_a.data(), list.idx.size(), reinterpret_cast<float *>(vtx_data.data()), list.vtx.size(), stride, 1.05F);
 
 			std::vector<int8_t> vtx(list.vtx.size() * stride);
 			meshopt_optimizeVertexFetch(vtx.data(), idx_b.data(), idx_b.size(), vtx_data.data(), list.vtx.size(), stride);
 
 			on_end_list(decl, minmax, idx_b, vtx, list.bones_table, list.mat, userdata);
+		} else {
+			on_end_list(decl, minmax, list.idx, vtx_data, list.bones_table, list.mat, userdata);
 		}
 	}
 
 	if (verbose) {
-		if (vtx_count == 0)
+		if (vtx_count == 0) {
 			debug("No vertex in geometry!");
-		else
+		} else {
 			debug(fmt::format("Vertex hash collision: {} ({}%)", hash_collision, hash_collision * 100 / vtx_count));
+		}
 	}
 }
 
 static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
 	const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
+	bones_table;
+
 	Model &model = *reinterpret_cast<Model *>(userdata);
 
 	DisplayList list;
