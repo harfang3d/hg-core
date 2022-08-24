@@ -223,8 +223,6 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 
 static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const std::vector<VtxIdxType> &idx_data, const std::vector<int8_t> &vtx_data,
 	const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata) {
-	bones_table;
-
 	Model &model = *reinterpret_cast<Model *>(userdata);
 
 	DisplayList list;
