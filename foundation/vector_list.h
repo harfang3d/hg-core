@@ -142,16 +142,21 @@ public:
 			return &(*c)[i];
 		}
 
+		inline iterator &operator++() {
+			i = c->next(i);
+			return *this;
+		}
+		inline iterator operator++(int) {
+			iterator tmp = *this;
+			i = c->next(i);
+			return tmp;
+		}
+
 		inline bool operator==(const iterator &i_) const {
 			return i == i_.i;
 		}
-
 		inline bool operator!=(const iterator &i_) const {
 			return i != i_.i;
-		}
-
-		inline void operator++() {
-			i = c->next(i);
 		}
 
 		inline uint32_t idx() const {

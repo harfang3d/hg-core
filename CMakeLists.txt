@@ -11,8 +11,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 option(HG_ENABLE_COVERAGE "enable code coverage" OFF)
 option(HG_ENABLE_PVS_MISRA "enable MISRA compliance run" OFF)
 
+set(HG_ENGINE_BACKEND SOKOL_GLCORE33 CACHE STRING "Graphics backend (default: SOKOL_GLCORE33)")
+set_property(CACHE HG_ENGINE_BACKEND PROPERTY STRINGS SOKOL_GLCORE33 SOKOL_GLES2 SOKOL_GLES3 SOKOL_D3D11 SOKOL_METAL SOKOL_WGPU SOKOL_DUMMY_BACKEND)
+
 if(HG_ENABLE_COVERAGE)
 	include(CodeCoverage)
+	set(HG_ENGINE_BACKEND "SOKOL_DUMMY_BACKEND")
 	append_coverage_compiler_flags()
 endif()
 
@@ -26,13 +30,39 @@ endif()
 
 add_compile_definitions(__STDC_WANT_LIB_EXT1__=1)
 
+add_library(dummy_backend INTERFACE)
+
+if(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLCORE33")
+	find_package(OpenGL REQUIRED)
+	add_library(hg::gfx_backend ALIAS OpenGL::GL)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLES2")
+	find_package(OpenGLES3 REQUIRED)
+	add_library(hg::gfx_backend ALIAS OpenGL::GLES3)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLES3")
+	find_package(OpenGLES2 REQUIRED)
+	add_library(hg::gfx_backend ALIAS OpenGL::GLES2)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_D3D11")
+	# [todo]
+	add_library(hg::gfx_backend ALIAS dummy_backend)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_METAL")
+	# [todo]
+	add_library(hg::gfx_backend ALIAS dummy_backend)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_WGPU")
+	# [todo]
+	add_library(hg::gfx_backend ALIAS dummy_backend)
+elseif(HG_ENGINE_BACKEND STREQUAL "SOKOL_DUMMY_BACKEND")
+	add_library(hg::gfx_backend ALIAS dummy_backend)
+endif()
+
 # add_compile_options(-pedantic)
 add_subdirectory(foundation)
 add_subdirectory(engine)
 add_subdirectory(tests)
 
-add_subdirectory(app_glfw)
-add_subdirectory(samples)
+if(NOT HG_ENGINE_BACKEND STREQUAL "SOKOL_DUMMY_BACKEND")
+	add_subdirectory(app_glfw)
+	add_subdirectory(samples)
+endif()
 
 #
 if(HG_ENABLE_PVS_MISRA)

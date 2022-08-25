@@ -269,11 +269,22 @@ static void test_reader_interface() {
 	}
 }
 
+static bool g_next_op_will_fail = false;
+
+static void will_fail() { g_next_op_will_fail = true; }
+static void will_succeed() { g_next_op_will_fail = false; }
+
 static size_t DummyWriterWrite(Handle h, const void* data, size_t size) {
+	if (bool_gate(g_next_op_will_fail)) {
+		return 0;
+	}
 	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
 	return buffer->Write(data, size);
 }
 static bool DummyWriterSeek(Handle h, ptrdiff_t offset, SeekMode mode) {
+	if (bool_gate(g_next_op_will_fail)) {
+		return false;
+	}
 	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
 	if (mode == SM_Start) {
 		if (offset < 0) {
@@ -296,15 +307,24 @@ static bool DummyWriterSeek(Handle h, ptrdiff_t offset, SeekMode mode) {
 	return true;
 }
 static size_t DummyWriterTell(Handle h) {
+	if (bool_gate(g_next_op_will_fail)) {
+		return 0;
+	}
 	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
 	return buffer->GetCursor();
 }
 static bool DummyWriterIsValid(Handle h) { 
+	if (bool_gate(g_next_op_will_fail)) {
+		return nullptr;
+	}
 	Data *buffer = *(reinterpret_cast<Data **>(&h.v[0]));
 	return (buffer != nullptr);
 }
 
 static Handle DummyWriterOpen(const std::string& path) {
+	if (bool_gate(g_next_op_will_fail)) {
+		return Handle();
+	}
 	Handle h;
 	Data *buffer = nullptr;
 	if (path == "valid") {
@@ -378,8 +398,17 @@ static void test_writer_interface() {
 	provider.close = DummyWriterClose;
 
 	{ 
+#ifdef ENABLE_BINARY_DEBUG_HANDLE
+		ScopedWriteHandle hw(provider, "valid", true);
+#else
 		ScopedWriteHandle hw(provider, "valid");
+#endif
 		TEST_CHECK(Write<uint32_t>(writer, hw, 0xbeef) == true);
+
+#ifdef ENABLE_BINARY_DEBUG_HANDLE
+		will_fail();
+		TEST_CHECK(Write<uint16_t>(writer, hw, 0xcafe) == false);
+#endif
 	}
 }
 

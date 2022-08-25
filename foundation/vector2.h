@@ -4,6 +4,7 @@
 
 #include <cstddef>
 
+#include "foundation/cext.h"
 #include "foundation/assert.h"
 
 namespace hg {
@@ -83,7 +84,7 @@ template <class T> struct tVec2 {
 		} else if (n == 1) {
 			v = y;
 		} else {
-			v = {};
+			v = static_cast<T>(0);
 		}
 
 		return v;

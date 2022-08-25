@@ -288,6 +288,15 @@ private:
 	uint8_t stride;
 };
 
+//
+VertexLayout VertexLayoutPosFloatNormFloat();
+VertexLayout VertexLayoutPosFloatNormUInt8();
+VertexLayout VertexLayoutPosFloatColorFloat();
+VertexLayout VertexLayoutPosFloatColorUInt8();
+VertexLayout VertexLayoutPosFloatTexCoord0UInt8();
+VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
+
+//
 void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index = 0);
 
 //
@@ -598,14 +607,6 @@ RenderState ComputeRenderState(BlendMode blend, DepthTest test = DT_Less, FaceCu
 	bool write_g = true, bool write_b = true, bool write_a = true);
 
 //
-VertexLayout VertexLayoutPosFloatNormFloat();
-VertexLayout VertexLayoutPosFloatNormUInt8();
-VertexLayout VertexLayoutPosFloatColorFloat();
-VertexLayout VertexLayoutPosFloatColorUInt8();
-VertexLayout VertexLayoutPosFloatTexCoord0UInt8();
-VertexLayout VertexLayoutPosFloatNormUInt8TexCoord0UInt8();
-
-//
 struct Model { // 96B (+heap)
 	uint32_t tri_count;
 	VertexLayout vtx_layout;
@@ -646,10 +647,10 @@ struct PipelineResources {
 		DestroyAll();
 	}
 
-	ResourceCache<PipelineProgram, PipelineProgramRef> programs;
-	ResourceCache<Texture, TextureRef> textures;
-	ResourceCache<Material, MaterialRef> materials;
-	ResourceCache<Model, ModelRef> models;
+	ResourceCache<PipelineProgram> programs;
+	ResourceCache<Texture> textures;
+	ResourceCache<Material> materials;
+	ResourceCache<Model> models;
 
 	std::deque<TextureLoad> texture_loads;
 	std::deque<ModelLoad> model_loads;

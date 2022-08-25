@@ -22,7 +22,6 @@
 #include <set>
 
 #define SOKOL_GFX_IMPL
-#define SOKOL_GLCORE33
 #include <sokol_gfx.h>
 
 namespace hg {
@@ -231,8 +230,12 @@ Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &n
 	return shader;
 }
 
-Shader LoadShaderFromFile(const std::string &path, bool silent) { return LoadShader(g_file_reader, g_file_read_provider, path, silent); }
-Shader LoadShaderFromAssets(const std::string &name, bool silent) { return LoadShader(g_assets_reader, g_assets_read_provider, name, silent); }
+Shader LoadShaderFromFile(const std::string &path, bool silent) {
+	return LoadShader(g_file_reader, g_file_read_provider, path, silent);
+}
+Shader LoadShaderFromAssets(const std::string &name, bool silent) {
+	return LoadShader(g_assets_reader, g_assets_read_provider, name, silent);
+}
 
 //
 sg_buffer MakeIndexBuffer(const void *data, size_t size) {
@@ -333,11 +336,17 @@ Material LoadMaterialFromAssets(
 	return Material();
 }
 
-bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) { return false; }
+bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) {
+	return false;
+}
 
-bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) { return false; }
+bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) {
+	return false;
+}
 
-bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) { return false; }
+bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) {
+	return false;
+}
 
 //
 Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
@@ -345,9 +354,13 @@ Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string 
 	return LoadDDS(ir, h, name);
 }
 
-Texture LoadTextureFromFile(const std::string &path, bool silent) { return Texture(); }
+Texture LoadTextureFromFile(const std::string &path, bool silent) {
+	return Texture();
+}
 
-Texture LoadTextureFromAssets(const std::string &name, bool silent) { return Texture(); }
+Texture LoadTextureFromAssets(const std::string &name, bool silent) {
+	return Texture();
+}
 
 void Destroy(Texture &tex) {}
 
@@ -421,8 +434,12 @@ int GetUniformDataIndex(const std::string &name, const Shader &shader) {
 	return -1;
 }
 
-const void *GetUniformDataPtr(const UniformData &data) { return data.data.data(); }
-size_t GetUniformDataSize(const UniformData &data) { return data.data.size(); }
+const void *GetUniformDataPtr(const UniformData &data) {
+	return data.data.data();
+}
+size_t GetUniformDataSize(const UniformData &data) {
+	return data.data.size();
+}
 
 void SetupShaderUniformData(const Shader &shader, UniformData &data) {
 	size_t offset = 0;
@@ -454,7 +471,6 @@ void SetupShaderUniformData(const Shader &shader, UniformData &data) {
 
 	data.data.resize(offset);
 }
-
 
 //
 enum legacy_Attrib {

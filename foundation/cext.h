@@ -196,7 +196,7 @@ template <typename T, size_t N> bool operator<(const array<T, N> &lhs, const arr
 }
 
 template <typename T, size_t N> bool operator>(const array<T, N> &lhs, const array<T, N> &rhs) {
-	return rhs > lhs;
+	return rhs < lhs;
 }
 
 template <typename T, size_t N> bool operator<=(const array<T, N> &lhs, const array<T, N> &rhs) {

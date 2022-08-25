@@ -157,16 +157,20 @@ FileInfo GetFileInfo(const std::string &path) {
 #if _WIN32
 	struct _stat info;
 	if (_wstat(utf8_to_wchar(path).c_str(), &info) == 0) {
-		res = {
-			info.st_mode & S_IFREG ? true : false, static_cast<size_t>(info.st_size), static_cast<time_ns>(info.st_ctime), static_cast<time_ns>(info.st_mtime)};
+		res.is_file = info.st_mode & S_IFREG ? true : false;
+		res.size = static_cast<size_t>(info.st_size);
+		res.created = static_cast<time_ns>(info.st_ctime);
+		res.modified = static_cast<time_ns>(info.st_mtime);
 	} else {
 		res = not_found;
 	}
 #else
 	struct stat info;
 	if (stat(path.c_str(), &info) == 0) {
-		res = {
-			info.st_mode & S_IFREG ? true : false, static_cast<size_t>(info.st_size), static_cast<time_ns>(info.st_ctime), static_cast<time_ns>(info.st_mtime)};
+		res.is_file = info.st_mode & S_IFREG ? true : false;
+		res.size = static_cast<size_t>(info.st_size);
+		res.created = static_cast<time_ns>(info.st_ctime);
+		res.modified = static_cast<time_ns>(info.st_mtime);
 	} else {
 		res = not_found;
 	}
