@@ -38,10 +38,6 @@ Vec4 RandomVec4(const Vec4 &min, const Vec4 &max) {
 	return Vec4(FRRand(min.x, max.x), FRRand(min.y, max.y), FRRand(min.z, max.z), FRRand(min.w, max.w));
 }
 
-bool Equal(const Vec4 &a, const Vec4 &b) {
-	return Equal(a.x, b.x) && Equal(a.y, b.y) && Equal(a.z, b.z) && Equal(a.w, b.w);
-}
-
 bool AlmostEqual(const Vec4 &a, const Vec4 &b, float e) {
 	return AlmostEqual(a.x, b.x, e) && AlmostEqual(a.y, b.y, e) && AlmostEqual(a.z, b.z, e) && AlmostEqual(a.w, b.w, e);
 }

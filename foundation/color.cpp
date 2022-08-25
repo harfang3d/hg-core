@@ -119,10 +119,6 @@ float Dist(const Color &i, const Color &j) {
 }
 
 /// Compare two colors with a configurable threshold.
-bool Equal(const Color &a, const Color &b) {
-	return Equal(a.r, b.r) && Equal(a.g, b.g) && Equal(a.b, b.b) && Equal(a.a, b.a);
-}
-
 bool AlmostEqual(const Color &a, const Color &b, float e) {
 	return AlmostEqual(a.r, b.r, e) && AlmostEqual(a.g, b.g, e) && AlmostEqual(a.b, b.b, e) && AlmostEqual(a.a, b.a, e);
 }

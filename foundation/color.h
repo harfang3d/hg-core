@@ -176,7 +176,6 @@ float Dist2(const Color &i, const Color &j);
 float Dist(const Color &i, const Color &j);
 
 /// Compare two colors.
-bool Equal(const Color &a, const Color &b);
 bool AlmostEqual(const Color &a, const Color &b, const float epsilon = 0.00001F);
 
 /// Scale the chroma component of a color, return the result as a new color.
