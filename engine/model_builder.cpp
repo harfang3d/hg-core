@@ -54,12 +54,22 @@ static uint64_t fnv1a64(const void *buf, size_t len) {
 }
 
 static bool operator==(const Vertex &a, const Vertex &b) {
-	const bool uv =
-		a.uv0 == b.uv0 && a.uv1 == b.uv1 && a.uv2 == b.uv2 && a.uv3 == b.uv3 && a.uv4 == b.uv4 && a.uv5 == b.uv5 && a.uv6 == b.uv6 && a.uv7 == b.uv7;
-	const bool c = a.color0 == b.color0 && a.color1 == b.color1 && a.color2 == b.color2 && a.color3 == b.color3;
-	const bool i = a.index[0] == b.index[0] && a.index[1] == b.index[1] && a.index[2] == b.index[2] && a.index[3] == b.index[3];
-	const bool w = Equal(a.weight[0], b.weight[0]) && Equal(a.weight[1], b.weight[1]) && Equal(a.weight[2], b.weight[2]) && Equal(a.weight[3], b.weight[3]);
-	return a.pos == b.pos && a.normal == b.normal && a.tangent == b.tangent && a.binormal == b.binormal && uv && c && i && w;
+	for (size_t i = 0; i < Vertex::UVCount; i++) {
+		if (a.uv[i] != b.uv[i]) {
+			return false;
+		}
+	}
+	for (size_t i = 0; i < Vertex::ColorCount; i++) {
+		if (a.color[i] != b.color[i]) {
+			return false;
+		}
+	}
+	for (size_t i = 0; i < Vertex::BoneCount; i++) {
+		if ((a.index[i] != b.index[i]) || (!Equal(a.weight[i], b.weight[i]))) {
+			return false;
+		}
+	}
+	return a.pos == b.pos && a.normal == b.normal && a.tangent == b.tangent && a.binormal == b.binormal;
 }
 
 VtxIdxType ModelBuilder::AddVertex(const Vertex &vtx) {
@@ -162,23 +172,23 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 			}
 
 			if (decl.Has(VA_Color)) {
-				decl.PackVertex(VA_Color, &vtx.color0.r, 4, p_vtx);
+				decl.PackVertex(VA_Color, &vtx.color[0].r, 4, p_vtx);
 			}
 
 			if (decl.Has(VA_UV0)) {
-				decl.PackVertex(VA_UV0, &vtx.uv0.x, 2, p_vtx);
+				decl.PackVertex(VA_UV0, &vtx.uv[0].x, 2, p_vtx);
 			}
 
 			if (decl.Has(VA_UV1)) {
-				decl.PackVertex(VA_UV1, &vtx.uv1.x, 2, p_vtx);
+				decl.PackVertex(VA_UV1, &vtx.uv[1].x, 2, p_vtx);
 			}
 
 			if (decl.Has(VA_BoneIndices)) {
-				decl.PackVertex(VA_BoneIndices, vtx.index, 4, p_vtx);
+				decl.PackVertex(VA_BoneIndices, vtx.index, Vertex::BoneCount, p_vtx);
 			}
 
 			if (decl.Has(VA_BoneWeights)) {
-				decl.PackVertex(VA_BoneWeights, vtx.weight, 4, p_vtx);
+				decl.PackVertex(VA_BoneWeights, vtx.weight, Vertex::BoneCount, p_vtx);
 			}
 
 			minmax.mn = Min(minmax.mn, vtx.pos); // update list minmax
