@@ -309,9 +309,7 @@ bool RmTree(const std::string &path, bool verbose) {
 	}
 
 	if (res) {
-		if (!RmDir(path, verbose)) {
-			res = false;
-		}
+		res = RmDir(path, verbose);
 	}
 
 	return res;
@@ -320,44 +318,32 @@ bool RmTree(const std::string &path, bool verbose) {
 #else
 
 bool RmTree(const std::string &path, bool verbose) {
-	bool res = true;
-
 	DIR *dir = opendir(path.c_str());
+	if (dir == nullptr) { //-V2506
+		return false;
+	}
 
-	if (dir != nullptr) {
-		while (const struct dirent *ent = readdir(dir)) {
-			if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
-				continue;
-			}
-
-			const std::string ent_path = PathJoin(path, ent->d_name);
-
+	bool ok = true;
+	for (struct dirent *ent = readdir(dir); ok && (ent != nullptr); ent = readdir(dir)) {
+		if (strcmp(ent->d_name, ".") && strcmp(ent->d_name, "..")) {
+			std::string ent_path = PathJoin(path, ent->d_name);
 			if (ent->d_type == DT_DIR) {
-				if (!RmTree(ent_path, verbose)) {
-					res = false;
-					break;
-				}
+				ok = RmTree(ent_path, verbose);
 			} else {
-				const int ret = remove(ent_path.c_str());
-
-				if (verbose && ret) {
-					warn(fmt::format("RmTree({}) failed to delete {}: {}", path, ent_path, strerror(errno)));
-					res = false;
-					break;
+				if (remove(ent_path.c_str())) {
+					ok = false;
+					if (verbose) {
+						warn(fmt::format("RmTree({}) failed to delete {}: {}", path, ent_path, strerror(errno)));
+					}
 				}
 			}
 		}
-
-		closedir(dir);
 	}
-
-	if (res) {
-		if (!RmDir(path, verbose)) {
-			res = false;
-		}
+	closedir(dir);
+	if (ok) {
+		ok = RmDir(path, verbose);
 	}
-
-	return res;
+	return ok;
 }
 
 #endif
