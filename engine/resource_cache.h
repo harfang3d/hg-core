@@ -22,31 +22,34 @@ template <typename T> struct ResourceRef {
 	}
 };
 
-template <typename T, typename R> class ResourceCache {
+template <typename T> class ResourceCache {
+public:
+	typedef ResourceRef<T> RefType;
+
 private:
 	struct name_T {
 		std::string name;
 		T T_;
 	};
 
-	typedef typename std::map<const std::string, R>::iterator dict_iterator;
-	typedef typename std::map<const std::string, R>::const_iterator const_dict_iterator;
+	typedef typename std::map<const std::string, RefType>::iterator dict_iterator;
+	typedef typename std::map<const std::string, RefType>::const_iterator const_dict_iterator;
 
 	typedef typename generational_vector_list<name_T>::iterator res_iterator;
 	typedef typename generational_vector_list<name_T>::const_iterator const_res_iterator;
 
-	inline R add_ref(const std::string &name, const T &res) {
+	inline RefType add_ref(const std::string &name, const T &res) { 
 		name_T in = {name, res};
-		gen_ref ref = resources.add_ref(in);
-		R out = {ref};
+		RefType out;
+		out.ref = resources.add_ref(in);
 		return out;
 	}
 
 public:
 	ResourceCache(void (*destroy)(T &)) : _destroy(destroy) {}
 
-	R Add(const std::string &name, const T &res) {
-		R ref;
+	RefType Add(const std::string &name, const T &res) {
+		RefType ref;
 		const dict_iterator i = name_to_ref.find(name);
 
 		if (i == name_to_ref.end()) {
@@ -59,18 +62,17 @@ public:
 		} else {
 			ref = i->second;
 		}
-
 		return ref;
 	}
 
-	void Update(R ref, const T &res) {
+	void Update(RefType ref, const T &res) {
 		if (resources.is_valid(ref.ref)) {
 			_destroy(resources[ref.ref.idx].T_);
 			resources[ref.ref.idx].T_ = res;
 		}
 	}
 
-	void Destroy(R ref) {
+	void Destroy(RefType ref) {
 		if (resources.is_valid(ref.ref)) {
 			_destroy(resources[ref.ref.idx].T_);
 			name_to_ref.erase(resources[ref.ref.idx].name); // drop from cache
@@ -79,33 +81,29 @@ public:
 	}
 
 	void DestroyAll() {
-		for (res_iterator i = resources.begin(); i < resources.end(); i++) {
-			_destroy(i.T_);
+		for (res_iterator i = resources.begin(); i != resources.end(); ++i) {
+			_destroy(i->T_);
 		}
 
 		resources.clear();
 		name_to_ref.clear();
 	}
 
-	bool IsValidRef(R ref) const {
-		return resources.is_valid(ref.ref);
-	}
+	bool IsValidRef(RefType ref) const { return resources.is_valid(ref.ref); }
 
 	// get a resource index for code that does not carry a full reference to the resource.
-	uint16_t GetValidatedRefIndex(R ref) const {
-		return resources.is_valid(ref.ref) ? numeric_cast<uint16_t>(ref.ref.idx) : 0xffff;
-	}
+	uint16_t GetValidatedRefIndex(RefType ref) const { return resources.is_valid(ref.ref) ? numeric_cast<uint16_t>(ref.ref.idx) : 0xffff; }
 
-	R Has(const std::string &name) const {
+	RefType Has(const std::string &name) const {
 		const_dict_iterator i = name_to_ref.find(name);
-		return i != name_to_ref.end() ? i->second : R();
+		return i != name_to_ref.end() ? i->second : RefType();
 	}
 
 	size_t GetCount() const {
 		return resources.size();
 	}
 
-	void SetName(R ref, const std::string &name) {
+	void SetName(RefType ref, const std::string &name) {
 		if (resources.is_valid(ref.ref)) {
 			resources[ref.ref.idx].name = name;
 		}
@@ -118,24 +116,21 @@ public:
 		}
 	}
 
-	std::string GetName(R ref) const {
-		return resources.is_valid(ref.ref) ? resources[ref.ref.idx].name : std::string();
+	std::string GetName(RefType ref) const { 
+		return resources.is_valid(ref.ref) ? resources[ref.ref.idx].name : std::string(); 
 	}
 
 	std::string GetName_unsafe_(uint16_t idx) const {
 		std::string res;
-
-		if (idx != 0xffffU) {
+		if (idx != 0xffff) {
 			HG_ASSERT(resources.is_used(idx));
 			res = resources[idx].name;
 		}
-
 		return res;
 	}
 
-	const T &Get(R ref) const {
-		return resources.is_valid(ref.ref) ? resources[ref.ref.idx].T_ : dflt;
-	}
+	const T &Get(RefType ref) const { return IsValidRef(ref) ? resources[ref.ref.idx].T_ : dflt; }
+	T &Get(RefType ref) { return IsValidRef(ref) ? resources[ref.ref.idx].T_ : dflt; }
 
 	const T &Get_unsafe_(uint16_t idx) const {
 		const T *res;
@@ -151,13 +146,8 @@ public:
 	}
 
 	const T &Get(const std::string &name) const {
-		const dict_iterator i = name_to_ref.find(name);
-		return i != name_to_ref.end() ? resources[i->second.idx].T_ : dflt;
-	}
-
-	T &Get(R ref) {
-		HG_ASSERT(IsValidRef(ref));
-		return resources[ref.ref.idx].T_;
+		const_dict_iterator i = name_to_ref.find(name);
+		return i != name_to_ref.end() ? resources[i->second.ref.idx].T_ : dflt;
 	}
 
 	gen_ref first_ref() const {
@@ -199,7 +189,7 @@ private:
 	T dflt;
 
 	generational_vector_list<name_T> resources;
-	std::map<const std::string, R> name_to_ref;
+	std::map<const std::string, RefType> name_to_ref;
 
 	void (*_destroy)(T &);
 };

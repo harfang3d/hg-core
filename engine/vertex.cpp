@@ -8,8 +8,8 @@ Vertex MakeVertex(const Vec3 &pos, const Vec3 &nrm, const Vec2 &uv0, const Color
 	Vertex vtx;
 	vtx.pos = pos;
 	vtx.normal = nrm;
-	vtx.uv0 = uv0;
-	vtx.color0 = color0;
+	vtx.uv[0] = uv0;
+	vtx.color[0] = color0;
 	return vtx;
 }
 

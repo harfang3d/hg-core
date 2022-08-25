@@ -118,7 +118,7 @@ void test_vector_list() {
 
 			++it;
 
-			++it;
+			it++;
 			TEST_CHECK(*it == Vec3::One);
 			TEST_CHECK(it->x == Vec3::One.x);
 			TEST_CHECK(it->y == Vec3::One.y);

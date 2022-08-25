@@ -126,7 +126,7 @@ Vec3 Scene::GetTransformScale(ComponentRef ref) const {
 		return c->TRS.scl;
 
 	warn("Invalid transform component");
-	return Vec3::Zero;
+	return Vec3::One;
 }
 
 void Scene::SetTransformScale(ComponentRef ref, const Vec3 &v) {
@@ -141,7 +141,7 @@ Vec3 Transform::GetScale() const {
 		return scene_ref->scene->GetTransformScale(ref);
 
 	warn("Orphaned transform component");
-	return Vec3::Zero;
+	return Vec3::One;
 }
 
 void Transform::SetScale(const Vec3 &v) {
@@ -609,7 +609,7 @@ Material &Scene::GetObjectMaterial(ComponentRef ref, size_t slot_idx) {
 	return null_bound_material;
 }
 
-void Scene::SetObjectMaterial(ComponentRef ref, size_t slot_idx, Material material) {
+void Scene::SetObjectMaterial(ComponentRef ref, size_t slot_idx, const Material& material) {
 	if (Object_ *c = GetComponent_(objects, ref)) {
 		if (c->materials.size() <= slot_idx)
 			c->materials.resize(slot_idx + 1);
@@ -646,7 +646,7 @@ Material &Object::GetMaterial(const size_t slot_idx) const {
 	return null_bound_material;
 }
 
-void Object::SetMaterial(const size_t slot_idx, Material material) {
+void Object::SetMaterial(const size_t slot_idx, const Material& material) {
 	if (scene_ref && scene_ref->scene)
 		scene_ref->scene->SetObjectMaterial(ref, slot_idx, material);
 	else
