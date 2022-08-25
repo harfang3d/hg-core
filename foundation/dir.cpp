@@ -155,13 +155,11 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask) {
 			}
 
 			if (ent->d_type == DT_DIR) {
+				std::vector<std::string> elms(2);
 				elms[0] = path;
 				elms[1] = ent->d_name;
-
 				const std::vector<DirEntry> sub_entries = ListDirRecursive(PathJoin(elms), mask);
-
 				for (std::vector<DirEntry>::const_iterator i = sub_entries.begin(); i != sub_entries.end(); ++i) {
-					std::vector<std::string> elms(2);
 					elms[0] = ent->d_name;
 					elms[1] = i->name;
 					DirEntry e = {i->type, PathJoin(elms), 0, 0};
