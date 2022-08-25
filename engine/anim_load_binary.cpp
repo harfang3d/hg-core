@@ -204,8 +204,9 @@ void LoadAnimFromBinary(const Reader &ir, const Handle &h, Anim &anim) {
 		LoadAnimTracks(ir, h, anim.color_tracks);
 		LoadAnimTracks(ir, h, anim.string_tracks);
 
-		if (version >= 2)
+		if (version >= 2) {
 			LoadInstanceAnimTrack(ir, h, anim.instance_anim_track);
+		}
 
 		MigrateLegacyAnimTracks(anim);
 	}
