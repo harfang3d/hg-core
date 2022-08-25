@@ -136,7 +136,7 @@ template <typename T, size_t N> bool operator!=(const array<T, N> &lhs, const ar
 template <typename T, size_t N> bool operator<(const array<T, N> &lhs, const array<T, N> &rhs) {
 	return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
-template <typename T, size_t N> bool operator>(const array<T, N> &lhs, const array<T, N> &rhs) { return rhs > lhs; }
+template <typename T, size_t N> bool operator>(const array<T, N> &lhs, const array<T, N> &rhs) { return rhs < lhs; }
 template <typename T, size_t N> bool operator<=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs > rhs); }
 template <typename T, size_t N> bool operator>=(const array<T, N> &lhs, const array<T, N> &rhs) { return !(lhs < rhs); }
 

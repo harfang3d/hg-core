@@ -23,24 +23,24 @@ jobs:
       - name: install dependencies
         run: |
             sudo apt-get update
-            sudo apt-get install lcov libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev mesa-common-dev libgl1-mesa-dev -qyy
+            sudo apt-get install lcov -qyy
       - name: prepare
         run: mkdir -p build
       - name: configure
-        run: cmake .. -DCMAKE_BUILD_TYPE=Debug -DHG_ENABLE_COVERAGE:BOOL=ON
+        run: cmake .. -DCMAKE_BUILD_TYPE=Debug -DHG_ENABLE_COVERAGE:BOOL=ON -DHG_ENGINE_BACKEND=SOKOL_DUMMY_BACKEND
         working-directory: build
       - name: build
-        run: cmake --build . --target foundation_coverage -j2
+        run: cmake --build . --target coverage
         working-directory: build
       - name: results
         shell: bash
         run: |
           echo "::group::Report code coverage"
-          lcov --list foundation_coverage.info
+          lcov --list coverage.info
           echo "::endgroup::"
         working-directory: build
       - name: upload results
         uses: actions/upload-artifact@v3
         with:
           name: coverage-results
-          path: build/foundation_coverage
+          path: build/coverage

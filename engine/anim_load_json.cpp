@@ -183,7 +183,7 @@ void LoadAnimFromJson(const rapidjson::Value &js, Anim &anim) {
 			anim.flags |= AF_UseQuaternionForRotation;
 	}
 
-	MigrateLegacyAnimTracks(anim);
+	// [todo] MigrateLegacyAnimTracks(anim);
 }
 
 } // namespace hg

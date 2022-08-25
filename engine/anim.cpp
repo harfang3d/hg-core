@@ -117,31 +117,6 @@ void ConformAnimTrackKeys(AnimTrackT<Quaternion> &track) {
 }
 
 //
-void MigrateLegacyAnimTracks(Anim &anim) {
-	for (std::vector<AnimTrackT<std::string> >::iterator i = anim.string_tracks.begin(); i != anim.string_tracks.end();) {
-		const AnimTrackT<std::string> &track = *i;
-
-		if (track.target == "Instance.Anim") { // migrate legacy instance animation track
-			if (anim.instance_anim_track.keys.empty()) {
-				for (std::deque<AnimKeyT<std::string> >::const_iterator i = track.keys.begin(); i != track.keys.end(); ++i) {
-					AnimKeyT<InstanceAnimKey> key;
-					key.t = i->t;
-					key.v.anim_name = i->v;
-					key.v.loop_mode = ALM_Once;
-					anim.instance_anim_track.keys.push_back(key);
-				}
-			} else {
-				warn("Not migrating legacy instance animation track as a modern track of this type exists");
-			}
-
-			i = anim.string_tracks.erase(i);
-		} else {
-			++i;
-		}
-	}
-}
-
-//
 template <typename AnimTrack> bool AnimTracksHaveKeys(const std::vector<AnimTrack> &tracks) {
 	for (typename std::vector<AnimTrack>::const_iterator i = tracks.begin(); i != tracks.end(); ++i)
 		if (!i->keys.empty())

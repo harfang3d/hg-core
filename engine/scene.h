@@ -339,7 +339,7 @@ public:
 	bool GetObjectMinMax(ComponentRef ref, const PipelineResources &resources, MinMax &minmax) const;
 
 	Material &GetObjectMaterial(ComponentRef ref, size_t slot_idx);
-	void SetObjectMaterial(ComponentRef ref, size_t slot_idx, Material material);
+	void SetObjectMaterial(ComponentRef ref, size_t slot_idx, const Material& material);
 	std::string GetObjectMaterialName(ComponentRef ref, size_t slot_idx) const;
 	void SetObjectMaterialName(ComponentRef ref, size_t slot_idx, const std::string &name);
 
