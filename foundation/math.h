@@ -94,6 +94,7 @@ float Pow(float v, float exp);
 
 float Ceil(float);
 float Floor(float);
+float Round(float);
 float Mod(float);
 
 float Frac(float);

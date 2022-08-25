@@ -28,12 +28,8 @@ template <> tVec2<int>::tVec2(const Vec4 &v) {
 	y = static_cast<int>(v.y);
 }
 
-bool Equal(const Vec2 &a, const Vec2 &b) {
+template <> bool operator==(const tVec2<float> &a, const tVec2<float> &b) {
 	const float epsilon = std::numeric_limits<float>::epsilon();
-	return Abs(b.x - a.x) < epsilon && Abs(b.y - a.y) < epsilon;
-}
-
-bool AlmostEqual(const Vec2 &a, const Vec2 &b, float epsilon) {
 	return Abs(b.x - a.x) < epsilon && Abs(b.y - a.y) < epsilon;
 }
 

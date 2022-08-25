@@ -4,6 +4,7 @@
 // foundation tests
 extern void test_cext();
 extern void test_os();
+extern void test_pack_float();
 extern void test_math();
 extern void test_rand();
 extern void test_units();
@@ -47,6 +48,7 @@ extern void test_scene();
 TEST_LIST = {
 	{"foundation.cext", test_cext},
 	{"foundation.os", test_os},
+	{"foundation.pack_float", test_pack_float},
 	{"foundation.math", test_math},
 	{"foundation.rand", test_rand},
 	{"foundation.units", test_units},

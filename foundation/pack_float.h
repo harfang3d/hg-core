@@ -10,7 +10,7 @@
 namespace hg {
 
 template <typename T> inline T pack_float(float v, float scale = 1.F) {
-	return static_cast<T>(Clamp(v / scale, (std::is_signed<T>::value) ? -1.F : 0.F, 1.F) * std::numeric_limits<T>::max());
+	return static_cast<T>(Round(Clamp(v / scale, (std::is_signed<T>::value) ? -1.F : 0.F, 1.F) * std::numeric_limits<T>::max()));
 }
 
 template <typename T> inline float unpack_float(T v, float scale = 1.F) {

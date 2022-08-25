@@ -268,7 +268,7 @@ bool MkTree(const std::string &path, int permissions, bool verbose) {
 #if _WIN32
 
 bool RmTree(const std::string &path, bool verbose) {
-	bool res = true;
+	bool ok = true;
 
 	std::string _path(path);
 	if (!ends_with(_path, "/")) {
@@ -283,36 +283,26 @@ bool RmTree(const std::string &path, bool verbose) {
 	HANDLE hFind = FindFirstFileW(wfilter.c_str(), &FindFileData);
 
 	if ((hFind != nullptr) && (hFind != INVALID_HANDLE_VALUE)) {
-		while (FindNextFileW(hFind, &FindFileData) != 0) {
+		while (ok && (FindNextFileW(hFind, &FindFileData) != 0)) {
 			const std::wstring filename = FindFileData.cFileName;
-
-			if ((filename == L".") || (filename == L"..")) {
-				continue;
-			}
-
-			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (!RmTree(wchar_to_utf8(wpath + filename), verbose)) {
-					res = false;
+			if ((filename != L".") && (filename != L"..")) {
+				if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					ok = RmTree(wchar_to_utf8(wpath + filename), verbose);
+				} else {
+					if (!DeleteFileW((wpath + filename).c_str())) {
+						ok = false;
+					}
 				}
-			} else {
-				if (!DeleteFileW((wpath + filename).c_str())) {
-					res = false;
-				}
-			}
-
-			if (!res) {
-				break;
 			}
 		}
 
 		FindClose(hFind);
 	}
 
-	if (res) {
-		res = RmDir(path, verbose);
+	if (ok) {
+		ok = RmDir(path, verbose);
 	}
-
-	return res;
+	return ok;
 }
 
 #else
@@ -353,19 +343,12 @@ bool RmTree(const std::string &path, bool verbose) {
 
 bool IsDir(const std::string &path) {
 	bool res;
-
 	struct _stat info;
-
 	if (_wstat(utf8_to_wchar(path).c_str(), &info) == 0) {
-		if (info.st_mode & S_IFDIR) {
-			res = true;
-		} else {
-			res = false;
-		}
+		res = ((info.st_mode & S_IFDIR) == S_IFDIR);
 	} else {
 		res = false;
 	}
-
 	return res;
 }
 
@@ -373,19 +356,12 @@ bool IsDir(const std::string &path) {
 
 bool IsDir(const std::string &path) {
 	bool res;
-
 	struct stat info;
-
 	if (stat(path.c_str(), &info) == 0) {
-		if (info.st_mode & S_IFDIR) {
-			res = true;
-		} else {
-			res = false;
-		}
+		res = ((info.st_mode & S_IFDIR) == S_IFDIR);
 	} else {
 		res = false;
 	}
-
 	return res;
 }
 

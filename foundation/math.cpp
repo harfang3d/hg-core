@@ -55,6 +55,14 @@ float Floor(float v) {
 #endif
 }
 
+float Round(float v) {
+#if __STDC_VERSION__ >= 199901L
+	return roundf(v);
+#else
+	return static_cast<float>(round(static_cast<double>(v)));
+#endif
+}
+
 float Mod(float v) {
 	double integral;
 	return static_cast<float>(modf(v, &integral));

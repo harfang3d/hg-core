@@ -119,11 +119,13 @@ template <typename T> bool operator==(const tVec2<T> &a, const tVec2<T> &b) {
 	return a.x == b.x && a.y == b.y;
 }
 
+template <> bool operator==(const tVec2<float> &a, const tVec2<float> &b);
+
 template <typename T> bool operator!=(const tVec2<T> &a, const tVec2<T> &b) {
 	return a.x != b.x || a.y != b.y;
 }
 
-template <typename T> bool AlmostEqual(const tVec2<T> &a, const tVec2<T> &b, float e) {
+template <typename T> bool AlmostEqual(const tVec2<T> &a, const tVec2<T> &b, T e) {
 	return Abs(a.x - b.x) <= e && Abs(a.y - b.y) <= e;
 }
 
@@ -202,7 +204,5 @@ template <typename T> T Dist2(const tVec2<T> &a, const tVec2<T> &b) {
 
 /// Vector distance.
 template <typename T> T Dist(const tVec2<T> &a, const tVec2<T> &b);
-
-bool TestEqual(const Vec2 &a, const Vec2 &b, float e = 0.000001F);
 
 } // namespace hg
