@@ -110,7 +110,7 @@ struct Vec4 {
 		} else if (n == 3) {
 			res = w;
 		} else {
-			res = -1.F;
+			res = std::numeric_limits<float>::max();
 		}
 
 		return res;

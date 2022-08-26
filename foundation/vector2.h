@@ -84,7 +84,7 @@ template <class T> struct tVec2 {
 		} else if (n == 1) {
 			v = y;
 		} else {
-			v = static_cast<T>(0);
+			v = std::numeric_limits<T>::max();
 		}
 
 		return v;

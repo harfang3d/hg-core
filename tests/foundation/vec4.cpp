@@ -134,7 +134,7 @@ void test_vec4() {
 		TEST_CHECK(Equal(u[1], u.y));
 		TEST_CHECK(Equal(u[2], u.z));
 		TEST_CHECK(Equal(u[3], u.w));
-		TEST_CHECK(Equal(u[4], -1.f));
+		TEST_CHECK(u[4] == std::numeric_limits<float>::max());
 	}
 	{
 		Vec4 u(75.757575f, 1.207f, -44.01f, 0.192f);

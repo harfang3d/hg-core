@@ -240,11 +240,29 @@ void test_vec2() {
 		Vec2 u(1.207f, -44.01f);
 		TEST_CHECK(Equal(u[0], u.x));
 		TEST_CHECK(Equal(u[1], u.y));
+
+		u[0] = -47.f;
+		TEST_CHECK(Equal(u.x, -47.f));
+	}
+	{
+		const Vec2 u(1.207f, -44.01f);
+		TEST_CHECK(Equal(u[0], u.x));
+		TEST_CHECK(Equal(u[1], u.y));
+		TEST_CHECK(Equal(u[8], std::numeric_limits<float>::max()));
 	}
 	{
 		iVec2 u(121, -909);
 		TEST_CHECK(u[0] == u.x);
 		TEST_CHECK(u[1] == u.y);
+
+		u[1] = 28;
+		TEST_CHECK(u.y == 28);
+	}
+	{
+		const iVec2 u(121, -909);
+		TEST_CHECK(u[0] == u.x);
+		TEST_CHECK(u[1] == u.y);
+		TEST_CHECK(Equal(u[2], std::numeric_limits<int>::max()));
 	}
 	{
 		Vec2 u(1.207f, -44.01f);

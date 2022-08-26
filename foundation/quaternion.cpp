@@ -137,9 +137,6 @@ Quaternion QuaternionFromEuler(float x, float y, float z, RotationOrder rorder) 
 		case RO_XZY:
 			r = qx * qz * qy;
 			break;
-		case RO_YXZ:
-			r = qy * qx * qz;
-			break;
 		case RO_XYZ:
 			r = qx * qy * qz;
 			break;
