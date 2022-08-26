@@ -92,6 +92,7 @@ struct Color {
 	}
 
 	inline float operator[](int n) const {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float res;
 
 		if (n == 0) {
@@ -110,6 +111,7 @@ struct Color {
 	}
 
 	inline float &operator[](int n) {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float *res;
 
 		if (n == 0) {

@@ -99,6 +99,7 @@ struct Vec4 {
 	}
 
 	inline float operator[](size_t n) const {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float res;
 
 		if (n == 0) {
@@ -117,6 +118,7 @@ struct Vec4 {
 	}
 
 	inline float &operator[](size_t n) {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float *res;
 
 		if (n == 0) {
