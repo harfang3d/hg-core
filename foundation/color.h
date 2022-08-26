@@ -103,7 +103,7 @@ struct Color {
 		} else if (n == 3) {
 			res = a;
 		} else {
-			res = -1.F;
+			res = std::numeric_limits<float>::max();
 		}
 
 		return res;
