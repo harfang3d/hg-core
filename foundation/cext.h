@@ -240,24 +240,24 @@ typedef integral_constant<bool, false> false_type;
 
 namespace detail {
 
-template <typename T> class is_integral : std::false_type {};
-template <> struct is_integral<bool> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<char> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<signed char> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<unsigned char> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<short> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<unsigned short> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<int> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<unsigned int> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<long> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<unsigned long> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<long long> : public std::integral_constant<bool, true> {};
-template <> struct is_integral<unsigned long long> : public std::integral_constant<bool, true> {};
+template <typename T> struct is_integral : public std::false_type {};
+template <> struct is_integral<bool> : public std::true_type {};
+template <> struct is_integral<char> : public std::true_type {};
+template <> struct is_integral<signed char> : public std::true_type {};
+template <> struct is_integral<unsigned char> : public std::true_type {};
+template <> struct is_integral<short> : public std::true_type {};
+template <> struct is_integral<unsigned short> : public std::true_type {};
+template <> struct is_integral<int> : public std::true_type {};
+template <> struct is_integral<unsigned int> : public std::true_type {};
+template <> struct is_integral<long> : public std::true_type {};
+template <> struct is_integral<unsigned long> : public std::true_type {};
+template <> struct is_integral<long long> : public std::true_type {};
+template <> struct is_integral<unsigned long long> : public std::true_type {};
 
 template <typename> struct is_floating_point : public std::false_type {};
-template <> struct is_floating_point<float> : public std::integral_constant<bool, true> {};
-template <> struct is_floating_point<double> : public std::integral_constant<bool, true> {};
-template <> struct is_floating_point<long double> : public std::integral_constant<bool, true> {};
+template <> struct is_floating_point<float> : public std::true_type {};
+template <> struct is_floating_point<double> : public std::true_type {};
+template <> struct is_floating_point<long double> : public std::true_type {};
 
 } // namespace detail
 
@@ -269,6 +269,11 @@ template <typename T> struct is_arithmetic : public integral_constant<bool, is_i
 namespace detail {
 template <typename T, bool = std::is_arithmetic<T>::value> struct is_signed : public std::integral_constant<bool, (T(-1) < T(0))> {};
 template <typename T> struct is_signed<T, false> : public std::false_type {};
+
+template <> struct is_signed<bool, true> : public std::false_type {};
+template <> struct is_signed<float, true> : public std::true_type {};
+template <> struct is_signed<double, true> : public std::true_type {};
+template <> struct is_signed<long double, true> : public std::true_type {};
 } // namespace detail
 
 template <typename T> struct is_signed : public detail::is_signed<T>::type {};
