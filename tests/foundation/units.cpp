@@ -6,6 +6,7 @@
 
 #include "foundation/math.h"
 #include "foundation/unit.h"
+#include "foundation/vector3.h"
 
 using namespace hg;
 
@@ -24,15 +25,21 @@ void test_units() {
 	TEST_CHECK(AlmostEqual(DegreeToRadian(315.f), 7.f * Pi / 4.f));
 	TEST_CHECK(Equal(DegreeToRadian(360.f), TwoPi));
 
+	TEST_CHECK(DegreeToRadian(Vec3(60.f, 90.f, 120.f)) == Vec3(Pi / 3.f, HalfPi, TwoPi/3.f));
+
 	TEST_CHECK(Equal(RadianToDegree(Pi / 3.f), 60.f));
 	TEST_CHECK(Equal(RadianToDegree(HalfPi), 90.f));
 	TEST_CHECK(Equal(RadianToDegree(TwoPi / 3.f), 120.f));
 	TEST_CHECK(Equal(RadianToDegree(Pi), 180.f));
 	TEST_CHECK(Equal(RadianToDegree(7.f * Pi / 4.f), 315.f));
 	TEST_CHECK(Equal(RadianToDegree(TwoPi), 360.f));
-	
+
 	TEST_CHECK(Equal(Csec(1.0f), 0.01f));
 	TEST_CHECK(Equal(Csec(100.f), 1.f));
+
+	TEST_CHECK(Equal(Sec(1.f), 1.f));
+	TEST_CHECK(Equal(Sec(60.f), 60.f));
+	TEST_CHECK(Equal(Sec(0.5f), 0.5f));
 
 	TEST_CHECK(Equal(Ms(1.0f), 0.001f));
 	TEST_CHECK(Equal(Ms(1000.f), 1.f));

@@ -188,12 +188,21 @@ void test_math() {
 	TEST_CHECK(Equal(Sin(0.3f + HalfPi), Cos(0.3f)));
 	TEST_CHECK(Equal(Sin(1.8f - HalfPi),-Cos(1.8f)));
 
+	const float math_pi = 
+#if defined(M_PI)
+		static_cast<float>(M_PI);
+#else
+		static_cast<float>(3.14159265358979323846);
+#endif
+	
+	float pi_e = Abs(Pi - acos(-1.f));
+
 	TEST_CHECK(Equal(ACos(1.f), 0.f));
 	TEST_CHECK(Equal(ACos(float(sqrt(3.0) / 2.f)), Pi / 6.f));
 	TEST_CHECK(Equal(ACos(float(sqrt(2.0) / 2.0)), Pi / 4.f));
 	TEST_CHECK(Equal(ACos(1.0 / 2.0), Pi / 3.f));
 	TEST_CHECK(Equal(ACos(0.f), HalfPi));
-	TEST_CHECK(Equal(ACos(-1.f), Pi));
+	TEST_CHECK(AlmostEqual(ACos(-1.f), Pi, pi_e));
 
 	TEST_CHECK(Equal(ACos(-0.7f), HalfPi + ASin(0.7f)));
 
