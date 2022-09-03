@@ -99,6 +99,7 @@ struct Vec4 {
 	}
 
 	inline float operator[](size_t n) const {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float res;
 
 		if (n == 0) {
@@ -110,13 +111,14 @@ struct Vec4 {
 		} else if (n == 3) {
 			res = w;
 		} else {
-			res = -1.F;
+			res = std::numeric_limits<float>::max();
 		}
 
 		return res;
 	}
 
 	inline float &operator[](size_t n) {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float *res;
 
 		if (n == 0) {

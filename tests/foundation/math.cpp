@@ -102,6 +102,16 @@ void test_math() {
 	TEST_CHECK(Floor(-2.11111f) == -3.f);
 	TEST_CHECK(Floor(-0.5f) == -1.f);
 
+	TEST_CHECK(Round(1.f) == 1.f);
+	TEST_CHECK(Round(-1.f) == -1.f);
+	TEST_CHECK(Round(1.5125f) == 2.f);
+	TEST_CHECK(Round(1.99999f) == 2.f);
+	TEST_CHECK(Round(1.49999f) == 1.f);
+	TEST_CHECK(Round(1.11111f) == 1.f);
+	TEST_CHECK(Round(-2.11111f) == -2.f);
+	TEST_CHECK(Round(-4.75f) == -5.f);
+	TEST_CHECK(Round(-0.5f) == -1.f);
+
 	TEST_CHECK(Mod(301.f) == 0.f);
 	TEST_CHECK(Equal(Mod(0.5555f), 0.5555f));
 	TEST_CHECK(Equal(Mod(-99.125f), -0.125f));
@@ -178,12 +188,21 @@ void test_math() {
 	TEST_CHECK(Equal(Sin(0.3f + HalfPi), Cos(0.3f)));
 	TEST_CHECK(Equal(Sin(1.8f - HalfPi),-Cos(1.8f)));
 
+	const float math_pi = 
+#if defined(M_PI)
+		static_cast<float>(M_PI);
+#else
+		static_cast<float>(3.14159265358979323846);
+#endif
+	
+	float pi_e = Abs(Pi - acos(-1.f));
+
 	TEST_CHECK(Equal(ACos(1.f), 0.f));
 	TEST_CHECK(Equal(ACos(float(sqrt(3.0) / 2.f)), Pi / 6.f));
 	TEST_CHECK(Equal(ACos(float(sqrt(2.0) / 2.0)), Pi / 4.f));
 	TEST_CHECK(Equal(ACos(1.0 / 2.0), Pi / 3.f));
 	TEST_CHECK(Equal(ACos(0.f), HalfPi));
-	TEST_CHECK(Equal(ACos(-1.f), Pi));
+	TEST_CHECK(AlmostEqual(ACos(-1.f), Pi, pi_e));
 
 	TEST_CHECK(Equal(ACos(-0.7f), HalfPi + ASin(0.7f)));
 

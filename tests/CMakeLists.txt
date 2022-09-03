@@ -1,6 +1,7 @@
 set(TEST_FOUNDATION_SRCS
 	foundation/cext.cpp
 	foundation/os.cpp
+	foundation/pack_float.cpp
 	foundation/math.cpp
 	foundation/rand.cpp
 	foundation/units.cpp

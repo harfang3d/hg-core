@@ -335,5 +335,10 @@ void test_projection() {
 		TEST_CHECK(WorldRaycastScreenPos(res.x, res.y, res.x, res.y, inv_proj, Mat4::Identity, o, d));
 		TEST_CHECK(AlmostEqual(o, Vec3::Zero, 0.000001f));
 		TEST_CHECK(AlmostEqual(Normalize(d), Normalize(Vec3(ar.x, ar.y, zoom)), 0.000001f));
+
+		Mat44 buggy_proj = inv_proj;
+		buggy_proj.m[3][2] = -20.f;
+		buggy_proj.m[3][3] = 10.f;
+		TEST_CHECK(WorldRaycastScreenPos(res.x, res.y, res.x, res.y, buggy_proj, Mat4::Identity, o, d) == false);
 	}
 }

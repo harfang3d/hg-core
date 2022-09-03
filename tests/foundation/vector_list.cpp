@@ -36,7 +36,7 @@ void test_vector_list() {
 	}
 	{
 		vector_list<Vec3> list(4);
-		
+
 		TEST_CHECK(list.add(Vec3::Back) == 0);
 		TEST_CHECK(list.add(Vec3::Down) == 1);
 		TEST_CHECK(list.add(Vec3::Left) == 2);
@@ -79,7 +79,7 @@ void test_vector_list() {
 		TEST_CHECK(list.remove(3) == 4);
 		TEST_CHECK(list.remove(4) == 5);
 		TEST_CHECK(list.remove(2) == 5);
-		
+
 		TEST_CHECK(list.size() == 5);
 
 		TEST_CHECK(list.is_used(0) == true);
@@ -107,7 +107,7 @@ void test_vector_list() {
 		TEST_CHECK(list.remove(1) == 5);
 		TEST_CHECK(list.first() == 5);
 
-		{ 
+		{
 			vector_list<Vec3>::iterator it = list.begin();
 			TEST_CHECK(it != list.end());
 			TEST_CHECK(it.idx() == list.first());
@@ -155,15 +155,10 @@ void test_vector_list() {
 		}
 
 		TEST_CHECK(list.add(Vec3::Down) == 1);
-		
+
 		TEST_CHECK(list.size() == 4);
 
-		const Vec3 expected[4] = { 
-			Vec3::Back,
-			Vec3::Zero,
-			Vec3::One,
-			Vec3::Down
-		};
+		const Vec3 expected[4] = {Vec3::Back, Vec3::Zero, Vec3::One, Vec3::Down};
 		int count[4] = {0, 0, 0, 0};
 		for (vector_list<Vec3>::iterator it = list.begin(); it != list.end(); ++it) {
 			for (int i = 0; i < 4; i++) {
@@ -179,5 +174,27 @@ void test_vector_list() {
 		TEST_CHECK(count[3] == 1);
 
 		list.compact(); // [todo] there's no way to test this.
+	}
+	{
+		vector_list<size_t> list;
+		for (size_t i = 0; i < 320; i++) {
+			list.add(i);
+		}
+		for (size_t i = 0; i < 320; i++) {
+			list.remove(i);
+		}
+		std::vector<bool> visited(640, false);
+		for (size_t i = 0; i < 320; i += 2) {
+			list.add(2 * i);
+			visited[2 * i] = true;
+		}
+		TEST_CHECK(list.size() == 160);
+		for (vector_list<size_t>::iterator it = list.begin(); it != list.end(); ++it) {
+			TEST_CHECK(visited[*it] == true);
+			visited[*it] = false;
+		}
+		for (std::vector<bool>::iterator it = visited.begin(); it != visited.end(); it++) {
+			TEST_CHECK(visited[*it] == false);
+		}
 	}
 }

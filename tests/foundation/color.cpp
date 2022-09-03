@@ -93,6 +93,17 @@ void test_color() {
 		TEST_CHECK(Equal(c0[1], c0.g));
 		TEST_CHECK(Equal(c0[2], c0.b));
 		TEST_CHECK(Equal(c0[3], c0.a));
+
+		c0[1] = 1.f;
+		TEST_CHECK(Equal(c0.g, 1.f));
+	}
+	{
+		const Color c0(1.207f, -44.01f, 0.34034f, -54.0127f);
+		TEST_CHECK(Equal(c0[0], c0.r));
+		TEST_CHECK(Equal(c0[1], c0.g));
+		TEST_CHECK(Equal(c0[2], c0.b));
+		TEST_CHECK(Equal(c0[3], c0.a));
+		TEST_CHECK(c0[12] == std::numeric_limits<float>::max());
 	}
 	{
 		Color c0(75.757575f, 1.207f, -44.01f, 0.192f);

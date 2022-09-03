@@ -854,7 +854,7 @@ private:
 	};
 
 	struct Camera_ {
-		Camera_() : fov(Deg(40)), size(1), ortho(false) {}
+		Camera_() : fov(Deg(40.f)), size(1), ortho(false) {}
 
 		CameraZRange zrange;
 		float fov;

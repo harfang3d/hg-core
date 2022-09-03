@@ -50,14 +50,6 @@ Vec3 RandomVec3(const Vec3 &min, const Vec3 &max) {
 	return Vec3(FRRand(min.x, max.x), FRRand(min.y, max.y), FRRand(min.z, max.z));
 }
 
-bool Equal(const Vec3 &a, const Vec3 &b) {
-	return Equal(a.x, b.x) && Equal(a.y, b.y) && Equal(a.z, b.z);
-}
-
-bool NotEqual(const Vec3 &a, const Vec3 &b) {
-	return NotEqual(a.x, b.x) || NotEqual(a.y, b.y) || NotEqual(a.z, b.z);
-}
-
 bool AlmostEqual(const Vec3 &a, const Vec3 &b, float e) {
 	return AlmostEqual(a.x, b.x, e) && AlmostEqual(a.y, b.y, e) && AlmostEqual(a.z, b.z, e);
 }

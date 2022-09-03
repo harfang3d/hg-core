@@ -106,6 +106,16 @@ void test_vec3() {
 		TEST_CHECK(Equal(u[0], u.x));
 		TEST_CHECK(Equal(u[1], u.y));
 		TEST_CHECK(Equal(u[2], u.z));
+		
+		u[1] = 8.125f;
+		TEST_CHECK(Equal(u.y, 8.125f));
+	}
+	{
+		const Vec3 u(1.207f, -44.01f, 0.34034f);
+		TEST_CHECK(Equal(u[0], u.x));
+		TEST_CHECK(Equal(u[1], u.y));
+		TEST_CHECK(Equal(u[2], u.z));
+		TEST_CHECK(u[3] == std::numeric_limits<float>::max());
 	}
 	{
 		Vec3 u(75.757575f, 1.207f, -44.01f);

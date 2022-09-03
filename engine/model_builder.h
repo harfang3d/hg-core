@@ -15,12 +15,6 @@ namespace hg {
 
 typedef uint32_t VtxIdxType;
 
-enum ModelOptimisationLevel {
-	MOL_None, // fastest
-	MOL_Minimal, // improve index cache hit
-	MOL_Full // slowest, improve index and vertex cache hit, reduce overdraw
-};
-
 struct ModelBuilder {
 	ModelBuilder();
 
@@ -43,9 +37,9 @@ struct ModelBuilder {
 		const std::vector<uint16_t> &bones_table, uint16_t mat, void *userdata);
 
 	void Make(
-		const VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level = MOL_None, bool verbose = false) const;
+		const VertexLayout &decl, end_list_cb on_end_list, void *userdata, bool verbose = false) const;
 
-	Model MakeModel(const VertexLayout &decl, ModelOptimisationLevel optimisation_level = MOL_None, bool verbose = false) const;
+	Model MakeModel(const VertexLayout &decl, bool verbose = false) const;
 
 private:
 	size_t hash_collision;

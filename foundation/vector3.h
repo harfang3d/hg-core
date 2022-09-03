@@ -97,7 +97,7 @@ struct Vec3 {
 		} else if (n == 2) {
 			res = z;
 		} else {
-			res = -1.F;
+			res = std::numeric_limits<float>::max();
 		}
 
 		return res;

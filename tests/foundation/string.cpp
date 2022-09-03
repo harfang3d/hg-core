@@ -198,6 +198,7 @@ void test_string() {
 	TEST_CHECK(slice(in, 25, -17) == "et iusto");
 	TEST_CHECK(slice(in, -16, -6) == "odio digni");
 	TEST_CHECK(slice(in, 0, -128) == "");
+	TEST_CHECK(slice(in, 50, 0) == "");
 
 	TEST_CHECK(left(in, 12) == "At vero eos ");
 	TEST_CHECK(left(in, -23) == "At vero eos et accusamus et");
@@ -254,9 +255,19 @@ void test_string() {
 										 "    consectetur adipiscing elit.\n"
 										 "    Nunc sagittis orci porta massa\n"
 										 "    iaculis efficitur.";
+	const std::string word_wrap_24 = "Lorem ipsum dolor sit amet,\n"
+									 "consectetur\n"
+									 "adipiscing elit. Nunc sagittis\n"
+									 "orci porta massa iaculis\n"
+									 "efficitur.";
 	TEST_CHECK(word_wrap(word_wrap_in, 30) == word_wrap_30);
 	TEST_CHECK(word_wrap(word_wrap_in, 26, 4, ' ') == word_wrap_26_sp4);
 	TEST_CHECK(word_wrap(word_wrap_in, word_wrap_in.size()) == word_wrap_in);
+	TEST_CHECK(word_wrap(word_wrap_30, 24) == word_wrap_24);
+
+	const std::string word_min = "Lorem ipsum dolor;sit amet; consectetur adipiscing elit.";
+	const std::string word_1 = "Lorem\nipsum\ndolor;\nsit\namet;\n consectetur\nadipiscing\nelit.";
+	TEST_CHECK(word_wrap(word_min, -10) == word_1);
 
 	TEST_CHECK(name_to_path("user@home/readme first!") == "user-home-readme-first-");
 	TEST_CHECK(name_to_path("random_filename_00") == "random_filename_00");

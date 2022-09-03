@@ -678,11 +678,11 @@ static void GeometryToModelBuilder(const Geometry &geo, ModelBuilder &builder) {
 }
 
 //
-Model GeometryToModel(const Geometry &geo, const VertexLayout &layout, ModelOptimisationLevel optimisation_level) {
+Model GeometryToModel(const Geometry &geo, const VertexLayout &layout) {
 	ModelBuilder builder;
 	GeometryToModelBuilder(geo, builder);
 
-	Model model = builder.MakeModel(layout, optimisation_level);
+	Model model = builder.MakeModel(layout);
 
 	model.bind_pose = geo.bind_pose; // copy bind pose over to model
 	return model;
@@ -733,7 +733,7 @@ static void on_end_list(const VertexLayout &layout, const MinMax &minmax, const 
 	log(fmt::format("Index size: {}, vertex size: {}", idx_size, vtx_size));
 };
 
-bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, const VertexLayout &layout, ModelOptimisationLevel optimisation_level) { //-V2506
+bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, const VertexLayout &layout) { //-V2506
 	ScopedFile file(OpenWrite(path));
 	if (!file) {
 		return false;
@@ -753,7 +753,7 @@ bool SaveGeometryModelToFile(const std::string &path, const Geometry &geo, const
 	ModelBuilder builder;
 	GeometryToModelBuilder(geo, builder);
 
-	builder.Make(layout, on_end_list, &file.f, optimisation_level);
+	builder.Make(layout, on_end_list, &file.f);
 
 	Write<uint8_t>(file, 0); // EOLists
 

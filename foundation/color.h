@@ -92,6 +92,7 @@ struct Color {
 	}
 
 	inline float operator[](int n) const {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float res;
 
 		if (n == 0) {
@@ -103,13 +104,14 @@ struct Color {
 		} else if (n == 3) {
 			res = a;
 		} else {
-			res = -1.F;
+			res = std::numeric_limits<float>::max();
 		}
 
 		return res;
 	}
 
 	inline float &operator[](int n) {
+		HG_ASSERT(n >= 0 && n <= 3);
 		float *res;
 
 		if (n == 0) {
@@ -176,7 +178,6 @@ float Dist2(const Color &i, const Color &j);
 float Dist(const Color &i, const Color &j);
 
 /// Compare two colors.
-bool Equal(const Color &a, const Color &b);
 bool AlmostEqual(const Color &a, const Color &b, const float epsilon = 0.00001F);
 
 /// Scale the chroma component of a color, return the result as a new color.

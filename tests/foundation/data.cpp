@@ -1,5 +1,11 @@
 // HARFANG(R) Copyright (C) 2022 NWNC. Released under GPL/LGPL/Commercial Licence, see licence.txt for details.
 
+#if !_WIN32
+#	include <fcntl.h>
+#	include <sys/types.h>
+#	include <sys/stat.h>
+#endif
+
 #define TEST_NO_MAIN
 #include "acutest.h"
 
@@ -11,10 +17,6 @@
 #include "foundation/file.h"
 
 #include "../utils.h"
-
-#if !_WIN32
-#include <fcntl.h>
-#endif
 
 using namespace hg;
 

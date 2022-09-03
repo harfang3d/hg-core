@@ -155,13 +155,11 @@ std::vector<DirEntry> ListDirRecursive(const std::string &path, int mask) {
 			}
 
 			if (ent->d_type == DT_DIR) {
+				std::vector<std::string> elms(2);
 				elms[0] = path;
 				elms[1] = ent->d_name;
-
 				const std::vector<DirEntry> sub_entries = ListDirRecursive(PathJoin(elms), mask);
-
 				for (std::vector<DirEntry>::const_iterator i = sub_entries.begin(); i != sub_entries.end(); ++i) {
-					std::vector<std::string> elms(2);
 					elms[0] = ent->d_name;
 					elms[1] = i->name;
 					DirEntry e = {i->type, PathJoin(elms), 0, 0};
@@ -270,7 +268,7 @@ bool MkTree(const std::string &path, int permissions, bool verbose) {
 #if _WIN32
 
 bool RmTree(const std::string &path, bool verbose) {
-	bool res = true;
+	bool ok = true;
 
 	std::string _path(path);
 	if (!ends_with(_path, "/")) {
@@ -285,81 +283,57 @@ bool RmTree(const std::string &path, bool verbose) {
 	HANDLE hFind = FindFirstFileW(wfilter.c_str(), &FindFileData);
 
 	if ((hFind != nullptr) && (hFind != INVALID_HANDLE_VALUE)) {
-		while (FindNextFileW(hFind, &FindFileData) != 0) {
+		while (ok && (FindNextFileW(hFind, &FindFileData) != 0)) {
 			const std::wstring filename = FindFileData.cFileName;
-
-			if ((filename == L".") || (filename == L"..")) {
-				continue;
-			}
-
-			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (!RmTree(wchar_to_utf8(wpath + filename), verbose)) {
-					res = false;
+			if ((filename != L".") && (filename != L"..")) {
+				if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					ok = RmTree(wchar_to_utf8(wpath + filename), verbose);
+				} else {
+					if (!DeleteFileW((wpath + filename).c_str())) {
+						ok = false;
+					}
 				}
-			} else {
-				if (!DeleteFileW((wpath + filename).c_str())) {
-					res = false;
-				}
-			}
-
-			if (!res) {
-				break;
 			}
 		}
 
 		FindClose(hFind);
 	}
 
-	if (res) {
-		if (!RmDir(path, verbose)) {
-			res = false;
-		}
+	if (ok) {
+		ok = RmDir(path, verbose);
 	}
-
-	return res;
+	return ok;
 }
 
 #else
 
 bool RmTree(const std::string &path, bool verbose) {
-	bool res = true;
-
 	DIR *dir = opendir(path.c_str());
+	if (dir == nullptr) { //-V2506
+		return false;
+	}
 
-	if (dir != nullptr) {
-		while (const struct dirent *ent = readdir(dir)) {
-			if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
-				continue;
-			}
-
-			const std::string ent_path = PathJoin(path, ent->d_name);
-
+	bool ok = true;
+	for (struct dirent *ent = readdir(dir); ok && (ent != nullptr); ent = readdir(dir)) {
+		if (strcmp(ent->d_name, ".") && strcmp(ent->d_name, "..")) {
+			std::string ent_path = PathJoin(path, ent->d_name);
 			if (ent->d_type == DT_DIR) {
-				if (!RmTree(ent_path, verbose)) {
-					res = false;
-					break;
-				}
+				ok = RmTree(ent_path, verbose);
 			} else {
-				const int ret = remove(ent_path.c_str());
-
-				if (verbose && ret) {
-					warn(fmt::format("RmTree({}) failed to delete {}: {}", path, ent_path, strerror(errno)));
-					res = false;
-					break;
+				if (remove(ent_path.c_str())) {
+					ok = false;
+					if (verbose) {
+						warn(fmt::format("RmTree({}) failed to delete {}: {}", path, ent_path, strerror(errno)));
+					}
 				}
 			}
 		}
-
-		closedir(dir);
 	}
-
-	if (res) {
-		if (!RmDir(path, verbose)) {
-			res = false;
-		}
+	closedir(dir);
+	if (ok) {
+		ok = RmDir(path, verbose);
 	}
-
-	return res;
+	return ok;
 }
 
 #endif
@@ -369,19 +343,12 @@ bool RmTree(const std::string &path, bool verbose) {
 
 bool IsDir(const std::string &path) {
 	bool res;
-
 	struct _stat info;
-
 	if (_wstat(utf8_to_wchar(path).c_str(), &info) == 0) {
-		if (info.st_mode & S_IFDIR) {
-			res = true;
-		} else {
-			res = false;
-		}
+		res = ((info.st_mode & S_IFDIR) == S_IFDIR);
 	} else {
 		res = false;
 	}
-
 	return res;
 }
 
@@ -389,19 +356,12 @@ bool IsDir(const std::string &path) {
 
 bool IsDir(const std::string &path) {
 	bool res;
-
 	struct stat info;
-
 	if (stat(path.c_str(), &info) == 0) {
-		if (info.st_mode & S_IFDIR) {
-			res = true;
-		} else {
-			res = false;
-		}
+		res = ((info.st_mode & S_IFDIR) == S_IFDIR);
 	} else {
 		res = false;
 	}
-
 	return res;
 }
 

@@ -5,7 +5,6 @@
 #include "foundation/log.h"
 
 #include <fmt/format.h>
-#include <meshoptimizer.h>
 
 namespace hg {
 
@@ -136,7 +135,7 @@ void ModelBuilder::AddBoneIdx(uint16_t idx) {
 }
 
 //
-void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void *userdata, ModelOptimisationLevel optimisation_level, bool verbose) const {
+void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void *userdata, bool verbose) const {
 	Model model;
 	model.lists.reserve(lists.size());
 
@@ -203,23 +202,7 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 		}
 
 		//
-		if (optimisation_level == MOL_Minimal) {
-			std::vector<uint32_t> idx(list.idx.size());
-			meshopt_optimizeVertexCache(idx.data(), list.idx.data(), list.idx.size(), list.vtx.size());
-
-			on_end_list(decl, minmax, idx, vtx_data, list.bones_table, list.mat, userdata);
-		} else if (optimisation_level == MOL_Full) {
-			std::vector<uint32_t> idx_a(list.idx.size()), idx_b(list.idx.size());
-			meshopt_optimizeVertexCache(idx_a.data(), list.idx.data(), list.idx.size(), list.vtx.size());
-			meshopt_optimizeOverdraw(idx_b.data(), idx_a.data(), list.idx.size(), reinterpret_cast<float *>(vtx_data.data()), list.vtx.size(), stride, 1.05F);
-
-			std::vector<int8_t> vtx(list.vtx.size() * stride);
-			meshopt_optimizeVertexFetch(vtx.data(), idx_b.data(), idx_b.size(), vtx_data.data(), list.vtx.size(), stride);
-
-			on_end_list(decl, minmax, idx_b, vtx, list.bones_table, list.mat, userdata);
-		} else {
-			on_end_list(decl, minmax, list.idx, vtx_data, list.bones_table, list.mat, userdata);
-		}
+		on_end_list(decl, minmax, list.idx, vtx_data, list.bones_table, list.mat, userdata);
 	}
 
 	if (verbose) {
@@ -245,11 +228,11 @@ static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const
 	model.mats.push_back(mat);
 }
 
-Model ModelBuilder::MakeModel(const VertexLayout &layout, ModelOptimisationLevel optimisation_level, bool verbose) const {
+Model ModelBuilder::MakeModel(const VertexLayout &layout, bool verbose) const {
 	Model model;
 	model.lists.reserve(16);
 
-	Make(layout, Model_end_cb, &model, optimisation_level, verbose);
+	Make(layout, Model_end_cb, &model, verbose);
 
 	return model;
 }
