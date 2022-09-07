@@ -8,6 +8,9 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
+#if __linux__
+#include <linux/limits.h>
+#endif
 #endif
 
 #include "foundation/assert.h"
