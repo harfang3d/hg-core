@@ -26,6 +26,9 @@ std::string FactorizePath(const std::string &path);
 std::string CleanPath(const std::string &path);
 std::string CleanFileName(const std::string &filename);
 
+// Returns the absolute pathname of an existing file or directory.
+std::string GetAbsolutePath(const std::string path);
+
 /// Returns the folder navigation part of a file path. The file name and its extension are stripped.
 /// @see CutFileExtension and CutFileName.
 std::string CutFilePath(const std::string &path);

@@ -32,6 +32,7 @@ set(TEST_FOUNDATION_SRCS
 	foundation/data_rw_interface.cpp
 	foundation/file_rw_interface.cpp
 	foundation/clock.cpp
+	foundation/cmd_line.cpp
 )
 
 set(TEST_ENGINE_SRCS

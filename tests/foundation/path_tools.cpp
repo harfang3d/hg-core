@@ -39,7 +39,8 @@ void test_path_tools() {
 	TEST_CHECK(FactorizePath("/p/a/t/h") == "/p/a/t/h");
 
 #if WIN32
-	TEST_CHECK(CleanPath("C:/User/Default/My Documents/My Videos\\..\\..\\AppData\\Roaming\\hg_app\\./.config") == "c:/User/Default/AppData/Roaming/hg_app/.config");
+	TEST_CHECK(
+		CleanPath("C:/User/Default/My Documents/My Videos\\..\\..\\AppData\\Roaming\\hg_app\\./.config") == "c:/User/Default/AppData/Roaming/hg_app/.config");
 	TEST_CHECK(CleanPath("\\\\printers\\laserjet\\jobs") == "\\\\printers/laserjet/jobs");
 #endif
 	TEST_CHECK(CleanPath("/home/user0001/../../home/../home/user0000/.config/app/hg.cfg") == "/home/user0000/.config/app/hg.cfg");
@@ -72,7 +73,7 @@ void test_path_tools() {
 	TEST_CHECK(CutFileName("c:\\Users\\6502\\Documents\\") == "c:\\Users\\6502\\Documents\\");
 	TEST_CHECK(CutFileName("Readme.md") == "");
 	TEST_CHECK(CutFileName("") == "");
-	
+
 	TEST_CHECK(GetFileName("/usr/local/bin/deltree.exe") == "deltree");
 	TEST_CHECK(GetFileName(".app-config.json") == ".app-config");
 	TEST_CHECK(GetFileName("/proc/sys/Device/00000032") == "00000032");
@@ -122,7 +123,7 @@ void test_path_tools() {
 	elements[4] = "005";
 	elements[5] = "006";
 	TEST_CHECK(PathJoin(elements) == "001/002/003/004/005/006");
-	
+
 	TEST_CHECK(SwapFileExtension("image.png", "pcx") == "image.pcx");
 	TEST_CHECK(SwapFileExtension("config", "json") == "config.json");
 	TEST_CHECK(SwapFileExtension("~/.config", "xml") == "~/.xml");
@@ -142,4 +143,18 @@ void test_path_tools() {
 	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == usr);
 	TEST_CHECK(SetCurrentWorkingDirectory(cwd) == true);
 	TEST_CHECK(CleanPath(GetCurrentWorkingDirectory()) == cwd);
+
+#if WIN32
+	std::string sys32 = "C:\\Windows\\System32";
+	if (TEST_CHECK(SetCurrentWorkingDirectory(sys32) == true)) {
+		TEST_CHECK(GetAbsolutePath("svchost.exe") == std::string("C:\\Windows\\System32\\svchost.exe"));
+		TEST_CHECK(SetCurrentWorkingDirectory(cwd) == true);
+	}
+#else
+	std::string usrbin = "/usr/bin";
+	if (TEST_CHECK(SetCurrentWorkingDirectory("/usr/bin") == true)) {
+		TEST_CHECK(GetAbsolutePath("bash") == "/usr/bin/bash");
+		TEST_CHECK(SetCurrentWorkingDirectory(cwd) == true);
+	}
+#endif
 }
