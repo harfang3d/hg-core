@@ -201,6 +201,28 @@ bool IsFile(const std::string &path) {
 
 	return res;
 }
+//
+bool IsDirectory(const std::string &path) {
+	bool res;
+
+#if _WIN32
+	struct _stat info;
+	if (_wstat(utf8_to_wchar(path).c_str(), &info) == 0) {
+		res = (info.st_mode & S_IFDIR) != 0;
+	} else {
+		res = false;
+	}
+#else
+	struct stat info;
+	if (stat(path.c_str(), &info) == 0) {
+		res = (info.st_mode & S_IFDIR) != 0;
+	} else {
+		res = false;
+	}
+#endif
+
+	return res;
+}
 
 bool Unlink(const std::string &path) {
 #if _WIN32
