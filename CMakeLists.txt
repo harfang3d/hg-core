@@ -35,8 +35,6 @@ else()
 	add_compile_options(-pedantic)
 endif()
 
-add_compile_definitions(__STDC_WANT_LIB_EXT1__=1)
-
 add_library(dummy_backend INTERFACE)
 
 if(HG_ENGINE_BACKEND STREQUAL "SOKOL_GLCORE33")

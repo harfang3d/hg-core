@@ -53,3 +53,8 @@ add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
 target_link_libraries(engine PUBLIC foundation mikktspace miniz hg::gfx_backend)
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb)
 target_compile_definitions(engine PUBLIC ${HG_ENGINE_BACKEND})
+set_target_properties(engine 
+	PROPERTIES 
+		CXX_STANDARD 98
+		CXX_EXTENSIONS OFF
+)

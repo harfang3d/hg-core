@@ -8,6 +8,9 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
+#if __linux__
+#include <linux/limits.h>
+#endif
 #endif
 
 #include "foundation/assert.h"
@@ -58,7 +61,7 @@ std::string GetFileName(const std::string &path) {
 
 //
 bool IsPathAbsolute(const std::string &path) {
-#if WIN32
+#if _WIN32
 	return path.length() > 2 && path[1] == ':';
 #else
 	return path.length() > 1 && path[0] == '/';
@@ -302,6 +305,30 @@ std::string CleanFileName(const std::string &filename) {
 	}
 
 	return res;
+}
+
+//
+std::string GetAbsolutePath(const std::string path) {
+#if _WIN32
+	const std::wstring wpath = utf8_to_wchar(path);
+	DWORD len = GetFullPathNameW(wpath.c_str(), 0, NULL, NULL);
+	if (len == 0) {
+		return std::string();
+	}
+	std::wstring out(len-1, 0);
+	len = GetFullPathNameW(wpath.c_str(), len, &out[0], NULL);
+
+	return wchar_to_utf8(out);
+#else
+	std::string out(PATH_MAX, 0);
+	if (realpath(path.c_str(), &out[0]) == NULL) {
+		return std::string();
+	}
+
+	size_t len = strlen(out.c_str());
+	out.resize(len);
+	return out;
+#endif
 }
 
 //

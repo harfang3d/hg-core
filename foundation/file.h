@@ -42,6 +42,7 @@ size_t Tell(File file);
 void Rewind(File file);
 
 bool IsFile(const std::string &path);
+bool IsDirectory(const std::string &path);
 bool Unlink(const std::string &path);
 
 struct FileInfo {

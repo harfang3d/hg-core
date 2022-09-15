@@ -12,6 +12,7 @@ set(FOUNDATION_HDRS
 	axis.h
 	cext.h
 	clock.h
+	cmd_line.h
 	color.h
 	data.h
 	data_rw_interface.h
@@ -52,6 +53,7 @@ set(FOUNDATION_HDRS
 set(FOUNDATION_SRCS
 	assert.cpp
 	clock.cpp
+	cmd_line.cpp
 	color.cpp
 	data.cpp
 	data_rw_interface.cpp
@@ -87,3 +89,9 @@ add_library(foundation STATIC ${FOUNDATION_SRCS} ${FOUNDATION_HDRS})
 target_include_directories(foundation PUBLIC ${CMAKE_SOURCE_DIR} extern/utf8-cpp extern/rapidjson extern/srombauts-shared_ptr)
 target_compile_definitions(foundation PUBLIC RAPIDJSON_HAS_STDSTRING=1)
 target_link_libraries(foundation PUBLIC fmt xxhash)
+set_target_properties(foundation 
+	PROPERTIES 
+		PUBLIC_HEADER "${FOUNDATION_HDRS}"
+		CXX_STANDARD 98
+		CXX_EXTENSIONS OFF
+)

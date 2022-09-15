@@ -35,6 +35,7 @@ extern void test_rw_interface();
 extern void test_data_rw_interface();
 extern void test_file_rw_interface();
 extern void test_clock();
+extern void test_cmd_line();
 
 // engine tests
 extern void test_vertex_layout();
@@ -79,6 +80,7 @@ TEST_LIST = {
 	{"foundation.data_rw_interface", test_data_rw_interface},
 	{"foundation.file_rw_interface", test_file_rw_interface},
 	{"foundation.clock", test_clock},
+	{"foundation.cmd_line", test_cmd_line},
 
 #if 0
 	{"engine.vertex_layout", test_vertex_layout},					// [todo] deactivated until VertexLayout stride computation is fixed.
