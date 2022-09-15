@@ -22,20 +22,34 @@ sudo fusermount -u sysroot
 The board rootfs can be downloaded using `rsync`
 ```bash
 rsync -avAHXe --copy-unsafe-links ssh --numeric-ids --stats \
-    --exclude /dev/ \
-    --exclude /proc/ \
-    --exclude /sys/ \
-    --exclude /tmp/ \
-    --exclude /var/cache/man \
-    --exclude /var/run \
-    --exclude /var/cache/apt \
-    --exclude /var/log \
-    --exclude /run \
-    --exclude /mnt/ \
-    --exclude /media/ \
-    --exclude /lost+found \
+    --exclude /bin \
+    --exclude /boot \
     --exclude /etc \
+    --exclude /dev \
+    --exclude /home \
+    --exclude /lost+found \
+    --exclude /media/ \
+    --exclude /mnt/ \
+    --exclude /proc \
+    --exclude /root \
+    --exclude /run \
+    --exclude /sys \
     --exclude /swapfile1 \
+    --exclude /tmp \
+    --exclude /usr/bin \
+    --exclude /usr/libexec \
+    --exclude /usr/local/bin \
+    --exclude /usr/local/etc \
+    --exclude /usr/local/games \
+    --exclude /usr/local/man \
+    --exclude /usr/local/share \
+    --exclude /usr/local/src \
+    --exclude /usr/local/sbin \
+    --exclude /usr/games \
+    --exclude /usr/sbin \
+    --exclude /usr/share \
+    --exclude /usr/src \
+    --exclude /var \
     odroid@${board_address}:/ \
     ${board_sysroot}
 ```
