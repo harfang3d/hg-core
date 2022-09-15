@@ -95,7 +95,20 @@ Detach the loopback device.
 sudo losetup -d /dev/loop14
 ```
 
-We can resize the image file.
+Use `fdisk` to find where the partition ends.
+
+```bash
+fdisk -l odroid-m1.img
+```
+The last line of the output gives the last block of the partition (here `11073535`).
+```
+odroid-m1.img2           526336 11073535 10547200     5G 83 Linux
+```
+
+The image is then truncated to `(last block + 1) * block size`. Here the block is `512`. The new image size is then `(11073535+1) * 512 = 5669650432`.
+```bash
+truncate --size=5669650432 odroid-m1.img
+```
 
 # Build
 
