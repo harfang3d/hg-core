@@ -66,9 +66,36 @@ Run `fdisk -l` to identify the SD card disk.
 
 Dump the SD Card using `dd`. Here we assume that the SD Card is `/dev/mmcblk0`.
 ```bash
-sudo dd if=/dev/mmcblk0 of=odroid-m1.img bs=1M status=progress
+sudo dd if=/dev/mmcblk0 of=odroid-m1.img conv=notrunc status=progress
 sync
 ```
+
+Here is the procedure to shrink the disk image.
+
+Request a new loopback device.
+```bash
+sudo losetup -f
+```
+Upon success, `losetup` prints the name of the newly created loopback device on the standar output.
+
+Setup the loop device.
+```bash
+sudo losetup /dev/loop14 odroid-m1.img
+```
+
+Ask the kernel to load the partition table.
+```bash
+sudo partprobe /dev/loop14
+```
+
+The partitions can now be resized with `gparted` for example.
+
+Detach the loopback device.
+```bash
+sudo losetup -d /dev/loop14
+```
+
+We can resize the image file.
 
 # Build
 
