@@ -422,8 +422,9 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 		version 2: added arbitrary number of bones
 	*/
 	const uint32_t version = Read<uint32_t>(ir, h);
+
 	if (version > 2) {
-		warn(fmt::format("Cannot load geometry '{}', unsupported version", name));
+		warn(fmt::format("Cannot load geometry '{}', unsupported version {}", name, version));
 		return geo;
 	}
 
@@ -439,6 +440,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 	for (size_t i = 0; i < geo.uv.size(); i++) {
 		ReadStdVector(ir, h, geo.uv[i]);
 	}
+
 	if (version > 0) {
 		if (version == 1) {
 			std::vector<Skin_v1> skin1;
@@ -456,6 +458,7 @@ Geometry LoadGeometry(const Reader &ir, const Handle &h, const std::string &name
 
 		ReadStdVector(ir, h, geo.bind_pose);
 	}
+
 	return geo;
 }
 

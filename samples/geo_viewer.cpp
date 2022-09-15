@@ -42,8 +42,9 @@ sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, co
 	sg_pipeline_desc pipeline_desc;
 
 	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
-	pipeline_desc.index_type = SG_INDEXTYPE_UINT32;
+	pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
 	pipeline_desc.shader = shader;
+	pipeline_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLES;
 
 	pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
 	pipeline_desc.depth.write_enabled = true;
@@ -143,7 +144,7 @@ int main(int narg, const char **args) {
 	Shader shader = LoadShaderFromFile("dummy");
 
 	// a pipeline state object (default render states are fine for triangle)
-	const Geometry geo = LoadGeometryFromFile(args[1]);
+	const Geometry geo = LoadGeometryFromFile("D:/assemble-demo-assets/range_rover_simple/project/car_rangerover/Car01_Body_LOD0.geo");
 #if 0
 	VertexLayout vtx_layout;
 	vtx_layout.Set(VA_Normal, SG_VERTEXFORMAT_FLOAT3);
@@ -151,8 +152,14 @@ int main(int narg, const char **args) {
 #else
 	const VertexLayout vtx_layout = ComputeGeometryVertexLayout(geo);
 #endif
-	Model mdl = GeometryToModel(geo, vtx_layout);
-	// Model mdl = CreateSphereModel(vtx_layout, 1.f, 32, 16);
+	Model geo_to_mdl = GeometryToModel(geo, vtx_layout);
+//	Model mdl = CreateSphereModel(vtx_layout, 1.f, 32, 16);
+
+	Model compiled_mdl = LoadModelFromFile("D:/assemble-demo-assets/range_rover_simple/project_compiled/car_rangerover/Car01_Body_LOD0.geo");
+
+	Model mdl = compiled_mdl;
+
+
 
 	//
 	sg_pipeline pip = MakePipeline(mdl.vtx_layout, shader.shader, shader.layout);

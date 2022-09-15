@@ -9,7 +9,7 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/samples/geo_viewer.exe",
-			"args": ["d:/LOD0.geo"],
+			"args": ["D:/assemble-demo-assets/range_rover_simple/project_compiled/car_rangerover/Car01_Body_LOD0.geo"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

@@ -135,11 +135,13 @@ void ModelBuilder::AddBoneIdx(uint16_t idx) {
 }
 
 //
-void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void *userdata, bool verbose) const {
-	Model model;
+void ModelBuilder::Make(const VertexLayout &vtx_layout, end_list_cb on_end_list, void *userdata, bool verbose) const {
+	Model &model = *reinterpret_cast<Model *>(userdata);
+
+	model.vtx_layout = vtx_layout;
 	model.lists.reserve(lists.size());
 
-	const size_t stride = decl.GetStride();
+	const size_t stride = vtx_layout.GetStride();
 
 	size_t vtx_count = 0;
 	for (size_t i = 0; i < lists.size(); i++) {
@@ -156,38 +158,38 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 
 		for (size_t j = 0; j < list.vtx.size(); j++) {
 			const Vertex &vtx = list.vtx[j];
-			decl.PackVertex(VA_Position, &vtx.pos.x, 3, p_vtx);
+			vtx_layout.PackVertex(VA_Position, &vtx.pos.x, 3, p_vtx);
 
-			if (decl.Has(VA_Normal)) {
-				decl.PackVertex(VA_Normal, &vtx.normal.x, 3, p_vtx);
+			if (vtx_layout.Has(VA_Normal)) {
+				vtx_layout.PackVertex(VA_Normal, &vtx.normal.x, 3, p_vtx);
 			}
 
-			if (decl.Has(VA_Tangent)) {
-				decl.PackVertex(VA_Tangent, &vtx.tangent.x, 3, p_vtx);
+			if (vtx_layout.Has(VA_Tangent)) {
+				vtx_layout.PackVertex(VA_Tangent, &vtx.tangent.x, 3, p_vtx);
 			}
 
-			if (decl.Has(VA_Bitangent)) {
-				decl.PackVertex(VA_Bitangent, &vtx.binormal.x, 3, p_vtx);
+			if (vtx_layout.Has(VA_Bitangent)) {
+				vtx_layout.PackVertex(VA_Bitangent, &vtx.binormal.x, 3, p_vtx);
 			}
 
-			if (decl.Has(VA_Color)) {
-				decl.PackVertex(VA_Color, &vtx.color[0].r, 4, p_vtx);
+			if (vtx_layout.Has(VA_Color)) {
+				vtx_layout.PackVertex(VA_Color, &vtx.color[0].r, 4, p_vtx);
 			}
 
-			if (decl.Has(VA_UV0)) {
-				decl.PackVertex(VA_UV0, &vtx.uv[0].x, 2, p_vtx);
+			if (vtx_layout.Has(VA_UV0)) {
+				vtx_layout.PackVertex(VA_UV0, &vtx.uv[0].x, 2, p_vtx);
 			}
 
-			if (decl.Has(VA_UV1)) {
-				decl.PackVertex(VA_UV1, &vtx.uv[1].x, 2, p_vtx);
+			if (vtx_layout.Has(VA_UV1)) {
+				vtx_layout.PackVertex(VA_UV1, &vtx.uv[1].x, 2, p_vtx);
 			}
 
-			if (decl.Has(VA_BoneIndices)) {
-				decl.PackVertex(VA_BoneIndices, vtx.index, Vertex::BoneCount, p_vtx);
+			if (vtx_layout.Has(VA_BoneIndices)) {
+				vtx_layout.PackVertex(VA_BoneIndices, vtx.index, Vertex::BoneCount, p_vtx);
 			}
 
-			if (decl.Has(VA_BoneWeights)) {
-				decl.PackVertex(VA_BoneWeights, vtx.weight, Vertex::BoneCount, p_vtx);
+			if (vtx_layout.Has(VA_BoneWeights)) {
+				vtx_layout.PackVertex(VA_BoneWeights, vtx.weight, Vertex::BoneCount, p_vtx);
 			}
 
 			minmax.mn = Min(minmax.mn, vtx.pos); // update list minmax
@@ -202,7 +204,7 @@ void ModelBuilder::Make(const VertexLayout &decl, end_list_cb on_end_list, void 
 		}
 
 		//
-		on_end_list(decl, minmax, list.idx, vtx_data, list.bones_table, list.mat, userdata);
+		on_end_list(vtx_layout, minmax, list.idx, vtx_data, list.bones_table, list.mat, userdata);
 	}
 
 	if (verbose) {
@@ -228,12 +230,9 @@ static void Model_end_cb(const VertexLayout &layout, const MinMax &minmax, const
 	model.mats.push_back(mat);
 }
 
-Model ModelBuilder::MakeModel(const VertexLayout &layout, bool verbose) const {
+Model ModelBuilder::MakeModel(const VertexLayout &vtx_layout, bool verbose) const {
 	Model model;
-	model.lists.reserve(16);
-
-	Make(layout, Model_end_cb, &model, verbose);
-
+	Make(vtx_layout, Model_end_cb, &model, verbose);
 	return model;
 }
 

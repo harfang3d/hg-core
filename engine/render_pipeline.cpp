@@ -213,7 +213,7 @@ Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &n
 							"in vec3 i_normal;\n"
 							"out vec4 o_color;\n"
 							"void main() {\n"
-							"	float k = normalize(i_normal).z;\n"
+							"	float k = normalize(i_normal).y;\n"
 							"	o_color = vec4(k, k, k, 1);\n"
 							"}\n";
 
@@ -350,8 +350,9 @@ bool SaveMaterialToFile(const std::string &path, const Material &m, const Pipeli
 
 //
 Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
-	ScopedReadHandle h(ip, name, silent);
-	return LoadDDS(ir, h, name);
+//	ScopedReadHandle h(ip, name, silent);
+//	return ir.is_valid(h) ? LoadDDS(ir, h, name) : Texture();
+	return Texture();
 }
 
 Texture LoadTextureFromFile(const std::string &path, bool silent) {
@@ -555,7 +556,7 @@ static void legacy_VertexLayoutToVertexLayout(const legacy_VertexLayout &legacy_
 					sg_type = SG_VERTEXFORMAT_FLOAT4;
 			} else if (type == lAT_Uint8) {
 				if (is_normalized) {
-					if (is_signed) {
+					if (!is_signed) {
 						if ((num == 3) || (num == 4))
 							sg_type = SG_VERTEXFORMAT_BYTE4N;
 					} else {
@@ -563,7 +564,7 @@ static void legacy_VertexLayoutToVertexLayout(const legacy_VertexLayout &legacy_
 							sg_type = SG_VERTEXFORMAT_UBYTE4N;
 					}
 				} else {
-					if (is_signed) {
+					if (!is_signed) {
 						if (num == 4)
 							sg_type = SG_VERTEXFORMAT_BYTE4;
 					} else {
@@ -577,6 +578,8 @@ static void legacy_VertexLayoutToVertexLayout(const legacy_VertexLayout &legacy_
 				layout.Set(va, sg_type, legacy_layout.m_offset[i]);
 		}
 	}
+
+	layout.SetStride(legacy_layout.m_stride);
 }
 
 //
@@ -641,6 +644,9 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 		data.resize(size);
 		ir.read(h, data.data(), size); // load indices
 
+uint16_t *p_idx = (uint16_t *)data.data();
+
+
 		list.element_count = size / idx_type_size; // index count
 		list.index_buffer = MakeIndexBuffer(data.data(), size);
 		tri_count += list.element_count / 3;
@@ -651,6 +657,23 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 		data.resize(size);
 		ir.read(h, data.data(), size); // load vertices
 		list.vertex_buffer = MakeVertexBuffer(data.data(), size);
+
+
+
+auto read_vtx_attrib = [](const legacy_VertexLayout &vs_decl, size_t vtx_idx, legacy_Attrib attr, const uint8_t *data) {
+	const size_t vtx_offset = vs_decl.m_stride * vtx_idx;
+	const size_t offset = vs_decl.m_offset[attr];
+
+	const Vec3 *pos = reinterpret_cast<const Vec3 *>(&data[vtx_offset + offset]);
+	return pos;
+};
+
+const auto v0 = read_vtx_attrib(vs_decl, 0, lA_Position, data.data());
+const auto v1 = read_vtx_attrib(vs_decl, 1, lA_Position, data.data());
+const auto v2 = read_vtx_attrib(vs_decl, 2, lA_Position, data.data());
+const auto v3 = read_vtx_attrib(vs_decl, 3, lA_Position, data.data());
+
+
 
 		// bones table
 		size = Read<uint32_t>(ir, h);

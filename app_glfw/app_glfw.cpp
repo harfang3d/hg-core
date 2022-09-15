@@ -24,6 +24,7 @@ GLFWwindow *RenderInit(int width, int height, const std::string &title) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 	GLFWwindow *win = glfwCreateWindow(640, 480, title.c_str(), 0, 0);
 	glfwMakeContextCurrent(win);
 	glfwSwapInterval(1);

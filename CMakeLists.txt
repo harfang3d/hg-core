@@ -31,8 +31,10 @@ if(WIN32)
 	endif()
 
 	add_compile_definitions(GLFW_WIN32=1)
+else()
+	add_compile_options(-pedantic)
 endif()
-add_compile_options(-pedantic)
+
 add_compile_definitions(__STDC_WANT_LIB_EXT1__=1)
 
 add_library(dummy_backend INTERFACE)

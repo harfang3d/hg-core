@@ -275,6 +275,10 @@ struct VertexLayout {
 		return stride;
 	}
 
+	void SetStride(uint8_t stride_) {
+		stride = stride_;
+	}
+
 	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
 	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
 
@@ -608,6 +612,8 @@ RenderState ComputeRenderState(BlendMode blend, DepthTest test = DT_Less, FaceCu
 
 //
 struct Model { // 96B (+heap)
+	Model() : tri_count(0) {}
+
 	uint32_t tri_count;
 	VertexLayout vtx_layout;
 
