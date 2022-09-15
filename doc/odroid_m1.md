@@ -17,6 +17,29 @@ The sysroot is unmounted with `fusermount`.
 sudo fusermount -u sysroot
 ```
 
+## Local board filesystem backup
+
+The board rootfs can be downloaded using `rsync`
+```bash
+rsync -avAHXe --copy-unsafe-links ssh --numeric-ids --stats \
+    --exclude /dev/ \
+    --exclude /proc/ \
+    --exclude /sys/ \
+    --exclude /tmp/ \
+    --exclude /var/cache/man \
+    --exclude /var/run \
+    --exclude /var/cache/apt \
+    --exclude /var/log \
+    --exclude /run \
+    --exclude /mnt/ \
+    --exclude /media/ \
+    --exclude /lost+found \
+    --exclude /etc \
+    --exclude /swapfile1 \
+    odroid@${board_address}:/ \
+    ${board_sysroot}
+```
+
 ## Using the OS image
 
 > **Warning:**
@@ -108,6 +131,35 @@ odroid-m1.img2           526336 11073535 10547200     5G 83 Linux
 The image is then truncated to `(last block + 1) * block size`. Here the block is `512`. The new image size is then `(11073535+1) * 512 = 5669650432`.
 ```bash
 truncate --size=5669650432 odroid-m1.img
+```
+
+Fix symbolic links.
+
+Fix some symlinks in the `sysroot` directory.
+```bash
+# mount the image to sysroot directory
+cd sysroot/usr/lib/aarch64-linux-gnu/
+ln -fs ../../../lib/aarch64-linux-gnu/librt.so.1 librt.so
+ln -fs ../../../lib/aarch64-linux-gnu/libanl.so.1 libanl.so
+ln -fs ../../../lib/aarch64-linux-gnu/libBrokenLocale.so.1 libBrokenLocale.so
+ln -fs ../../../lib/aarch64-linux-gnu/libcrypt.so.1.1.0 libcrypt.so
+ln -fs ../../../lib/aarch64-linux-gnu/libdl.so.2 libdl.so
+ln -fs ../../../lib/aarch64-linux-gnu/libexpat.so.1.6.11 libexpat.so
+ln -fs ../../../lib/aarch64-linux-gnu/libm.so.6 libm.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnsl.so.1 libnsl.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnss_compat.so.2 libnss_compat.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnss_dns.so.2 libnss_dns.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnss_files.so.2 libnss_files.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnss_hesiod.so.2 libnss_hesiod.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnss_nisplus.so.2 libnss_nisplus.so
+ln -fs ../../../lib/aarch64-linux-gnu/libnss_nis.so.2 libnss_nis.so
+ln -fs ../../../lib/aarch64-linux-gnu/libpthread.so.0 libpthread.so
+ln -fs ../../../lib/aarch64-linux-gnu/libresolv.so.2 libresolv.so
+ln -fs ../../../lib/aarch64-linux-gnu/librt.so.1 librt.so 
+ln -fs ../../../lib/aarch64-linux-gnu/libthread_db.so.1 libthread_db.so
+ln -fs ../../../lib/aarch64-linux-gnu/libutil.so.1 libutil.so
+ln -fs ../../../lib/aarch64-linux-gnu/libuuid.so.1.3.0 libuuid.so
+ln -fs ../../../lib/aarch64-linux-gnu/libz.so.1.2.11 libz.so
 ```
 
 # Build

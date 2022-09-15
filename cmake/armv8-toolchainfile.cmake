@@ -8,15 +8,13 @@ set(TARGET_PREFIX "aarch64-linux-gnu")
 set(CMAKE_C_COMPILER ${TOOLCHAIN}/bin/${TARGET_PREFIX}-gcc)
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN}/bin/${TARGET_PREFIX}-g++)
 
-set(ENV{CFLAGS} "--sysroot=${SYSROOT} $ENV{CFLAGS}")
-set(ENV{LDFLAGS} "--sysroot=${SYSROOT} -Wl,-rpath,${SYSROOT}/lib/${TARGET_PREFIX} $ENV{LDFLAGS}")
-
+set(ENV{LDFLAGS} "-Wl,-rpath,${SYSROOT}/lib/${TARGET_PREFIX} $ENV{LDFLAGS}")
 
 if(IS_DIRECTORY "${SYSROOT}/usr/lib/pkgconfig")
     set(ENV{PKG_CONFIG_PATH} $ENV{SYSROOT}/usr/lib/pkgconfig)
 endif()
 if(IS_DIRECTORY "${SYSROOT}/usr/lib/${TARGTE_PREFIX}/pkgconfig")
-    set(ENV{PKG_CONFIG_PATH} $ENV{SYSROOT}/usr/lib/${TARGTE_PREFIX}/pkgconfig)
+    set(ENV{PKG_CONFIG_PATH} $ENV{SYSROOT}/usr/lib/${TARGET_PREFIX}/pkgconfig)
 endif()
 if (NOT "$ENV{PKG_CONFIG_PATH}" STREQUAL "")
     set(ENV{PKG_CONFIG_SYSROOT_DIR} $ENV{SYSROOT})
