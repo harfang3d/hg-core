@@ -107,7 +107,7 @@ void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format, size_t
 
 // sg_vertex_format attrib[VA_Count];
 
-void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &shader_layout, sg_layout_desc &layout, size_t buffer_index) {
+void FillPipelineLayout(const VertexLayout& vertex_layout, const ShaderLayout& shader_layout, sg_layout_desc& layout, size_t buffer_index) {
 	const size_t stride = vertex_layout.GetStride();
 	assert(stride != 0);
 
@@ -128,7 +128,7 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 		if (location == -1)
 			continue; // shader not consuming this attribute
 
-		sg_vertex_attr_desc &layout_attr = layout.attrs[location];
+		sg_vertex_attr_desc& layout_attr = layout.attrs[location];
 
 		layout_attr.buffer_index = buffer_index;
 		layout_attr.format = vertex_layout.GetFormat(VertexAttribute(i));
@@ -136,7 +136,7 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const {
+void VertexLayout::PackVertex(VertexAttribute semantic, const float* in, size_t in_count, int8_t* out) const {
 	const sg_vertex_format format = sg_vertex_format(attrib[semantic].format);
 
 	if (format == SG_VERTEXFORMAT_FLOAT || format == SG_VERTEXFORMAT_FLOAT2 || format == SG_VERTEXFORMAT_FLOAT3 || format == SG_VERTEXFORMAT_FLOAT4) {
@@ -154,15 +154,16 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t 
 		if (in_count > out_count)
 			in_count = out_count;
 
-		float *f_out = reinterpret_cast<float *>(out + attrib[semantic].offset);
+		float* f_out = reinterpret_cast<float*>(out + attrib[semantic].offset);
 
 		size_t i = 0;
 		for (; i < in_count; ++i)
 			f_out[i] = in[i];
 		for (; i < out_count; ++i) // zero pad missing input
 			f_out[i] = 0.f;
-	} else if (format == SG_VERTEXFORMAT_BYTE4 || format == SG_VERTEXFORMAT_BYTE4N) {
-		int8_t *i_out = reinterpret_cast<int8_t *>(out + attrib[semantic].offset);
+	}
+	else if (format == SG_VERTEXFORMAT_BYTE4 || format == SG_VERTEXFORMAT_BYTE4N) {
+		int8_t* i_out = reinterpret_cast<int8_t*>(out + attrib[semantic].offset);
 
 		const size_t out_count = 4;
 
@@ -171,8 +172,9 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t 
 			i_out[i] = format == SG_VERTEXFORMAT_BYTE4N ? pack_float<int8_t>(in[i]) : int8_t(in[i]);
 		for (; i < out_count; ++i) // zero pad missing input
 			i_out[i] = 0;
-	} else if (format == SG_VERTEXFORMAT_UBYTE4 || format == SG_VERTEXFORMAT_UBYTE4N) {
-		uint8_t *u_out = reinterpret_cast<uint8_t *>(out + attrib[semantic].offset);
+	}
+	else if (format == SG_VERTEXFORMAT_UBYTE4 || format == SG_VERTEXFORMAT_UBYTE4N) {
+		uint8_t* u_out = reinterpret_cast<uint8_t*>(out + attrib[semantic].offset);
 
 		const size_t out_count = 4;
 
@@ -184,9 +186,449 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t 
 	}
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
+void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t* in, size_t in_count, int8_t* out) const {}
 
-//
+// [todo] use some kind of string buffer?
+enum ShaderLang {		// [todo] put in a header file
+	GLSLTarget = 0,
+	HLSLTarget
+};
+
+enum ShaderType {
+	VertexShader = 0,
+	FragmentShader,
+	ComputeShader
+};
+
+enum ShaderUniformType {
+	InvalidUniformType = -1,
+	UniformFloat = 0,
+	UniformFloat2,
+	UniformFloat3,
+	UniformFloat4,
+	UniformInt,
+	UniformInt2,
+	UniformInt3,
+	UniformInt4,
+	UniformMat3,
+	UniformMat4
+};
+
+enum ShaderImageType { InvalidImageType = -1, Image2D = 0, ImageCube, Image3D, ImageArray }; // [todo] rename
+enum ShaderImageBaseType { InvalidImageBaseType = -1, ImageFloat = 0, ImageByte, ImageShort, ImageInt, ImageUByte, ImageUShort, ImageUInt }; // [todo] rename
+
+struct ShaderInfos {
+	ShaderType type;
+	ShaderLang lang;
+	uint32_t profile;
+};
+
+static sg_uniform_type ToSGUniformType(uint16_t type) {
+	sg_uniform_type ret = SG_UNIFORMTYPE_INVALID;
+	switch (type) {
+		case UniformFloat:
+			ret = SG_UNIFORMTYPE_FLOAT;
+			break;
+		case UniformFloat2:
+			ret = SG_UNIFORMTYPE_FLOAT2;
+			break;
+		case UniformFloat3:
+			ret = SG_UNIFORMTYPE_FLOAT3;
+			break;
+		case UniformFloat4:
+			ret = SG_UNIFORMTYPE_FLOAT4;
+			break;
+		case UniformInt:
+			ret = SG_UNIFORMTYPE_INT;
+			break;
+		case UniformInt2:
+			ret = SG_UNIFORMTYPE_INT2;
+			break;
+		case UniformInt3:
+			ret = SG_UNIFORMTYPE_INT3;
+			break;
+		case UniformInt4:
+			ret = SG_UNIFORMTYPE_INT3;
+			break;
+		case UniformMat4:
+			ret = SG_UNIFORMTYPE_MAT4;
+			break;
+		default:
+			ret = SG_UNIFORMTYPE_INVALID;
+			break;
+	}
+	return ret;
+}
+
+static sg_image_type ToImageType(uint8_t type) {
+	sg_image_type out;
+	switch (type) {
+		case Image2D:
+			out = SG_IMAGETYPE_2D;
+			break;
+		case ImageCube:
+			out = SG_IMAGETYPE_CUBE;
+			break;
+		case Image3D:
+			out = SG_IMAGETYPE_3D;
+			break;
+		case ImageArray:
+			out = SG_IMAGETYPE_ARRAY;
+			break;
+		default:
+			out = SG_IMAGETYPE_2D;
+			break;
+	};
+	return out;
+}
+
+static sg_sampler_type ToSamplerType(uint8_t type) {
+	sg_sampler_type out;
+	switch (type) {
+		case ImageFloat:
+			out = SG_SAMPLERTYPE_FLOAT;
+			break;
+		case ImageByte:
+		case ImageShort:
+		case ImageInt:
+			out = SG_SAMPLERTYPE_SINT;
+			break;
+		case ImageUByte:
+		case ImageUShort:
+		case ImageUInt:
+			out = SG_SAMPLERTYPE_UINT;
+			break;
+		default:
+			out = SG_SAMPLERTYPE_FLOAT;
+			break;
+	};
+	return out;
+}
+
+static char* Duplicate(const std::string &in) {
+	const size_t size = in.size();
+	char *out = new char[size+1];
+	if(!in.empty()) {
+		memcpy(out, in.data(), size);
+	}
+	out[size] = '\0';
+	return out;
+}
+
+static bool LoadShaderHeader(const Reader& ir, const Handle& handle, ShaderInfos &out) { 
+	static const uint8_t g_fourcc[4] = { 'H', 'G', 'S', 'L' };
+	static const uint8_t g_major_version = 0;
+	static const uint8_t g_minor_version = 0;
+
+	bool ret = true;
+	if (!ir.is_valid(handle)) {
+		ret = false;
+	} else {
+		uint8_t fourcc[4];
+		if (ir.read(handle, fourcc, 4) != 4) {
+			ret = false;
+		} else if (memcmp(fourcc, g_fourcc, 4)) {
+			ret = false;
+		} else {
+			uint8_t major, minor, lang, type;
+			if (!hg::Read<uint8_t>(ir, handle, major)) {
+				ret = false;
+			} else if (!hg::Read<uint8_t>(ir, handle, minor)) {
+				ret = false;
+			} else if ((major != g_major_version) || (minor != g_minor_version)) {
+				ret = false;
+			} else if (!hg::Read<uint8_t>(ir, handle, lang)) {
+				ret = false;
+			} else if (!hg::Read<uint8_t>(ir, handle, type)) {
+				ret = false;
+			} else if (!hg::Read<uint32_t>(ir, handle, out.profile)) {
+				ret = false;
+			} else {
+				switch(lang) {
+					case GLSLTarget:
+						out.lang = GLSLTarget;
+						break;
+					case HLSLTarget:
+						out.lang = HLSLTarget;
+						break;
+					default:
+						ret = false;
+				};
+				
+				switch(type) {
+					case VertexShader:
+						out.type = VertexShader;
+						break;
+					case FragmentShader:
+						out.type = FragmentShader;
+						break;
+					default:
+						ret = false;
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+static bool LoadShaderUniforms(const Reader &ir, const Handle &handle, sg_shader_stage_desc &out) {
+	bool ret = true;
+	uint16_t count;
+	ret = hg::Read<uint16_t>(ir, handle, count);
+	ret = ret && (count <= SG_MAX_SHADERSTAGE_UBS);
+	for (uint16_t i = 0; ret && (i < count); i++) {
+		out.uniform_blocks[i].layout = SG_UNIFORMLAYOUT_STD140;
+		
+		uint32_t binding;
+		std::string name;
+		uint32_t uniform_count;
+		uint32_t size;
+
+		if (!hg::Read<uint32_t>(ir, handle, binding)) {
+			ret = false;
+		} else if (!hg::Read(ir, handle, name)) {
+			ret = false;
+		} else if (!hg::Read<uint32_t>(ir, handle, size)) {
+			ret = false;
+		} else {
+			out.uniform_blocks[i].size = size;
+			if (!hg::Read<uint32_t>(ir, handle, uniform_count)) {
+				ret = false;
+			} else if (uniform_count >= SG_MAX_UB_MEMBERS) {
+				ret = false;
+			} else {
+				for (uint32_t j = 0; ret && (j < uniform_count); j++) {
+					uint32_t offset, array_count;
+					uint16_t type;
+					std::string name;
+					if (!hg::Read<uint32_t>(ir, handle, offset)) {
+						ret = false;
+					} else if (!hg::Read(ir, handle, name)) {
+						ret = false;
+					} else if(!hg::Read<uint16_t>(ir, handle, type)) {
+						ret = false;
+					} else if (!hg::Read<uint32_t>(ir, handle, array_count)) {
+						ret = false;
+					} else {
+						out.uniform_blocks[i].uniforms[j].type = ToSGUniformType(type);
+						out.uniform_blocks[i].uniforms[j].name = Duplicate(name);
+						out.uniform_blocks[i].uniforms[j].array_count = array_count;
+					}
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+static bool LoadShaderImages(const Reader &ir, const Handle &handle, sg_shader_stage_desc &out) {
+	bool ret = true;
+	uint16_t count;
+	ret = hg::Read<uint16_t>(ir, handle, count);
+	ret = ret && (count <= SG_MAX_SHADERSTAGE_IMAGES);
+	for (uint16_t i = 0; ret && (i < count); i++) {
+		uint32_t binding;
+		uint8_t type;
+		std::string name;
+		if (!hg::Read<uint32_t>(ir, handle, binding)) {
+			ret = false;
+		} else if (!hg::Read(ir, handle, name)) {
+			ret = false;
+		} else if (!hg::Read<uint8_t>(ir, handle, type)) {
+			ret = false;
+		} else if (!hg::Read<uint8_t>(ir, handle, type)) {
+			ret = false;
+		} else {
+			out.images[i].image_type = ToImageType(type);
+			out.images[i].sampler_type = ToSamplerType(type);
+			out.images[i].name = Duplicate(name);
+		}
+	}
+	return ret;
+}
+
+bool LoadShaderAttributes(const Reader &ir, const Handle &handle, sg_shader_attr_desc out[SG_MAX_VERTEX_ATTRIBUTES]) {
+	bool ret = true;
+	uint16_t count = 0;
+	if (!hg::Read<uint16_t>(ir, handle, count)) {
+		ret = false;
+	} else if (count > SG_MAX_VERTEX_ATTRIBUTES) {
+		ret = false;
+	} else {
+		for (uint16_t j = 0; ret && (j < count); j++) {
+			uint32_t location;
+			std::string name;
+			if (!hg::Read<uint32_t>(ir, handle, location)) {
+				ret = false;
+			} else if (location >= SG_MAX_VERTEX_ATTRIBUTES) {
+				ret = false;
+			} else if (!hg::Read(ir, handle, name)) {
+				ret = false;
+			} else {
+				out[location].name = Duplicate(name);
+			}
+		}
+	}
+	return ret;
+}
+
+static bool SkipShaderAttributes(const Reader &ir, const Handle &handle) {
+	bool ret = true;
+	uint16_t count = 0;
+	if (!hg::Read<uint16_t>(ir, handle, count)) {
+		ret = false;
+	} else {
+		for(uint16_t j=0; ret && (j<count); j++) {
+			if(!Skip<uint32_t>(ir, handle)) {
+				ret = false;
+			} else if(!SkipString(ir, handle)) {
+				ret = false;
+			}
+		}
+	}
+	return ret;
+}
+
+static bool LoadShaderSource(const Reader &ir, const Handle &handle, sg_shader_stage_desc &out) {
+	bool ret = true;
+	uint8_t binary;
+	uint32_t size;
+	if (!hg::Read<uint8_t>(ir, handle, binary)) {
+		ret = false;
+	} else if (!hg::Read<uint32_t>(ir, handle, size)) {
+		ret = false;
+	} else {
+		char *data = new char[size+(binary ? 0 : 1)];
+		if(data == nullptr) {
+			ret = false;
+		} else if(ir.read(handle, data, size) != size){
+			ret = false;
+		} else if(binary) {
+			out.bytecode.size = size;
+			out.bytecode.ptr = data;
+		} else {
+			data[size] = '\0';
+			out.source = data;
+		}
+	}
+	return ret;
+}
+
+static bool LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, ShaderType type, std::string &entry_point, sg_shader_attr_desc attr[SG_MAX_VERTEX_ATTRIBUTES], sg_shader_stage_desc &desc) {
+	bool ret = false;
+	ScopedReadHandle handle(ip, name);
+	if (ir.is_valid(handle)) {
+		ShaderInfos infos;
+		if (!LoadShaderHeader(ir, handle, infos)) {
+			ret = false;
+		} if(type != infos.type) {
+			ret = false;
+		} else {
+			if(!Read(ir, handle, entry_point)) {
+				ret = false;
+			} else {
+				ret = (type == VertexShader) ? LoadShaderAttributes(ir, handle, attr) : SkipShaderAttributes(ir, handle);
+				if(ret) {
+					if (!SkipShaderAttributes(ir, handle)) { // skip output
+						ret = false;
+					} else if (!LoadShaderUniforms(ir, handle, desc)) {
+						ret = false;
+					} else if (!LoadShaderImages(ir, handle, desc)) {
+						ret = false;
+					} else if(!LoadShaderSource(ir, handle, desc)) {
+						ret = false;
+					} else {
+						if(infos.lang == HLSLTarget) {
+							for(int i=0; i<SG_MAX_VERTEX_ATTRIBUTES; i++) {
+								attr[i].sem_name = "TEXCOORD";
+								attr[i].sem_index = i;
+							}
+
+							int major = infos.profile / 10;
+							int minor = infos.profile % 10;
+							std::string target = fmt::format("{}_{}_{}", infos.type ? "ps" : "vs", major, minor);
+							desc.d3d11_target = Duplicate(target);
+						}
+						ret = true;
+					}
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+static void Release(sg_shader_stage_desc &in) {
+	if(in.source) {
+		delete [] in.source;
+	}
+	if(in.bytecode.ptr) {
+		delete [] in.bytecode.ptr;
+	}
+	if(in.entry) {
+		delete [] in.entry;
+	}
+	if(in.d3d11_target) {
+		delete [] in.d3d11_target;
+	}
+	for(int i=0; i<SG_MAX_SHADERSTAGE_UBS; i++) {
+		for(int j=0; j<SG_MAX_UB_MEMBERS; j++) {
+			if(in.uniform_blocks[i].uniforms[j].name) {
+				delete [] in.uniform_blocks[i].uniforms[j].name;
+			}
+		}
+	}
+	for(int i=0; i<SG_MAX_SHADERSTAGE_IMAGES; i++) {
+		if(in.images[i].name) {
+			delete [] in.images[i].name;
+		}
+	}
+}
+
+static void Release(sg_shader_attr_desc &in) {
+	if(in.name) {
+		delete [] in.name;
+	}
+	// sem_name is a const string
+}
+
+static void Release(sg_shader_desc &in) {
+	for(int i=0; i<SG_MAX_VERTEX_ATTRIBUTES; i++) {
+		Release(in.attrs[i]);
+	}
+	Release(in.vs);
+	Release(in.fs);
+
+	if(in.label) {
+		delete [] in.label;
+	}
+	
+	memcpy(&in, 0, sizeof(sg_shader_desc));
+}
+
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent) {
+	Shader shader;
+	sg_shader_desc desc;
+
+	std::string vs_entry, fs_entry;
+
+	memset(&desc, 0, sizeof(sg_shader_desc));
+	
+	if(!LoadShader(ir, ip, vs_name, VertexShader, vs_entry, desc.attrs, desc.vs)) {
+		// [todo]
+	} if(!LoadShader(ir, ip, fs_name, FragmentShader, fs_entry, desc.attrs, desc.fs)) {
+		// [todo]
+	} else {
+		shader.shader = sg_make_shader(&desc);
+		// [todo] layout
+		// [todo] uniforms
+	}
+
+	Release(desc);
+
+	return shader;
+}
+
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
 	struct shader_vs_params {
 		Mat44 mvp;
