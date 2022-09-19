@@ -4,6 +4,7 @@
 #include "engine/assets_rw_interface.h"
 #include "engine/file_format.h"
 #include "engine/load_dds.h"
+#include "engine/shader.h"
 
 #include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
@@ -189,34 +190,6 @@ void VertexLayout::PackVertex(VertexAttribute semantic, const float* in, size_t 
 void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t* in, size_t in_count, int8_t* out) const {}
 
 // [todo] use some kind of string buffer?
-enum ShaderLang {		// [todo] put in a header file
-	GLSLTarget = 0,
-	HLSLTarget
-};
-
-enum ShaderType {
-	VertexShader = 0,
-	FragmentShader,
-	ComputeShader
-};
-
-enum ShaderUniformType {
-	InvalidUniformType = -1,
-	UniformFloat = 0,
-	UniformFloat2,
-	UniformFloat3,
-	UniformFloat4,
-	UniformInt,
-	UniformInt2,
-	UniformInt3,
-	UniformInt4,
-	UniformMat3,
-	UniformMat4
-};
-
-enum ShaderImageType { InvalidImageType = -1, Image2D = 0, ImageCube, Image3D, ImageArray }; // [todo] rename
-enum ShaderImageBaseType { InvalidImageBaseType = -1, ImageFloat = 0, ImageByte, ImageShort, ImageInt, ImageUByte, ImageUShort, ImageUInt }; // [todo] rename
-
 struct ShaderInfos {
 	ShaderType type;
 	ShaderLang lang;
@@ -563,7 +536,8 @@ static void Release(sg_shader_stage_desc &in) {
 		delete [] in.source;
 	}
 	if(in.bytecode.ptr) {
-		delete [] in.bytecode.ptr;
+		const char *ptr = reinterpret_cast<const char *>(in.bytecode.ptr);
+		delete [] ptr;
 	}
 	if(in.entry) {
 		delete [] in.entry;
