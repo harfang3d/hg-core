@@ -288,8 +288,12 @@ static char* Duplicate(const std::string &in) {
 	return out;
 }
 
+static inline uint32_t FourCC(char a, char b, char c, char d) {
+	return static_cast<unsigned char>(a) | (static_cast<unsigned char>(b) << 8) | (static_cast<unsigned char>(c) << 16) | (static_cast<unsigned char>(d) << 24);
+}
+
 static bool LoadShaderHeader(const Reader& ir, const Handle& handle, ShaderInfos &out) { 
-	static const uint8_t g_fourcc[4] = { 'H', 'G', 'S', 'L' };
+	static const uint32_t g_fourcc = FourCC('H','G','S','L');
 	static const uint8_t g_major_version = 0;
 	static const uint8_t g_minor_version = 0;
 
@@ -297,10 +301,10 @@ static bool LoadShaderHeader(const Reader& ir, const Handle& handle, ShaderInfos
 	if (!ir.is_valid(handle)) {
 		ret = false;
 	} else {
-		uint8_t fourcc[4];
-		if (ir.read(handle, fourcc, 4) != 4) {
+		uint32_t fourcc;
+		if (!hg::Read<uint32_t>(ir, handle, fourcc)) {
 			ret = false;
-		} else if (memcmp(fourcc, g_fourcc, 4)) {
+		} else if (fourcc != g_fourcc) {
 			ret = false;
 		} else {
 			uint8_t major, minor, lang, type;
