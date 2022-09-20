@@ -326,6 +326,7 @@ static bool LoadShaderHeader(const Reader& ir, const Handle& handle, ShaderInfos
 						break;
 					default:
 						ret = false;
+						break;
 				};
 				
 				switch(type) {
@@ -337,6 +338,7 @@ static bool LoadShaderHeader(const Reader& ir, const Handle& handle, ShaderInfos
 						break;
 					default:
 						ret = false;
+						break;
 				}
 			}
 		}
@@ -456,6 +458,8 @@ static bool SkipShaderAttributes(const Reader &ir, const Handle &handle) {
 				ret = false;
 			} else if(!SkipString(ir, handle)) {
 				ret = false;
+			} else {
+				ret = true;
 			}
 		}
 	}
