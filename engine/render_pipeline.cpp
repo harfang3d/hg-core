@@ -577,7 +577,7 @@ static void Release(sg_shader_desc &in) {
 		delete [] in.label;
 	}
 	
-	memcpy(&in, 0, sizeof(sg_shader_desc));
+	memset(&in, 0, sizeof(sg_shader_desc));
 }
 
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent) {
@@ -590,7 +590,7 @@ Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &v
 	
 	if(!LoadShader(ir, ip, vs_name, VertexShader, vs_entry, desc.attrs, desc.vs)) {
 		// [todo]
-	} if(!LoadShader(ir, ip, fs_name, FragmentShader, fs_entry, desc.attrs, desc.fs)) {
+	} else if(!LoadShader(ir, ip, fs_name, FragmentShader, fs_entry, desc.attrs, desc.fs)) {
 		// [todo]
 	} else {
 		shader.shader = sg_make_shader(&desc);
@@ -1074,7 +1074,7 @@ uint16_t *p_idx = (uint16_t *)data.data();
 		ir.read(h, data.data(), size); // load vertices
 		list.vertex_buffer = MakeVertexBuffer(data.data(), size);
 
-
+#if 0
 
 auto read_vtx_attrib = [](const legacy_VertexLayout &vs_decl, size_t vtx_idx, legacy_Attrib attr, const uint8_t *data) {
 	const size_t vtx_offset = vs_decl.m_stride * vtx_idx;
@@ -1089,7 +1089,7 @@ const auto v1 = read_vtx_attrib(vs_decl, 1, lA_Position, data.data());
 const auto v2 = read_vtx_attrib(vs_decl, 2, lA_Position, data.data());
 const auto v3 = read_vtx_attrib(vs_decl, 3, lA_Position, data.data());
 
-
+#endif
 
 		// bones table
 		size = Read<uint32_t>(ir, h);

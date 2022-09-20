@@ -355,6 +355,8 @@ struct Shader { // 20B
 	ShaderUniforms uniforms; // uniforms
 };
 
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent);
+
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
 Shader LoadShaderFromFile(const std::string &path, bool silent = false);
 Shader LoadShaderFromAssets(const std::string &name, bool silent = false);

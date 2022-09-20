@@ -41,6 +41,7 @@ set(TEST_ENGINE_SRCS
 	engine/node.cpp
 	engine/picture.cpp
 	engine/resource_cache.cpp
+	engine/render_pipeline.cpp
 	engine/scene.cpp
 )
 

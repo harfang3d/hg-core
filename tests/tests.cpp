@@ -43,6 +43,7 @@ extern void test_anim();
 extern void test_node();
 extern void test_picture();
 extern void test_resource_cache();
+extern void test_render_pipeline();
 extern void test_scene();
 
 //
@@ -89,6 +90,7 @@ TEST_LIST = {
 	{"engine.node", test_node},
 	{"engine.picture", test_picture},
 	{"engine.resource_cache", test_resource_cache},
+	{"engine.render_pipeline", test_render_pipeline},
 	{"engine.scene", test_scene},
 	 
 	{NULL, NULL},
