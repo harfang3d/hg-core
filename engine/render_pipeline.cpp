@@ -1011,23 +1011,24 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 	ProfilerPerfSection section("LoadModel", name);
 
 	const time_ns t = time_now();
+	Model model;
 
 	if (!ir.is_valid(h)) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', invalid file handle", name));
-		return Model();
+		return model;
 	}
 
 	if (Read<uint32_t>(ir, h) != HarfangMagic) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', invalid magic marker", name));
-		return Model();
+		return model;
 	}
 
 	if (Read<uint8_t>(ir, h) != ModelMarker) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', invalid file marker", name));
-		return Model();
+		return model;
 	}
 
 	const uint8_t version = Read<uint8_t>(ir, h);
@@ -1035,13 +1036,12 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 	if (version > 2) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', unsupported version {}", name, version));
-		return Model();
+		return model;
 	}
 
 	legacy_VertexLayout vs_decl;
 	ir.read(h, &vs_decl, sizeof(legacy_VertexLayout)); // read vertex declaration
 
-	Model model;
 	legacy_VertexLayoutToVertexLayout(vs_decl, model.vtx_layout);
 
 	uint32_t tri_count = 0;
@@ -1064,12 +1064,10 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 				break; // EOLists
 
 		DisplayList list;
+		list.index_type_size = idx_type_size;
 
 		data.resize(size);
 		ir.read(h, data.data(), size); // load indices
-
-uint16_t *p_idx = (uint16_t *)data.data();
-
 
 		list.element_count = size / idx_type_size; // index count
 		list.index_buffer = MakeIndexBuffer(data.data(), size);
@@ -1081,23 +1079,6 @@ uint16_t *p_idx = (uint16_t *)data.data();
 		data.resize(size);
 		ir.read(h, data.data(), size); // load vertices
 		list.vertex_buffer = MakeVertexBuffer(data.data(), size);
-
-#if 0
-
-auto read_vtx_attrib = [](const legacy_VertexLayout &vs_decl, size_t vtx_idx, legacy_Attrib attr, const uint8_t *data) {
-	const size_t vtx_offset = vs_decl.m_stride * vtx_idx;
-	const size_t offset = vs_decl.m_offset[attr];
-
-	const Vec3 *pos = reinterpret_cast<const Vec3 *>(&data[vtx_offset + offset]);
-	return pos;
-};
-
-const auto v0 = read_vtx_attrib(vs_decl, 0, lA_Position, data.data());
-const auto v1 = read_vtx_attrib(vs_decl, 1, lA_Position, data.data());
-const auto v2 = read_vtx_attrib(vs_decl, 2, lA_Position, data.data());
-const auto v3 = read_vtx_attrib(vs_decl, 3, lA_Position, data.data());
-
-#endif
 
 		// bones table
 		size = Read<uint32_t>(ir, h);

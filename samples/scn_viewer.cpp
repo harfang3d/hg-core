@@ -26,11 +26,17 @@ using namespace hg;
 
 
 //
-sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, const ShaderLayout &shader_layout) {
+sg_pipeline MakePipeline(const VertexLayout &vertex_layout, sg_shader shader, const ShaderLayout &shader_layout, uint8_t index_type_size) {
 	sg_pipeline_desc pipeline_desc;
 
 	memset(&pipeline_desc, 0, sizeof(sg_pipeline_desc));
-	pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+
+	if (index_type_size == 4) {
+		pipeline_desc.index_type = SG_INDEXTYPE_UINT32;
+	} else if (index_type_size == 2) {
+		pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+	}
+
 	pipeline_desc.shader = shader;
 
 	pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
@@ -71,7 +77,7 @@ void BindObject(Scene::Object_ &obj, const PipelineResources &resources) {
 		bound_list.bindings.index_buffer = list.index_buffer;
 		bound_list.bindings.vertex_buffers[0] = list.vertex_buffer;
 
-		bound_list.pipeline = MakePipeline(mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout); // MUST BE REMADE ON SHADER CHANGE!
+		bound_list.pipeline = MakePipeline(mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout, list.index_type_size); // MUST BE REMADE ON SHADER CHANGE!
 	}
 }
 

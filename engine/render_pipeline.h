@@ -413,6 +413,7 @@ bool LoadPipelineProgramUniformsFromAssets(
 //
 struct DisplayList { // 4B
 	size_t element_count;
+	uint8_t index_type_size;
 	sg_buffer index_buffer;
 	sg_buffer vertex_buffer;
 	std::vector<uint16_t> bones_table;
