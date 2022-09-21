@@ -6,6 +6,7 @@
 
 #include "foundation/profiler.h"
 #include "foundation/projection.h"
+#include "foundation/clock.h"
 
 #include "engine/assets.h"
 #include "engine/scene.h"
@@ -219,32 +220,34 @@ int main(int narg, const char **args) {
 	sg_pass_action pass_action = {0};
 
 
+
+	const std::vector<SceneAnimRef> scene_anims = scene.GetSceneAnims();
+
+	if (!scene_anims.empty()) {
+		const SceneAnimRef scene_anim_ref = scene_anims[0];
+		scene.PlayAnim(scene_anim_ref, ALM_Loop);
+	}
+
+
+	reset_clock();
+
 	while (!glfwWindowShouldClose(win)) {
-		scene.Update(0);
+		const time_ns dt_clock = tick_clock();
 
-/*
-		const Mat4 camera_world = TransformationMat4(pos, rot);
-		const Mat44 projection = ComputePerspectiveProjectionMatrix(0.1f, 1000.f, 3.2f, ComputeAspectRatioX(640.f, 480.f));
+		scene.Update(dt_clock);
 
-		ViewState view_state;
-		view_state.proj = projection;
-		view_state.view = InverseFast(camera_world);
-		view_state.frustum = MakeFrustum(projection, camera_world);
-*/
+		int width, height;
+		glfwGetFramebufferSize(win, &width, &height);
 
-		const ViewState view_state = scene.ComputeCurrentCameraViewState(ComputeAspectRatioX(640.f, 480.f));
+
+		const ViewState view_state = scene.ComputeCurrentCameraViewState(ComputeAspectRatioX(width, height));
 
 		// SubmitSceneToPipeline(scene, view_state, resources);
 
 		const Mat44 vp = view_state.proj * view_state.view;
 
-
-
 		//
-		int cur_width, cur_height;
-		glfwGetFramebufferSize(win, &cur_width, &cur_height);
-
-		sg_begin_default_pass(&pass_action, cur_width, cur_height);
+		sg_begin_default_pass(&pass_action, width, height);
 
 
 

@@ -178,7 +178,7 @@ void LoadInstanceAnimTrack(const Reader &ir, const Handle &h, AnimTrackT<Instanc
 		AnimKeyT<InstanceAnimKey> &key = track.keys[i];
 		Read(ir, h, key.t);
 		Read(ir, h, key.v.anim_name);
-		Read(ir, h, key.v.loop_mode);
+		key.v.loop_mode = AnimLoopMode(Read<uint8_t>(ir, h));
 		Read(ir, h, key.v.t_scale);
 	}
 }

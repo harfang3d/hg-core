@@ -56,8 +56,12 @@ struct ZipPackage {
 	mz_zip_archive archive;
 	std::string filename;
 
-	ZipPackage() { mz_zip_zero_struct(&archive); }
-	~ZipPackage() { mz_zip_reader_end(&archive); }
+	ZipPackage() {
+		mz_zip_zero_struct(&archive);
+	}
+	~ZipPackage() {
+		mz_zip_reader_end(&archive);
+	}
 };
 
 static std::deque<ZipPackage> assets_packages;
@@ -106,15 +110,35 @@ struct Asset_ {
 };
 
 //
-static size_t Asset_file_GetSize(Asset_ &asset) { return GetSize(asset.file); }
-static size_t Asset_file_Read(Asset_ &asset, void *data, size_t size) { return Read(asset.file, data, size); }
-static bool Asset_file_Seek(Asset_ &asset, ptrdiff_t offset, SeekMode mode) { return Seek(asset.file, offset, mode); }
-static size_t Asset_file_Tell(Asset_ &asset) { return Tell(asset.file); }
-static void Asset_file_Close(Asset_ &asset) { Close(asset.file); }
-static bool Asset_file_is_EOF(Asset_ &asset) { return IsEOF(asset.file); }
+static size_t Asset_file_GetSize(Asset_ &asset) {
+	return GetSize(asset.file);
+}
+
+static size_t Asset_file_Read(Asset_ &asset, void *data, size_t size) {
+	return Read(asset.file, data, size);
+}
+
+static bool Asset_file_Seek(Asset_ &asset, ptrdiff_t offset, SeekMode mode) {
+	return Seek(asset.file, offset, mode);
+}
+
+static size_t Asset_file_Tell(Asset_ &asset) {
+	return Tell(asset.file);
+}
+
+static void Asset_file_Close(Asset_ &asset) {
+	Close(asset.file);
+}
+
+static bool Asset_file_is_EOF(Asset_ &asset) {
+	return IsEOF(asset.file);
+}
 
 //
-static size_t Package_file_GetSize(Asset_ &asset) { return asset.pkg_file.data.size(); }
+static size_t Package_file_GetSize(Asset_ &asset) {
+	return asset.pkg_file.data.size();
+}
+
 static size_t Package_file_Read(Asset_ &asset, void *data, size_t size) {
 	size_t n = 0;
 	if (asset.pkg_file.cursor + size <= asset.pkg_file.data.size()) {
@@ -124,6 +148,7 @@ static size_t Package_file_Read(Asset_ &asset, void *data, size_t size) {
 	}
 	return n;
 }
+
 static bool Package_file_Seek(Asset_ &asset, ptrdiff_t offset, SeekMode mode) {
 	unused(mode);
 	bool ret = false;
@@ -133,11 +158,18 @@ static bool Package_file_Seek(Asset_ &asset, ptrdiff_t offset, SeekMode mode) {
 	}
 	return ret;
 }
-static size_t Package_file_Tell(Asset_ &asset) { return asset.pkg_file.cursor; }
+
+static size_t Package_file_Tell(Asset_ &asset) {
+	return asset.pkg_file.cursor;
+}
+
 static void Package_file_Close(Asset_ &asset) {
 	unused(asset);
 }
-static bool Package_file_is_EOF(Asset_ &asset) { return asset.pkg_file.cursor >= asset.pkg_file.data.size(); }
+
+static bool Package_file_is_EOF(Asset_ &asset) {
+	return asset.pkg_file.cursor >= asset.pkg_file.data.size();
+}
 
 //
 static generational_vector_list<Asset_> assets;
@@ -155,7 +187,7 @@ std::string FindAssetPath(const std::string &name) {
 
 Asset OpenAsset(const std::string &name, bool silent) {
 	Asset asset;
-	
+
 	// look on filesystem
 	for (std::deque<std::string>::iterator i = assets_folders.begin(); i != assets_folders.end(); ++i) {
 		const std::string asset_path = PathJoin(*i, name);
@@ -211,9 +243,11 @@ Asset OpenAsset(const std::string &name, bool silent) {
 			break;
 		}
 	}
+
 	if (!silent && !assets.is_valid(asset.ref)) {
 		warn(fmt::format("Failed to open asset '{}' (file not found)", name));
 	}
+
 	return asset;
 }
 

@@ -11,6 +11,21 @@ namespace hg {
 bool RenderInit(GLFWwindow *win) {
 	sg_desc desc;
 	memset(&desc, 0, sizeof(sg_desc));
+
+	desc.buffer_pool_size = 512;
+	desc.shader_pool_size = 4096;
+	desc.image_pool_size = 512;
+	desc.pipeline_pool_size = 4096;
+
+/*
+	int pipeline_pool_size;
+	int pass_pool_size;
+	int context_pool_size;
+	int uniform_buffer_size;
+	int staging_buffer_size;
+	int sampler_cache_size;
+*/
+
 	sg_setup(&desc);
 
 	return true;

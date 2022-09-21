@@ -70,7 +70,7 @@ ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear,
 	return out;
 }
 
-// l
+//
 Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Vec3 &scale) {
 	return ComputeBillboardMat4(pos, Transpose(GetRotationMatrix(view_state.view)), scale);
 }
