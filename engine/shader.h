@@ -5,12 +5,14 @@
 namespace hg {
 
 enum ShaderType {
+	InvalidShaderType = -1,
 	VertexShader = 0,
 	FragmentShader,
 	ComputeShader
 };
 
 enum ShaderLang {
+	InvalidShaderLang = -1,
 	GLSLTarget = 0,
 	HLSLTarget
 };
