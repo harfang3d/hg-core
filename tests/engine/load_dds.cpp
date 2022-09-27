@@ -28,7 +28,9 @@ void test_load_dds() {
 	for (std::vector<DirEntry>::iterator it = entries.begin(); it != entries.end(); ++it) {
 		std::string filename = PathJoin("data", it->name);
 		Handle h = g_file_read_provider.open(filename, false);
+#ifdef ENABLE_BINARY_DEBUG_HANDLE
 		h.debug = false;
+#endif
 		Texture tex = LoadDDS(g_file_reader, h, filename);
 		TEST_CHECK(tex.image.id != SG_INVALID_ID);
 		Destroy(tex);
