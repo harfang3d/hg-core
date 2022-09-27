@@ -9,7 +9,9 @@
 
 #include "engine/load_dds.h"
 
+#if !defined(SOKOL_DUMMY_BACKEND)
 #include "app_glfw/app_glfw.h"
+#endif
 
 using namespace hg;
 
