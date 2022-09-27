@@ -214,10 +214,10 @@ int main(int narg, const char **args) {
 //Node node = scene.GetNodeEx("scene_range:Car01_Body/Car01_Body_LOD0");
 //Scene::Object_ &obj = scene.objects[node.GetObject().ref.idx];
 
-	const auto objects = scene.GetAllNodesWithComponent(NCI_Object);
+	const std::vector<Node> objects = scene.GetAllNodesWithComponent(NCI_Object);
 
-	for (auto &node : objects) {
-		Scene::Object_ &obj = scene.objects[node.GetObject().ref.idx];
+	for (std::vector<Node>::const_iterator it = objects.begin(); it != objects.end(); ++it) {
+		Scene::Object_ &obj = scene.objects[it->GetObject().ref.idx];
 		BindObject(obj, resources);
 	}
 
@@ -257,10 +257,10 @@ int main(int narg, const char **args) {
 
 
 
-		for (auto &node : objects) {
-			Scene::Object_ &obj = scene.objects[node.GetObject().ref.idx];
+		for (std::vector<Node>::const_iterator it = objects.begin(); it != objects.end(); ++it) {
+			Scene::Object_ &obj = scene.objects[it->GetObject().ref.idx];
 
-			const Mat4 world = node.GetTransform().GetWorld();
+			const Mat4 world = it->GetTransform().GetWorld();
 			const Mat44 mvp = vp * world;
 
 			DrawObject(obj, resources, mvp);
