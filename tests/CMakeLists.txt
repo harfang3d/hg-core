@@ -43,11 +43,21 @@ set(TEST_ENGINE_SRCS
 	engine/resource_cache.cpp
 	engine/render_pipeline.cpp
 	engine/scene.cpp
+	engine/load_dds.cpp
 )
 
 add_executable(tests tests.cpp utils.cpp utils.h ${TEST_FOUNDATION_SRCS} ${TEST_ENGINE_SRCS})
 target_link_libraries(tests PUBLIC engine foundation)
+if(NOT HG_ENGINE_BACKEND STREQUAL "SOKOL_DUMMY_BACKEND")
+	target_link_libraries(tests PUBLIC app_glfw)
+endif()
 target_include_directories(tests PUBLIC extern/acutest)
+
+add_custom_command(TARGET tests
+	POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data ${PROJECT_BINARY_DIR}/data
+	COMMENT "Copy test assets"
+)
 
 if(HG_ENABLE_COVERAGE)
 	set(COVERAGE_EXCLUDES

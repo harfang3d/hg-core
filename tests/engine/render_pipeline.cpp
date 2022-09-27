@@ -7,6 +7,8 @@
 
 #include "engine/render_pipeline.h"
 
+#include "app_glfw/app_glfw.h"
+
 using namespace hg;
 
 static Handle dummy_read_provider_open_impl(const std::string &path, bool silent) {
@@ -85,11 +87,19 @@ static void test_shader_load() {
 }
 
 void test_render_pipeline() {
+#if defined(SOKOL_DUMMY_BACKEND)
 	sg_desc desc;
 	memset(&desc, 0, sizeof(sg_desc));
 	sg_setup(desc);
+#else
+	GLFWwindow *win = RenderInit(640, 480, "test_load_dds");
+#endif
 
 	test_shader_load();
 
+#if defined(SOKOL_DUMMY_BACKEND)
 	sg_shutdown();
+#else
+	RenderShutdown();
+#endif
 }

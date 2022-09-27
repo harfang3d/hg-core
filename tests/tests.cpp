@@ -45,6 +45,7 @@ extern void test_picture();
 extern void test_resource_cache();
 extern void test_render_pipeline();
 extern void test_scene();
+extern void test_load_dds();
 
 //
 TEST_LIST = {
@@ -92,6 +93,7 @@ TEST_LIST = {
 	{"engine.resource_cache", test_resource_cache},
 	{"engine.render_pipeline", test_render_pipeline},
 	{"engine.scene", test_scene},
-	 
+	{"engine.load_dds", test_load_dds},
+
 	{NULL, NULL},
 };
