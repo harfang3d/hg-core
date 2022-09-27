@@ -28,6 +28,8 @@ void test_load_dds() {
 		Handle h = g_file_read_provider.open(filename, false);
 		h.debug = false;
 		Texture tex = LoadDDS(g_file_reader, h, filename);
+		TEST_CHECK(tex.image.id != SG_INVALID_ID);
+		Destroy(tex);
 		g_file_read_provider.close(h);
 	}
 

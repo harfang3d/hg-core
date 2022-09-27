@@ -136,6 +136,18 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 							}
 						}
 					}
+					
+					sg_image_desc desc;
+					memset(&desc, 0, sizeof(sg_image_desc));
+					desc.width = header.dwWidth;
+					desc.height = header.dwHeight;
+					desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+					desc.min_filter = SG_FILTER_LINEAR;
+					desc.mag_filter = SG_FILTER_LINEAR;
+					desc.num_mipmaps = 1;
+					desc.data.subimage[0][0].ptr = &rgba[0];
+					desc.data.subimage[0][0].size = rgba.size();
+					tex.image = sg_make_image(&desc);
 				} else {
 					warn(fmt::format("    Unsupported bit count: {}", header.ddpfPixelFormat.dwRGBBitCount));
 				}
