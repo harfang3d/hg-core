@@ -58,6 +58,29 @@ static void test_shader_load() {
 	const ReadProvider dummy_read_provider = {dummy_read_provider_open_impl, dummy_read_provide_close_impl, dummy_read_provider_is_file_impl};
 	Shader sh = LoadShader(g_data_reader, dummy_read_provider, "dummy program", false);
 	TEST_CHECK(sh.shader.id != SG_INVALID_ID);
+	TEST_CHECK(sh.layout.attrib[0] == VA_Position);
+	TEST_CHECK(sh.layout.attrib[1] == VA_Normal);
+	for (int i = 2; i < SG_MAX_VERTEX_ATTRIBUTES; i++) {
+		TEST_CHECK(sh.layout.attrib[i] == VA_Count);
+	}
+	TEST_CHECK(sh.uniforms[0].layout == SG_UNIFORMLAYOUT_STD140);
+	TEST_CHECK(sh.uniforms[0].uniform[0].name == "u_mtx.modelViewProj");
+	TEST_CHECK(sh.uniforms[0].uniform[0].type == SG_UNIFORMTYPE_MAT4);
+	TEST_CHECK(sh.uniforms[0].uniform[0].count == 0);
+	for (int j = 1; j < SG_MAX_UB_MEMBERS; j++) {
+		TEST_CHECK(sh.uniforms[0].uniform[j].name.empty());
+		TEST_CHECK(sh.uniforms[0].uniform[j].type == SG_UNIFORMTYPE_INVALID);
+		TEST_CHECK(sh.uniforms[0].uniform[j].count == 0);
+	}
+		 
+	for (int i = 1; i < SG_MAX_SHADERSTAGE_UBS; i++) {
+		TEST_CHECK(sh.uniforms[i].layout == _SG_UNIFORMLAYOUT_DEFAULT);
+		for (int j = 0; j < SG_MAX_UB_MEMBERS; j++) {
+			TEST_CHECK(sh.uniforms[i].uniform[j].name.empty());
+			TEST_CHECK(sh.uniforms[i].uniform[j].type == SG_UNIFORMTYPE_INVALID);
+			TEST_CHECK(sh.uniforms[i].uniform[j].count == 0);
+		}
+	}
 	sg_destroy_shader(sh.shader);
 }
 
