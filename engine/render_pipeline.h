@@ -331,10 +331,10 @@ static const Vec4 default_pssm_split = Vec4(10.F, 50.F, 100.F, 500.F);
 
 //
 struct ShaderUniform {
-	ShaderUniform() : type(SG_UNIFORMTYPE_INVALID) {}
-
+	ShaderUniform() : type(SG_UNIFORMTYPE_INVALID), count(0) {}
 	std::string name;
 	sg_uniform_type type;
+	int count;
 };
 
 struct ShaderUniforms {
@@ -352,7 +352,9 @@ struct Shader { // 20B
 	sg_shader shader;
 
 	ShaderLayout layout; // attributes
-	ShaderUniforms uniforms; // uniforms
+	// [todo] There's SG_MAX_SHADERSTAGE_UBS per stages. This means that for a standard program with a vertex and fragment program we can have a total of SG_MAX_SHADERSTAGE_UBS * 2 uniforms.
+	// [todo] This can make sense when shaders are loaded separately but not when we loaded a "complete" program where uniforms have been merged across stages.
+	ShaderUniforms uniforms[SG_MAX_SHADERSTAGE_UBS]; // uniforms
 };
 
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent);

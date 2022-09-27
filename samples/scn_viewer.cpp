@@ -163,7 +163,7 @@ void DrawObject(Scene::Object_ &obj, PipelineResources &resources, const Mat44 &
 		sg_apply_bindings(bound_list.bindings);
 
 		// TODO set uniform values
-		const int mvp_idx = GetUniformDataIndex("mvp", program.shader);
+		const int mvp_idx = GetUniformDataIndex("u_mtx.modelViewProj", program.shader);
 		SetUniformDataValue(mat.uniform_data, mvp_idx, Mat44_to_sokol(mvp));
 
 		//
