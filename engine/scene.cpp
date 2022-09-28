@@ -1637,8 +1637,9 @@ bool Scene::NodeSetupInstance(
 		ctx.recursion_level = recursion_level;
 
 		{
-			const Instance_ &i_ = instances[i->second.idx];
-			if (!LoadScene(ir, ScopedReadHandle(ip, i_.name, flags & LSSF_Silent), i_.name, *this, ir, ip, resources, pipeline, ctx, flags))
+			// Be carefull! We must copy the string as the instances buffer can be reallocated.
+			std::string str = instances[i->second.idx].name;
+			if (!LoadScene(ir, ScopedReadHandle(ip, str, flags & LSSF_Silent), str, *this, ir, ip, resources, pipeline, ctx, flags))
 				return false;
 		}
 

@@ -782,7 +782,6 @@ bool SaveMaterialToFile(const std::string &path, const Material &m, const Pipeli
 Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
 	ScopedReadHandle h(ip, name, silent);
 	return ir.is_valid(h) ? LoadDDS(ir, h, name) : Texture();
-//	return Texture();
 }
 
 Texture LoadTextureFromFile(const std::string &path, bool silent) {
