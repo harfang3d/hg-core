@@ -7,9 +7,7 @@
 
 #include "engine/render_pipeline.h"
 
-#if !defined(SOKOL_DUMMY_BACKEND)
-#include "app_glfw/app_glfw.h"
-#endif
+#include "../utils.h"
 
 using namespace hg;
 
@@ -89,19 +87,9 @@ static void test_shader_load() {
 }
 
 void test_render_pipeline() {
-#if defined(SOKOL_DUMMY_BACKEND)
-	sg_desc desc;
-	memset(&desc, 0, sizeof(sg_desc));
-	sg_setup(desc);
-#else
-	GLFWwindow *win = RenderInit(640, 480, "test_load_dds");
-#endif
+	(void)hg::test::RenderInit(640, 480, "test_load_dds");
 
 	test_shader_load();
 
-#if defined(SOKOL_DUMMY_BACKEND)
-	sg_shutdown();
-#else
-	RenderShutdown();
-#endif
+	hg::test::RenderShutdown();
 }

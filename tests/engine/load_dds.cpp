@@ -9,20 +9,12 @@
 
 #include "engine/load_dds.h"
 
-#if !defined(SOKOL_DUMMY_BACKEND)
-#include "app_glfw/app_glfw.h"
-#endif
+#include "../utils.h"
 
 using namespace hg;
 
 void test_load_dds() {
-#if defined(SOKOL_DUMMY_BACKEND)
-	sg_desc desc;
-	memset(&desc, 0, sizeof(sg_desc));
-	sg_setup(desc);
-#else
-	GLFWwindow *win = RenderInit(640, 480, "test_load_dds");
-#endif
+	(void)hg::test::RenderInit(640, 480, "test_load_dds");
 
 	std::vector<DirEntry> entries = ListDir("data", DE_File);
 	for (std::vector<DirEntry>::iterator it = entries.begin(); it != entries.end(); ++it) {
@@ -37,9 +29,5 @@ void test_load_dds() {
 		g_file_read_provider.close(h);
 	}
 
-#if defined(SOKOL_DUMMY_BACKEND)
-	sg_shutdown();
-#else
-	RenderShutdown();
-#endif
+	hg::test::RenderShutdown();
 }

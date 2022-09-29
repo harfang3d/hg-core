@@ -8,6 +8,10 @@
 
 #include <stdio.h>
 
+#if !defined(SOKOL_DUMMY_BACKEND)
+#include "app_glfw/app_glfw.h"
+#endif
+
 namespace hg {
 namespace test {
 
@@ -83,6 +87,25 @@ std::string CreateTempFilepath() {
 	out = tmpnam(NULL);
 #endif
 	return out;
+}
+
+uintptr_t RenderInit(int width, int height, const std::string &name) {
+#if defined(SOKOL_DUMMY_BACKEND)
+	sg_desc desc;
+	memset(&desc, 0, sizeof(sg_desc));
+	sg_setup(desc);
+	return 0xcaffe;
+#else
+	return reinterpret_cast<uintptr_t>(hg::RenderInit(width, height, name.c_str()));
+#endif
+}
+
+void RenderShutdown() {
+#if defined(SOKOL_DUMMY_BACKEND)
+	sg_shutdown();
+#else
+	hg::RenderShutdown();
+#endif
 }
 
 } // namespace test
