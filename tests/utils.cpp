@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 
+#include <sokol_gfx.h>
+
 #if !defined(SOKOL_DUMMY_BACKEND)
 #include "app_glfw/app_glfw.h"
 #endif

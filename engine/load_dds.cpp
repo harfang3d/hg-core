@@ -558,7 +558,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 }
 	
 // 
-static inline size_t BytesPerPixel(sg_pixel_format fmt, int width, int height) {
+static inline size_t FrameSize(sg_pixel_format fmt, int width, int height) {
 	size_t size;
 	if (((fmt >= SG_PIXELFORMAT_BC1_RGBA) && (fmt <= SG_PIXELFORMAT_BC7_RGBA)) || (fmt == SG_PIXELFORMAT_ETC2_RGB8)) {
 		size_t block_size;
@@ -696,8 +696,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 						int d = desc.num_slices;
 
 						for (size_t i = 0; i < desc.num_mipmaps; i++) {
-							const size_t bytes_per_pixel = BytesPerPixel(desc.pixel_format, w, h);
-							const size_t size = d * bytes_per_pixel;
+							const size_t size = d * FrameSize(desc.pixel_format, w, h);
 
 							desc.data.subimage[j][i].ptr = ptr;
 							desc.data.subimage[j][i].size = size;
