@@ -620,7 +620,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 			}
 
 			// check for DXT10 extended header.
-			if ((header.ddpfPixelFormat.dwFlags & DDPF_FOURCC) && (header.ddpfPixelFormat.dwFourCC == FOURCC_DX10)) {
+			if (((header.ddpfPixelFormat.dwFlags & DDPF_FOURCC) == DDPF_FOURCC) && (header.ddpfPixelFormat.dwFourCC == FOURCC_DX10)) {
 				DDSHEADERDXT10 ext_header;
 				if (ir.read(h, &ext_header, sizeof(DDSHEADERDXT10)) != sizeof(DDSHEADERDXT10)) {
 					warn("    Failed to read extented header");
@@ -632,7 +632,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 						} else {
 							desc.type = SG_IMAGETYPE_2D;
 						}
-					} else if ((ext_header.resourceDimension == 4) && (header.dwFlags & DDSD_VOLUME)) {
+					} else if ((ext_header.resourceDimension == 4) && ((header.dwFlags & DDSD_VOLUME) == DDSD_VOLUME)) {
 						desc.type = SG_IMAGETYPE_3D;
 					} else {
 						warn("    Invalid image type");
@@ -641,7 +641,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 			} else {
 				if (header.ddpfPixelFormat.dwFlags & DDPF_FOURCC) {
 					desc.pixel_format = FromFourCC(header.ddpfPixelFormat.dwFourCC);
-				} else if ((header.ddpfPixelFormat.dwFlags & DDPF_RGB) && (header.ddpfPixelFormat.dwRGBBitCount == 32)) {
+				} else if (((header.ddpfPixelFormat.dwFlags & DDPF_RGB) == DDPF_RGB) && (header.ddpfPixelFormat.dwRGBBitCount == 32)) {
 					if ((header.ddpfPixelFormat.dwGBitMask == 0x0000ff00U) &&
 						((header.ddpfPixelFormat.dwRBitMask | header.ddpfPixelFormat.dwBBitMask) == 0x00ff00ffU)) {
 						if (header.ddpfPixelFormat.dwFlags & DDPF_ALPHAPIXELS) {
@@ -707,13 +707,13 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 							w >>= 1;
 							h >>= 1;
 							d >>= 1;
-							if (!w) {
+							if (w == 0) {
 								w = 1;
 							}
-							if (!h) {
+							if (h == 0) {
 								h = 1;
 							}
-							if (!d) {
+							if (d == 0) {
 								d = 1;
 							}
 						}
