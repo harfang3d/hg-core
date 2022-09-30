@@ -678,8 +678,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 				}
 				
 				log(fmt::format("Load DDS '{}'", name));
-				log(fmt::format("    Size: {}x{}x{} Mips: {}", desc.width, desc.height, desc.num_slices, desc.num_mipmaps));
-				// [todo] format / image type
+				log(fmt::format("    Size: {}x{}x{} Mips: {} Type: {} Format: {}", desc.width, desc.height, desc.num_slices, desc.num_mipmaps, desc.type, desc.pixel_format));
 
 				const size_t size = ir.size(h);
 				const size_t remaining = size - ir.tell(h);
