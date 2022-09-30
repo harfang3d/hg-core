@@ -7,6 +7,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 #include <sokol_gfx.h>
 
