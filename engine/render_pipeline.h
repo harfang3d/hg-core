@@ -344,6 +344,14 @@ struct ShaderUniforms {
 	sg_uniform_layout layout;
 };
 
+struct ShaderImage {
+	std::string name;
+};
+
+struct ShaderImages {
+	ShaderImage images[SG_MAX_SHADERSTAGE_IMAGES];
+};
+
 struct Shader { // 20B
 	Shader() {
 		shader.id = SG_INVALID_ID;
@@ -352,9 +360,11 @@ struct Shader { // 20B
 	sg_shader shader;
 
 	ShaderLayout layout; // attributes
-	// [todo] There's SG_MAX_SHADERSTAGE_UBS per stages. This means that for a standard program with a vertex and fragment program we can have a total of SG_MAX_SHADERSTAGE_UBS * 2 uniforms.
-	// [todo] This can make sense when shaders are loaded separately but not when we loaded a "complete" program where uniforms have been merged across stages.
+	// [todo] There's SG_MAX_SHADERSTAGE_UBS per stages. This means that for a standard program with a vertex and fragment program we can have a total of
+	// SG_MAX_SHADERSTAGE_UBS * 2 uniforms. [todo] This can make sense when shaders are loaded separately but not when we loaded a "complete" program where
+	// uniforms have been merged across stages.
 	ShaderUniforms uniforms[SG_MAX_SHADERSTAGE_UBS]; // uniforms
+	ShaderImages images; // images
 };
 
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent);
@@ -500,7 +510,8 @@ template <typename T> T GetUniformDataValue(const UniformData &data, const int i
 }
 
 template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
-	*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
+	if (index != -1)
+		*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
 }
 
 const void *GetUniformDataPtr(const UniformData &data);
