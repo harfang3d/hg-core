@@ -187,13 +187,16 @@ void BindObject(Scene::Object_ &obj, const PipelineResources &resources) {
 
 		for (std::map<std::string, Material::Texture>::const_iterator i = mat.textures.begin(); i != mat.textures.end(); ++i) {
 
-			for (int j = 0; j < SG_MAX_SHADERSTAGE_IMAGES; ++j) {
-				if (i->first == pipeline_shader.shader.images.images[j].name) {
-					const Texture &tex = resources.textures.Get(i->second.texture);
-					bound_list.bindings.fs_images[j].id = tex.image.id;
+			for (int k = 0; k < SG_NUM_SHADER_STAGES; k++) {
+				sg_image *img = (k == 0) ? bound_list.bindings.vs_images : bound_list.bindings.fs_images;
+				for (int j = 0; j < SG_MAX_SHADERSTAGE_IMAGES; ++j) {
+					if (i->first == pipeline_shader.shader.images[k][j].name) {
+						const Texture &tex = resources.textures.Get(i->second.texture);
+						img[j].id = tex.image.id;
+						
+					}
 				}
 			}
-
 			//			i->first; // uniform name
 			//			i->second; // texture object
 
