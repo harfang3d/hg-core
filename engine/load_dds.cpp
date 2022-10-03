@@ -48,10 +48,10 @@ namespace hg {
 
 #define DDSD_CUBEMAP 0x00000200L
 
-#define DDPF_ALPHAPIXELS 0x00000001L
 #define DDPF_FOURCC 0x00000004L
+#define DDPF_ALPHAPIXELS 0x00000001L
 #define DDPF_RGB 0x00000040L
-
+#define DDF_BUMPDUDV 0x00080000L 
 
 struct DDPIXELFORMAT {
 	uint32_t dwSize;
@@ -364,6 +364,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 			fmt = SG_PIXELFORMAT_RG32SI;
 			break;
 		case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+		case DXGI_FORMAT_R10G10B10A2_UNORM:
 			fmt = SG_PIXELFORMAT_RGB10A2;
 			break;
 		case DXGI_FORMAT_R11G11B10_FLOAT:
@@ -538,7 +539,6 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 		case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
 		case DXGI_FORMAT_R8G8B8A8_UNORM:
 		case DXGI_FORMAT_R10G10B10A2_UINT:
-		case DXGI_FORMAT_R10G10B10A2_UNORM:
 		case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
 		case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
 		case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
@@ -641,22 +641,49 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 			} else {
 				if (header.ddpfPixelFormat.dwFlags & DDPF_FOURCC) {
 					desc.pixel_format = FromFourCC(header.ddpfPixelFormat.dwFourCC);
-				} else if (((header.ddpfPixelFormat.dwFlags & DDPF_RGB) == DDPF_RGB) && (header.ddpfPixelFormat.dwRGBBitCount == 32)) {
-					if ((header.ddpfPixelFormat.dwGBitMask == 0x0000ff00U) &&
-						((header.ddpfPixelFormat.dwRBitMask | header.ddpfPixelFormat.dwBBitMask) == 0x00ff00ffU)) {
-						if (header.ddpfPixelFormat.dwFlags & DDPF_ALPHAPIXELS) {
-							assert(header.ddpfPixelFormat.dwABitMask == 0xff000000U);
-						}
-						if (header.ddpfPixelFormat.dwRBitMask == 0x000000ffU) {
-							desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+				} else if ((header.ddpfPixelFormat.dwFlags & DDPF_RGB) == DDPF_RGB) {
+					if (header.ddpfPixelFormat.dwRGBBitCount == 32) {
+						if ((header.ddpfPixelFormat.dwGBitMask == 0x0000ff00U) &&
+							((header.ddpfPixelFormat.dwRBitMask | header.ddpfPixelFormat.dwBBitMask) == 0x00ff00ffU)) {
+							if (header.ddpfPixelFormat.dwFlags & DDPF_ALPHAPIXELS) {
+								assert(header.ddpfPixelFormat.dwABitMask == 0xff000000U);
+							}
+							if (header.ddpfPixelFormat.dwRBitMask == 0x000000ffU) {
+								desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+							} else {
+								desc.pixel_format = SG_PIXELFORMAT_BGRA8;
+							}
+						} else if ((header.ddpfPixelFormat.dwRBitMask == 0xffffffffU) && (header.ddpfPixelFormat.dwGBitMask == 0x00000000U) &&
+								   (header.ddpfPixelFormat.dwBBitMask == 0x00000000U) && (header.ddpfPixelFormat.dwABitMask == 0x00000000U)) {
+							desc.pixel_format = SG_PIXELFORMAT_R32F;
+						} else if ((header.ddpfPixelFormat.dwRBitMask == 0x0000ffffU) && (header.ddpfPixelFormat.dwGBitMask == 0xffff0000U) &&
+								   (header.ddpfPixelFormat.dwBBitMask == 0x00000000U) && (header.ddpfPixelFormat.dwABitMask == 0x00000000U)) {
+							desc.pixel_format = SG_PIXELFORMAT_RG16;
+						} else if ((header.ddpfPixelFormat.dwRBitMask == 0x3ff00000) && (header.ddpfPixelFormat.dwGBitMask == 0x000ffc00) &&
+								   (header.ddpfPixelFormat.dwBBitMask == 0x000003ff) && (header.ddpfPixelFormat.dwABitMask == 0xc0000000)) {
+							desc.pixel_format = SG_PIXELFORMAT_RGB10A2;
 						} else {
-							desc.pixel_format = SG_PIXELFORMAT_BGRA8;
+							desc.pixel_format = SG_PIXELFORMAT_NONE;
 						}
-					} else if ((header.ddpfPixelFormat.dwRBitMask == 0xffffffffU) && (header.ddpfPixelFormat.dwGBitMask == 0x00000000U) &&
-							   (header.ddpfPixelFormat.dwBBitMask == 0x00000000U) && (header.ddpfPixelFormat.dwABitMask == 0x00000000U)) {
-						desc.pixel_format = SG_PIXELFORMAT_R32F;
 					}
+				} else if ((header.ddpfPixelFormat.dwFlags & DDF_BUMPDUDV) == DDF_BUMPDUDV) {
+					if (header.ddpfPixelFormat.dwRGBBitCount == 32) {
+						if ((header.ddpfPixelFormat.dwRBitMask == 0x000000ffU) && (header.ddpfPixelFormat.dwGBitMask == 0x0000ff00U) &&
+							(header.ddpfPixelFormat.dwBBitMask == 0x00ff0000U) && (header.ddpfPixelFormat.dwABitMask == 0xff000000U)) {
+							desc.pixel_format = SG_PIXELFORMAT_RGBA8SN;
+						} else if ((header.ddpfPixelFormat.dwRBitMask == 0x0000ffffU) && (header.ddpfPixelFormat.dwGBitMask == 0xffff0000U) &&
+								   (header.ddpfPixelFormat.dwBBitMask == 0x00000000U) && (header.ddpfPixelFormat.dwABitMask == 0x00000000U)) {
+							desc.pixel_format = SG_PIXELFORMAT_RG16SN;
+						} else {
+							desc.pixel_format = SG_PIXELFORMAT_NONE;
+						}
+					} else {
+						desc.pixel_format = SG_PIXELFORMAT_NONE;
+					}
+				} else {
+					desc.pixel_format = SG_PIXELFORMAT_NONE;
 				}
+
 				if (desc.type == 0) {
 					if (header.dwFlags & DDSD_VOLUME) {
 						desc.type = SG_IMAGETYPE_3D;
