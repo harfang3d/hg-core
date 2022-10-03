@@ -667,36 +667,26 @@ Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &n
 			shader.layout.attrib[i] = attr;
 		}
 
-		int k = 0;
-		for (int i = 0; (i < SG_MAX_SHADERSTAGE_UBS) && (k < SG_MAX_SHADERSTAGE_UBS); i++, k++) {
-			if (desc.vs.uniform_blocks[i].size) {
-				shader.uniforms[k].layout = desc.vs.uniform_blocks[i].layout;
-
-				for (int j = 0; j < SG_MAX_UB_MEMBERS; j++) {
-					if (desc.vs.uniform_blocks[i].uniforms[j].name) {
-						shader.uniforms[k].uniform[j].name = desc.vs.uniform_blocks[i].uniforms[j].name;
-						shader.uniforms[k].uniform[j].type = desc.vs.uniform_blocks[i].uniforms[j].type;
-						shader.uniforms[k].uniform[j].count = desc.vs.uniform_blocks[i].uniforms[j].array_count;
-					}
-				}
-
-				for (int j = 0; j < SG_MAX_SHADERSTAGE_IMAGES; ++j) {
-					if (desc.vs.images[j].name) {
-						shader.images.images[j].name = desc.vs.images[j].name;
+		for (int k = 0; k < SG_NUM_SHADER_STAGES; k++) {
+			const sg_shader_stage_desc &stage = (k == 0) ? desc.vs : desc.fs;
+			for (int i = 0; i < SG_MAX_SHADERSTAGE_UBS; i++) {
+				if (stage.uniform_blocks[i].size) {
+					shader.uniforms[k][i].layout = stage.uniform_blocks[i].layout;
+					for (int j = 0; j < SG_MAX_UB_MEMBERS; j++) {
+						if (stage.uniform_blocks[i].uniforms[j].name) {
+							shader.uniforms[k][i].uniform[j].name = stage.uniform_blocks[i].uniforms[j].name;
+							shader.uniforms[k][i].uniform[j].type = stage.uniform_blocks[i].uniforms[j].type;
+							shader.uniforms[k][i].uniform[j].count = stage.uniform_blocks[i].uniforms[j].array_count;
+						}
 					}
 				}
 			}
-		}
 
-		for (int i = 0; (i < SG_MAX_SHADERSTAGE_UBS) && (k < SG_MAX_SHADERSTAGE_UBS); i++, k++) {
-			if (desc.fs.uniform_blocks[i].size) {
-				shader.uniforms[k].layout = desc.fs.uniform_blocks[i].layout;
-				for (int j = 0; j < SG_MAX_UB_MEMBERS; j++) {
-					if (desc.fs.uniform_blocks[i].uniforms[j].name) {
-						shader.uniforms[k].uniform[j].name = desc.fs.uniform_blocks[i].uniforms[j].name;
-						shader.uniforms[k].uniform[j].type = desc.fs.uniform_blocks[i].uniforms[j].type;
-						shader.uniforms[k].uniform[j].count = desc.fs.uniform_blocks[i].uniforms[j].array_count;
-					}
+			for (int i = 0; i < SG_MAX_SHADERSTAGE_IMAGES; i++) {
+				if (stage.images[i].image_type) {
+					shader.images[k][i].name = stage.images[i].name;
+					shader.images[k][i].image = stage.images[i].image_type;
+					shader.images[k][i].sampler = stage.images[i].sampler_type;
 				}
 			}
 		}
@@ -906,10 +896,12 @@ TextureRef SkipLoadOrQueueTextureLoad(
 
 //
 int GetUniformDataIndex(const std::string &name, const Shader &shader) {
-	for (int j = 0; j < SG_MAX_SHADERSTAGE_UBS; j++) {
-		for (int i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
-			if (shader.uniforms[j].uniform[i].name == name) {
-				return i;
+	for (int k = 0; k < SG_NUM_SHADER_STAGES; k++) {
+		for (int j = 0; j < SG_MAX_SHADERSTAGE_UBS; j++) {
+			for (int i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+				if (shader.uniforms[k][j].uniform[i].name == name) {
+					return i;
+				}
 			}
 		}
 	}
@@ -926,36 +918,36 @@ size_t GetUniformDataSize(const UniformData &data) {
 
 void SetupShaderUniformData(const Shader &shader, UniformData &data) {
 	size_t offset = 0;
+	//for (size_t k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
+	size_t k = 0; { // [todo]
+		//	for (size_t j = 0; j < SG_MAX_SHADERSTAGE_UBS; ++j) {
+		size_t j = 0; { // [todo]
+			for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+				const sg_uniform_type type = shader.uniforms[k][j].uniform[i].type;
 
-	// for (size_t j = 0; j < SG_MAX_SHADERSTAGE_UBS; ++j) {
-	size_t j = 0;
-	{ // [todo]
-		for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
-			const sg_uniform_type type = shader.uniforms[j].uniform[i].type;
+				data.offset[i] = numeric_cast<uint16_t>(offset);
 
-			data.offset[i] = numeric_cast<uint16_t>(offset);
-
-			if (type == SG_UNIFORMTYPE_FLOAT)
-				offset += 4;
-			else if (type == SG_UNIFORMTYPE_FLOAT2)
-				offset += 4 * 2;
-			else if (type == SG_UNIFORMTYPE_FLOAT3)
-				offset += 4 * 3;
-			else if (type == SG_UNIFORMTYPE_FLOAT4)
-				offset += 4 * 4;
-			else if (type == SG_UNIFORMTYPE_INT)
-				offset += 4;
-			else if (type == SG_UNIFORMTYPE_INT2)
-				offset += 4 * 2;
-			else if (type == SG_UNIFORMTYPE_INT3)
-				offset += 4 * 3;
-			else if (type == SG_UNIFORMTYPE_INT4)
-				offset += 4 * 4;
-			else if (type == SG_UNIFORMTYPE_MAT4)
-				offset += 4 * 4 * 4; // float 4x4
+				if (type == SG_UNIFORMTYPE_FLOAT)
+					offset += 4;
+				else if (type == SG_UNIFORMTYPE_FLOAT2)
+					offset += 4 * 2;
+				else if (type == SG_UNIFORMTYPE_FLOAT3)
+					offset += 4 * 3;
+				else if (type == SG_UNIFORMTYPE_FLOAT4)
+					offset += 4 * 4;
+				else if (type == SG_UNIFORMTYPE_INT)
+					offset += 4;
+				else if (type == SG_UNIFORMTYPE_INT2)
+					offset += 4 * 2;
+				else if (type == SG_UNIFORMTYPE_INT3)
+					offset += 4 * 3;
+				else if (type == SG_UNIFORMTYPE_INT4)
+					offset += 4 * 4;
+				else if (type == SG_UNIFORMTYPE_MAT4)
+					offset += 4 * 4 * 4; // float 4x4
+			}
 		}
 	}
-
 	data.data.resize(offset);
 }
 

@@ -345,11 +345,10 @@ struct ShaderUniforms {
 };
 
 struct ShaderImage {
+	ShaderImage() : image(SG_IMAGETYPE_2D), sampler(SG_SAMPLERTYPE_FLOAT) {}
 	std::string name;
-};
-
-struct ShaderImages {
-	ShaderImage images[SG_MAX_SHADERSTAGE_IMAGES];
+	sg_image_type image;
+	sg_sampler_type sampler;
 };
 
 struct Shader { // 20B
@@ -360,11 +359,9 @@ struct Shader { // 20B
 	sg_shader shader;
 
 	ShaderLayout layout; // attributes
-	// [todo] There's SG_MAX_SHADERSTAGE_UBS per stages. This means that for a standard program with a vertex and fragment program we can have a total of
-	// SG_MAX_SHADERSTAGE_UBS * 2 uniforms. [todo] This can make sense when shaders are loaded separately but not when we loaded a "complete" program where
-	// uniforms have been merged across stages.
-	ShaderUniforms uniforms[SG_MAX_SHADERSTAGE_UBS]; // uniforms
-	ShaderImages images; // images
+
+	ShaderUniforms uniforms[SG_NUM_SHADER_STAGES][SG_MAX_SHADERSTAGE_UBS]; // uniforms
+	ShaderImage images[SG_NUM_SHADER_STAGES][SG_MAX_SHADERSTAGE_IMAGES]; // images
 };
 
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent);
