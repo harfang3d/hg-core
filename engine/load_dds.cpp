@@ -599,6 +599,8 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 	Texture tex;
 	tex.image.id = SG_INVALID_ID;
 
+	log(fmt::format("Load DDS '{}'", name));
+
 	const uint32_t magic = Read<uint32_t>(ir, h);
 	if (magic != MAKEFOURCC('D', 'D', 'S', ' ')) {
 		warn("    Invalid DDS file");
@@ -704,7 +706,6 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 					desc.num_slices = 1;
 				}
 				
-				log(fmt::format("Load DDS '{}'", name));
 				log(fmt::format("    Size: {}x{}x{} Mips: {} Type: {} Format: {}", desc.width, desc.height, desc.num_slices, desc.num_mipmaps, desc.type, desc.pixel_format));
 
 				const size_t size = ir.size(h);
