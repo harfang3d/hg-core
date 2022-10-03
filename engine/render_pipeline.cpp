@@ -503,14 +503,13 @@ static bool LoadShaderSource(const Reader &ir, const Handle &handle, sg_shader_s
 	return ret;
 }
 
-static bool LoadShaderStages(const Reader &ir, const Handle &handle, const ShaderInfos &infos, const sg_shader_stage_desc &desc, sg_shader_desc &out) {
+static bool LoadShaderStages(const Reader &ir, const Handle &handle, const ShaderInfos &infos, sg_shader_desc &out) {
 	bool ret = true;
 
 	uint16_t count;
 	if (!Read<uint16_t>(ir, handle, count)) {
 		ret = false;
 	} else {
-		bool copy_ubo = true;
 		for (uint16_t i = 0; ret && (i < count); ++i) {
 			uint8_t byte;
 			if (!Read<uint8_t>(ir, handle, byte)) {
@@ -519,12 +518,6 @@ static bool LoadShaderStages(const Reader &ir, const Handle &handle, const Shade
 				ret = false;
 			} else {
 				sg_shader_stage_desc &out_desc = (byte == VertexShader) ? out.vs : out.fs;
-
-				if (copy_ubo) {
-					memcpy(&out_desc, &desc, sizeof(sg_shader_stage_desc));
-					copy_ubo = false;
-				}
-
 				std::string entry;
 				if (!Read(ir, handle, entry)) {
 					ret = false;
@@ -536,9 +529,12 @@ static bool LoadShaderStages(const Reader &ir, const Handle &handle, const Shade
 					} else {
 						ret = SkipShaderAttributes(ir, handle);
 					}
-
 					if (ret) {
 						if (!SkipShaderAttributes(ir, handle)) { // skip output
+							ret = false;
+						} else if (!LoadShaderUniforms(ir, handle, out_desc)) {
+						ret = false;
+						} else if (!LoadShaderImages(ir, handle, out_desc)) {
 							ret = false;
 						} else if (!LoadShaderSource(ir, handle, out_desc)) {
 							ret = false;
@@ -569,8 +565,6 @@ static bool LoadShaderStages(const Reader &ir, const Handle &handle, const Shade
 static bool LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_shader_desc &out) {
 	bool ret = false;
 
-	sg_shader_stage_desc desc;
-	memset(&desc, 0, sizeof(sg_shader_stage_desc));
 	memset(&out, 0, sizeof(sg_shader_desc));
 
 	ScopedReadHandle handle(ip, name);
@@ -578,11 +572,7 @@ static bool LoadShader(const Reader &ir, const ReadProvider &ip, const std::stri
 		ShaderInfos infos;
 		if (!LoadShaderHeader(ir, handle, infos)) {
 			ret = false;
-		} else if (!LoadShaderUniforms(ir, handle, desc)) {
-			ret = false;
-		} else if (!LoadShaderImages(ir, handle, desc)) {
-			ret = false;
-		} else if (!LoadShaderStages(ir, handle, infos, desc, out)) {
+		} else if (!LoadShaderStages(ir, handle, infos, out)) {
 			ret = false;
 		} else {
 			ret = true;
