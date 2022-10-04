@@ -23,7 +23,7 @@ void test_load_dds() {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
 		h.debug = false;
 #endif
-		Texture tex = LoadDDS(g_file_reader, h, filename);
+		Texture tex = LoadDDS(g_file_reader, g_file_read_provider, h, filename, false);
 		TEST_CHECK(tex.image.id != SG_INVALID_ID);
 		Destroy(tex);
 		g_file_read_provider.close(h);

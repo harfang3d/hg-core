@@ -3,6 +3,7 @@
 #include "engine/render_pipeline.h"
 #include "engine/assets_rw_interface.h"
 #include "engine/file_format.h"
+#include "engine/json.h"
 #include "engine/load_dds.h"
 #include "engine/shader.h"
 
@@ -533,7 +534,7 @@ static bool LoadShaderStages(const Reader &ir, const Handle &handle, const Shade
 						if (!SkipShaderAttributes(ir, handle)) { // skip output
 							ret = false;
 						} else if (!LoadShaderUniforms(ir, handle, out_desc)) {
-						ret = false;
+							ret = false;
 						} else if (!LoadShaderImages(ir, handle, out_desc)) {
 							ret = false;
 						} else if (!LoadShaderSource(ir, handle, out_desc)) {
@@ -562,17 +563,19 @@ static bool LoadShaderStages(const Reader &ir, const Handle &handle, const Shade
 	return ret;
 }
 
-static bool LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_shader_desc &out) {
+static bool LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_shader_desc &shader_desc) {
 	bool ret = false;
+	memset(&shader_desc, 0, sizeof(sg_shader_desc));
 
-	memset(&out, 0, sizeof(sg_shader_desc));
+	sg_shader_stage_desc stage_desc;
+	memset(&stage_desc, 0, sizeof(sg_shader_stage_desc));
 
 	ScopedReadHandle handle(ip, name);
 	if (ir.is_valid(handle)) {
 		ShaderInfos infos;
 		if (!LoadShaderHeader(ir, handle, infos)) {
 			ret = false;
-		} else if (!LoadShaderStages(ir, handle, infos, out)) {
+		} else if (!LoadShaderStages(ir, handle, infos, shader_desc)) {
 			ret = false;
 		} else {
 			ret = true;
@@ -649,20 +652,21 @@ Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &n
 	if (LoadShader(ir, ip, name, desc)) {
 		shader.shader = sg_make_shader(&desc);
 
-		for (int i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; i++) {
+		for (int i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
 			uint8_t attr = VA_Count;
 			if (desc.attrs[i].name) {
-				for (attr = 0; (attr < VA_Count) && (strcmp(desc.attrs[i].name, g_vertex_attribute_names[attr]) != 0); attr++) {}
+				for (attr = 0; (attr < VA_Count) && (strcmp(desc.attrs[i].name, g_vertex_attribute_names[attr]) != 0); ++attr) {}
 			}
 			shader.layout.attrib[i] = attr;
 		}
 
-		for (int k = 0; k < SG_NUM_SHADER_STAGES; k++) {
+		for (int k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
 			const sg_shader_stage_desc &stage = (k == 0) ? desc.vs : desc.fs;
-			for (int i = 0; i < SG_MAX_SHADERSTAGE_UBS; i++) {
+
+			for (int i = 0; i < SG_MAX_SHADERSTAGE_UBS; ++i) {
 				if (stage.uniform_blocks[i].size) {
 					shader.uniforms[k][i].layout = stage.uniform_blocks[i].layout;
-					for (int j = 0; j < SG_MAX_UB_MEMBERS; j++) {
+					for (int j = 0; j < SG_MAX_UB_MEMBERS; ++j) {
 						if (stage.uniform_blocks[i].uniforms[j].name) {
 							shader.uniforms[k][i].uniform[j].name = stage.uniform_blocks[i].uniforms[j].name;
 							shader.uniforms[k][i].uniform[j].type = stage.uniform_blocks[i].uniforms[j].type;
@@ -672,7 +676,7 @@ Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &n
 				}
 			}
 
-			for (int i = 0; i < SG_MAX_SHADERSTAGE_IMAGES; i++) {
+			for (int i = 0; i < SG_MAX_SHADERSTAGE_IMAGES; ++i) {
 				if (stage.images[i].image_type) {
 					shader.images[k][i].name = stage.images[i].name;
 					shader.images[k][i].image = stage.images[i].image_type;
@@ -809,7 +813,7 @@ bool SaveMaterialToFile(const std::string &path, const Material &m, const Pipeli
 //
 Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
 	ScopedReadHandle h(ip, name, silent);
-	return ir.is_valid(h) ? LoadDDS(ir, h, name) : Texture();
+	return ir.is_valid(h) ? LoadDDS(ir, ip, h, name, silent) : Texture();
 }
 
 Texture LoadTextureFromFile(const std::string &path, bool silent) {
@@ -908,10 +912,12 @@ size_t GetUniformDataSize(const UniformData &data) {
 
 void SetupShaderUniformData(const Shader &shader, UniformData &data) {
 	size_t offset = 0;
-	//for (size_t k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
-	size_t k = 0; { // [todo]
+	// for (size_t k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
+	size_t k = 0;
+	{ // [todo]
 		//	for (size_t j = 0; j < SG_MAX_SHADERSTAGE_UBS; ++j) {
-		size_t j = 0; { // [todo]
+		size_t j = 0;
+		{ // [todo]
 			for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
 				const sg_uniform_type type = shader.uniforms[k][j].uniform[i].type;
 
@@ -1254,6 +1260,82 @@ ModelRef SkipLoadOrQueueModelLoad(
 #else
 	return InvalidModelRef;
 #endif
+}
+
+//
+void LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_image_desc &desc, bool silent) {
+	ProfilerPerfSection section("LoadTextureMeta", name);
+
+	rapidjson::Document meta;
+	if (!LoadJson(ir, ScopedReadHandle(ip, name + ".meta", silent), meta))
+		return;
+
+	meta.FindMember("min-filter");
+
+#if 0
+	{
+
+
+
+
+		std::string filter;
+
+		GetMetaValue(js, "min-filter", filter);
+		if (filter == "Nearest")
+			meta.flags |= BGFX_SAMPLER_MIN_POINT;
+		else if (filter == "Linear")
+			;
+		else // if (filter == "Anisotropic")
+			meta.flags |= BGFX_SAMPLER_MIN_ANISOTROPIC;
+
+		GetMetaValue(js, "mag-filter", filter);
+		if (filter == "Nearest")
+			meta.flags |= BGFX_SAMPLER_MAG_POINT;
+		else if (filter == "Linear")
+			;
+		else // if (filter == "Anisotropic")
+			meta.flags |= BGFX_SAMPLER_MAG_ANISOTROPIC;
+	}
+
+	{
+		std::string wrap;
+
+		GetMetaValue(js, "wrap-U", wrap);
+		if (wrap == "Clamp")
+			meta.flags |= BGFX_SAMPLER_U_CLAMP;
+		else if (wrap == "Border")
+			meta.flags |= BGFX_SAMPLER_U_BORDER;
+		else if (wrap == "Mirror")
+			meta.flags |= BGFX_SAMPLER_U_MIRROR;
+
+		GetMetaValue(js, "wrap-V", wrap);
+		if (wrap == "Clamp")
+			meta.flags |= BGFX_SAMPLER_V_CLAMP;
+		else if (wrap == "Border")
+			meta.flags |= BGFX_SAMPLER_V_BORDER;
+		else if (wrap == "Mirror")
+			meta.flags |= BGFX_SAMPLER_V_MIRROR;
+	}
+
+	{
+		bool sRGB = false;
+
+		GetMetaValue(js, "sRGB", sRGB);
+		if (sRGB)
+			meta.flags |= BGFX_TEXTURE_SRGB;
+		else
+			meta.flags &= ~BGFX_TEXTURE_SRGB;
+	}
+
+	return meta;
+#endif
+}
+
+void LoadTextureMetaFromFile(const std::string &path, sg_image_desc &desc, bool silent) {
+	return LoadTextureMeta(g_file_reader, g_file_read_provider, path, desc, silent);
+}
+void LoadTextureMetaFromAssets(const std::string &name, sg_image_desc &desc, bool silent) {
+	return LoadTextureMeta(g_assets_reader, g_assets_read_provider, name, desc, silent);
 }
 
 #if 0

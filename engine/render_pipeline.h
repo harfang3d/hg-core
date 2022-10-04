@@ -390,6 +390,11 @@ struct Vec4Uniform {
 };
 */
 
+void LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_image_desc &desc, bool silent);
+
+void LoadTextureMetaFromFile(const std::string &path, sg_image_desc &desc, bool silent);
+void LoadTextureMetaFromAssets(const std::string &name, sg_image_desc &desc, bool silent);
+
 #if 0
 struct PipelineProgram {
 	std::vector<PipelineProgramFeature> features; // features imply associated uniforms

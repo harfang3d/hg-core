@@ -6,6 +6,6 @@
 
 namespace hg {
 
-Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name);
+Texture LoadDDS(const Reader &ir, const ReadProvider &ip, const Handle &h, const std::string &name, bool silent);
 
 } // namespace hg

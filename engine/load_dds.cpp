@@ -670,7 +670,8 @@ static inline size_t FrameSize(sg_pixel_format fmt, int width, int height) {
 			bpp = 8;
 		} else if ((fmt >= SG_PIXELFORMAT_R16) && (fmt <= SG_PIXELFORMAT_RG8SI)) {
 			bpp = 16;
-		} else if (((fmt >= SG_PIXELFORMAT_R32UI) && (fmt <= SG_PIXELFORMAT_RG11B10F)) || (fmt == SG_PIXELFORMAT_DEPTH_STENCIL) || (fmt == SG_PIXELFORMAT_DEPTH)) {
+		} else if (((fmt >= SG_PIXELFORMAT_R32UI) && (fmt <= SG_PIXELFORMAT_RG11B10F)) || (fmt == SG_PIXELFORMAT_DEPTH_STENCIL) ||
+				   (fmt == SG_PIXELFORMAT_DEPTH)) {
 			bpp = 32;
 		} else if ((fmt >= SG_PIXELFORMAT_RG32UI) && (fmt <= SG_PIXELFORMAT_RGBA16F)) {
 			bpp = 64;
@@ -687,11 +688,13 @@ static inline size_t FrameSize(sg_pixel_format fmt, int width, int height) {
 }
 
 //
-Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
+Texture LoadDDS(const Reader &ir, const ReadProvider &ip, const Handle &h, const std::string &name, bool silent) {
 	ProfilerPerfSection section("LoadDDS", name);
 	
 	sg_image_desc desc;
 	memset(&desc, 0, sizeof(sg_image_desc));
+
+	LoadTextureMeta(ir, ip, name, desc, silent);
 
 	Texture tex;
 	tex.image.id = SG_INVALID_ID;
@@ -704,9 +707,9 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 	} else {
 		DDSURFACEDESC2 header;
 		if (ir.read(h, &header, sizeof(DDSURFACEDESC2)) != sizeof(DDSURFACEDESC2)) {
-			warn("    Failed to read header");
+			warn("    Failed to read DDS header");
 		} else if (header.dwSize != 124) {
-			warn("    Invalid header");
+			warn("    Invalid DDS header (size != 124)");
 		} else {
 			desc.pixel_format = SG_PIXELFORMAT_NONE;
 			desc.min_filter = SG_FILTER_LINEAR;
@@ -714,6 +717,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 			desc.width = header.dwWidth;
 			desc.height = header.dwHeight;
 			desc.num_mipmaps = header.dwMipMapCount;
+
 			if (desc.num_mipmaps == 0) {
 				desc.num_mipmaps = 1;
 			}
@@ -764,7 +768,8 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 					desc.num_slices = 1;
 				}
 				
-				log(fmt::format("    Size: {}x{}x{} Mips: {} Type: {} Format: {}", desc.width, desc.height, desc.num_slices, desc.num_mipmaps, desc.type, desc.pixel_format));
+				log(fmt::format("    Size: {}x{}x{} Mips: {} Type: {} Format: {}", desc.width, desc.height, desc.num_slices, desc.num_mipmaps, desc.type,
+					desc.pixel_format));
 
 				const size_t size = ir.size(h);
 				const size_t remaining = size - ir.tell(h);
@@ -821,6 +826,7 @@ Texture LoadDDS(const Reader &ir, const Handle &h, const std::string &name) {
 			}
 		}
 	}
+
 	return tex;
 }
 

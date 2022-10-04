@@ -30,6 +30,7 @@ class Scene;
 struct BoundDisplayList { // links DisplayList to object and its materials
 	sg_pipeline pipeline; // links list attributes to shader inputs
 	sg_bindings bindings; // links list buffers and material resources to shader inputs
+	bool valid;
 };
 
 //

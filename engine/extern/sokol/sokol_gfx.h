@@ -14131,6 +14131,7 @@ _SOKOL_PRIVATE bool _sg_validate_end(void) {
         return true;
     }
 }
+
 #endif
 
 _SOKOL_PRIVATE bool _sg_validate_buffer_desc(const sg_buffer_desc* desc) {

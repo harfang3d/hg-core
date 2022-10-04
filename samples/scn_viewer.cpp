@@ -165,42 +165,49 @@ void BindObject(Scene::Object_ &obj, const PipelineResources &resources) {
 
 	for (size_t i = 0; i < mdl.lists.size(); ++i) {
 		const DisplayList &list = mdl.lists[i];
-		const size_t mat_idx = mdl.mats[i];
-
-		Material &mat = obj.materials[mat_idx];
-
-		if (!resources.programs.IsValidRef(mat.program))
-			continue;
-
 		BoundDisplayList &bound_list = obj.bound_lists[i];
 
-		const PipelineProgram &pipeline_shader = resources.programs.Get(mat.program);
-		SetupShaderUniformData(pipeline_shader.shader, mat.uniform_data);
+		const size_t mat_idx = mdl.mats[i];
+		Material &mat = obj.materials[mat_idx];
 
-		memset(&bound_list.bindings, 0, sizeof(sg_bindings));
+		if (resources.programs.IsValidRef(mat.program)) {
+			bound_list.valid = true;
 
-		bound_list.bindings.index_buffer = list.index_buffer;
-		bound_list.bindings.vertex_buffers[0] = list.vertex_buffer;
+			const PipelineProgram &pipeline_shader = resources.programs.Get_unsafe_(mat.program.ref.idx);
+			SetupShaderUniformData(pipeline_shader.shader, mat.uniform_data);
 
-		bound_list.pipeline = MakePipeline(
-			mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout, list.index_type_size, mat.state); // MUST BE REMADE ON SHADER CHANGE!
+			memset(&bound_list.bindings, 0, sizeof(sg_bindings));
 
-		for (std::map<std::string, Material::Texture>::const_iterator i = mat.textures.begin(); i != mat.textures.end(); ++i) {
+			bound_list.bindings.index_buffer = list.index_buffer;
+			bound_list.bindings.vertex_buffers[0] = list.vertex_buffer;
 
-			for (int k = 0; k < SG_NUM_SHADER_STAGES; k++) {
+			bound_list.pipeline = MakePipeline(
+				mdl.vtx_layout, pipeline_shader.shader.shader, pipeline_shader.shader.layout, list.index_type_size, mat.state); // MUST BE REMADE ON SHADER CHANGE!
+
+			for (int k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
 				sg_image *img = (k == 0) ? bound_list.bindings.vs_images : bound_list.bindings.fs_images;
+
 				for (int j = 0; j < SG_MAX_SHADERSTAGE_IMAGES; ++j) {
-					if (i->first == pipeline_shader.shader.images[k][j].name) {
-						const Texture &tex = resources.textures.Get(i->second.texture);
-						img[j].id = tex.image.id;
-						
+					const std::string &shader_image_name = pipeline_shader.shader.images[k][j].name;
+
+					if (!shader_image_name.empty()) { // shader expects a texture
+						std::map<std::string, Material::Texture>::const_iterator i = mat.textures.find(shader_image_name);
+
+						if (i != mat.textures.end()) {
+							if (resources.textures.IsValidRef(i->second.texture)) {
+								const Texture &tex = resources.textures.Get_unsafe_(i->second.texture.ref.idx);
+								img[j].id = tex.image.id;
+							} else {
+								bound_list.valid = false;
+							}
+						} else {
+							bound_list.valid = false;
+						}
 					}
 				}
 			}
-			//			i->first; // uniform name
-			//			i->second; // texture object
-
-			//			bound_list.bindings.fs_images[0] =
+		} else {
+			bound_list.valid = false;
 		}
 	}
 }
@@ -253,26 +260,28 @@ void DrawObject(Scene::Object_ &obj, PipelineResources &resources, const Mat44 &
 		const DisplayList &list = mdl.lists[i];
 		const BoundDisplayList &bound_list = obj.bound_lists[i];
 
-		const uint16_t mat_idx = mdl.mats[i];
-		Material &mat = obj.materials[mat_idx];
+		if (bound_list.valid) {
+			const uint16_t mat_idx = mdl.mats[i];
+			Material &mat = obj.materials[mat_idx];
 
-		const PipelineProgram &program = resources.programs.Get(mat.program);
+			const PipelineProgram &program = resources.programs.Get(mat.program);
 
-		//
-		sg_apply_pipeline(bound_list.pipeline);
-		sg_apply_bindings(bound_list.bindings);
+			//
+			sg_apply_pipeline(bound_list.pipeline);
+			sg_apply_bindings(bound_list.bindings);
 
-		// TODO set uniform values
-		const int mvp_idx = GetUniformDataIndex("u_mtx.mvp", program.shader);
-		SetUniformDataValue(mat.uniform_data, mvp_idx, Mat44_to_sokol(mvp));
+			// TODO set uniform values
+			const int mvp_idx = GetUniformDataIndex("u_mtx.mvp", program.shader);
+			SetUniformDataValue(mat.uniform_data, mvp_idx, Mat44_to_sokol(mvp));
 
-		//
-		sg_range range;
-		range.ptr = GetUniformDataPtr(mat.uniform_data);
-		range.size = GetUniformDataSize(mat.uniform_data);
-		sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, range);
+			//
+			sg_range range;
+			range.ptr = GetUniformDataPtr(mat.uniform_data);
+			range.size = GetUniformDataSize(mat.uniform_data);
+			sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, range);
 
-		sg_draw(0, list.element_count, 1);
+			sg_draw(0, list.element_count, 1);
+		}
 	}
 }
 
