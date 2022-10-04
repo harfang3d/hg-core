@@ -51,7 +51,8 @@ namespace hg {
 #define DDPF_FOURCC 0x00000004L
 #define DDPF_ALPHAPIXELS 0x00000001L
 #define DDPF_RGB 0x00000040L
-#define DDF_BUMPDUDV 0x00080000L 
+#define DDPF_BUMPDUDV 0x00080000L
+#define DDPF_LUMINANCE 0x00020000L 
 
 struct DDPIXELFORMAT {
 	uint32_t dwSize;
@@ -340,6 +341,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 			fmt = SG_PIXELFORMAT_RGBA32SI;
 			break;
 		case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+		case DXGI_FORMAT_R16G16B16A16_UNORM:
 			fmt = SG_PIXELFORMAT_RGBA16;
 			break;
 		case DXGI_FORMAT_R16G16B16A16_FLOAT:
@@ -371,6 +373,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 			fmt = SG_PIXELFORMAT_RG11B10F;
 			break;
 		case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
 			fmt = SG_PIXELFORMAT_RGBA8;
 			break;
 		case DXGI_FORMAT_R8G8B8A8_UINT:
@@ -382,7 +385,14 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 		case DXGI_FORMAT_R8G8B8A8_SNORM:
 			fmt = SG_PIXELFORMAT_RGBA8SN;
 			break;
+		case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+		case DXGI_FORMAT_B8G8R8X8_TYPELESS:
+		case DXGI_FORMAT_B8G8R8X8_UNORM:
+			fmt = SG_PIXELFORMAT_BGRA8;
+			break;
 		case DXGI_FORMAT_R16G16_TYPELESS:
+		case DXGI_FORMAT_R16G16_UNORM:
 			fmt = SG_PIXELFORMAT_RG16;
 			break;
 		case DXGI_FORMAT_R16G16_FLOAT:
@@ -413,6 +423,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 			fmt = SG_PIXELFORMAT_DEPTH_STENCIL;
 			break;
 		case DXGI_FORMAT_R8G8_TYPELESS:
+		case DXGI_FORMAT_R8G8_UNORM:
 			fmt = SG_PIXELFORMAT_RG8;
 			break;
 		case DXGI_FORMAT_R8G8_UINT:
@@ -425,6 +436,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 			fmt = SG_PIXELFORMAT_RG8SI;
 			break;
 		case DXGI_FORMAT_R16_TYPELESS:
+		case DXGI_FORMAT_R16_UNORM:
 			fmt = SG_PIXELFORMAT_R16;
 			break;
 		case DXGI_FORMAT_R16_FLOAT:
@@ -440,6 +452,7 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 			fmt = SG_PIXELFORMAT_R16SI;
 			break;
 		case DXGI_FORMAT_R8_TYPELESS:
+		case DXGI_FORMAT_R8_UNORM:
 			fmt = SG_PIXELFORMAT_R8;
 			break;
 		case DXGI_FORMAT_R8_UINT:
@@ -491,12 +504,8 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 #if 0
 		case DXGI_FORMAT_BC7_UNORM_SRGB:
 		case DXGI_FORMAT_BC6H_TYPELESS :
-		case DXGI_FORMAT_B8G8R8A8_UNORM:
-		case DXGI_FORMAT_B8G8R8X8_UNORM:
 		case DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM:
-		case DXGI_FORMAT_B8G8R8A8_TYPELESS:
 		case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
-		case DXGI_FORMAT_B8G8R8X8_TYPELESS:
 		case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
 		case DXGI_FORMAT_B5G5R5A1_UNORM:
 		case DXGI_FORMAT_B5G6R5_UNORM:
@@ -527,24 +536,18 @@ static inline sg_pixel_format FromDXGIPixelFormat(uint32_t in) {
 		case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
 		case DXGI_FORMAT_R1_UNORM:
 		case DXGI_FORMAT_A8_UNORM:
-		case DXGI_FORMAT_R8_UNORM:
-		case DXGI_FORMAT_R16_UNORM:
 		case DXGI_FORMAT_D16_UNORM:
-		case DXGI_FORMAT_R8G8_UNORM:
 		case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
 		case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
 		case DXGI_FORMAT_R24G8_TYPELESS:
 		case DXGI_FORMAT_R32_TYPELESS:
-		case DXGI_FORMAT_R16G16_UNORM:
 		case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-		case DXGI_FORMAT_R8G8B8A8_UNORM:
 		case DXGI_FORMAT_R10G10B10A2_UINT:
 		case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
 		case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
 		case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
 		case DXGI_FORMAT_R32G8X24_TYPELESS:
 		case DXGI_FORMAT_R32G32_TYPELESS:
-		case DXGI_FORMAT_R16G16B16A16_UNORM:
 		case DXGI_FORMAT_R32G32B32_TYPELESS:
 		case DXGI_FORMAT_R32G32B32_FLOAT:
 		case DXGI_FORMAT_R32G32B32_UINT:
@@ -586,10 +589,44 @@ static sg_pixel_format FromDDSPixelFormat(const DDPIXELFORMAT &fmt) {
 			} else {
 				out = SG_PIXELFORMAT_NONE;
 			}
+		} else if (fmt.dwRGBBitCount == 16) {
+			if (HasBitMask(fmt, 0x000000ffU, 0x0U, 0x0U, 0x0000ff00U)) {
+				out = SG_PIXELFORMAT_RG8;
+			} else if (HasBitMask(fmt, 0x0000ffffU)) {
+				out = SG_PIXELFORMAT_R16;
+			} else {
+				out = SG_PIXELFORMAT_NONE;
+			}
+		} else if (fmt.dwRGBBitCount == 8) {
+			if (HasBitMask(fmt, 0x000000ffU)) {
+				out = SG_PIXELFORMAT_R8;
+			} else {
+				out = SG_PIXELFORMAT_NONE;
+			}
 		} else {
 			out = SG_PIXELFORMAT_NONE;
 		}
-	} else if ((fmt.dwFlags & DDF_BUMPDUDV) == DDF_BUMPDUDV) {
+	} else if ((fmt.dwFlags & DDPF_LUMINANCE) == DDPF_LUMINANCE) {
+		if (fmt.dwRGBBitCount == 16) {
+			if (HasBitMask(fmt, 0x0000ffffU)) {
+				out = SG_PIXELFORMAT_R16;
+			} else if (HasBitMask(fmt, 0x000000ffU, 0x00U, 0x00U, 0x0000ff00U)) {
+				out = SG_PIXELFORMAT_RG8;
+			} else {
+				out = SG_PIXELFORMAT_NONE;
+			}
+		} else if (fmt.dwRGBBitCount == 8) {
+			if (HasBitMask(fmt, 0x000000ffU)) {
+				out = SG_PIXELFORMAT_R8;
+			} else if (HasBitMask(fmt, 0x000000ffU, 0x00U, 0x00U, 0x0000ff00U)) {
+				out = SG_PIXELFORMAT_RG8;		// This one seems weird but this is from the "official" ms dds loader.
+			} else {
+				out = SG_PIXELFORMAT_NONE;
+			}
+		} else {
+			out = SG_PIXELFORMAT_NONE;
+		}
+	} else if ((fmt.dwFlags & DDPF_BUMPDUDV) == DDPF_BUMPDUDV) {
 		if (fmt.dwRGBBitCount == 32) {
 			if (HasBitMask(fmt, 0x000000ffU, 0x0000ff00U, 0x00ff0000U, 0xff000000U)) {
 				if (fmt.dwFlags & DDPF_ALPHAPIXELS) {
@@ -598,6 +635,12 @@ static sg_pixel_format FromDDSPixelFormat(const DDPIXELFORMAT &fmt) {
 				out = SG_PIXELFORMAT_RGBA8SN;
 			} else if (HasBitMask(fmt, 0x0000ffffU, 0xffff0000U)) {
 				out = SG_PIXELFORMAT_RG16SN;
+			} else {
+				out = SG_PIXELFORMAT_NONE;
+			}
+		} else if (fmt.dwRGBBitCount == 16) {
+			if (HasBitMask(fmt, 0x000000ffU, 0x0000ff00U)) {
+				out = SG_PIXELFORMAT_RG8SN;
 			} else {
 				out = SG_PIXELFORMAT_NONE;
 			}
