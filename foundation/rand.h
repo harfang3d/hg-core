@@ -16,8 +16,8 @@ void Seed(uint32_t seed);
 uint32_t Rand(uint32_t range = RAND_MAX);
 
 /// Return a float random value in the range [0;r] (default [0;1]).
-float FRand(float range = 1.f);
+float FRand(float range = 1.F);
 /// Return a float random value in the range [lo, hi] (default [-1, 1]).
-float FRRand(float range_start = -1.f, float range_end = 1.f);
+float FRRand(float range_start = -1.F, float range_end = 1.F);
 
 } // namespace hg

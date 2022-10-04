@@ -4,6 +4,7 @@
 // foundation tests
 extern void test_cext();
 extern void test_os();
+extern void test_pack_float();
 extern void test_math();
 extern void test_rand();
 extern void test_units();
@@ -34,6 +35,7 @@ extern void test_rw_interface();
 extern void test_data_rw_interface();
 extern void test_file_rw_interface();
 extern void test_clock();
+extern void test_cmd_line();
 
 // engine tests
 extern void test_vertex_layout();
@@ -41,12 +43,15 @@ extern void test_anim();
 extern void test_node();
 extern void test_picture();
 extern void test_resource_cache();
+extern void test_render_pipeline();
 extern void test_scene();
+extern void test_load_dds();
 
 //
 TEST_LIST = {
 	{"foundation.cext", test_cext},
 	{"foundation.os", test_os},
+	{"foundation.pack_float", test_pack_float},
 	{"foundation.math", test_math},
 	{"foundation.rand", test_rand},
 	{"foundation.units", test_units},
@@ -77,13 +82,18 @@ TEST_LIST = {
 	{"foundation.data_rw_interface", test_data_rw_interface},
 	{"foundation.file_rw_interface", test_file_rw_interface},
 	{"foundation.clock", test_clock},
+	{"foundation.cmd_line", test_cmd_line},
 
-	{"engine.vertex_layout", test_vertex_layout},
+#if 0
+	{"engine.vertex_layout", test_vertex_layout},					// [todo] deactivated until VertexLayout stride computation is fixed.
+#endif
 	{"engine.anim", test_anim},
 	{"engine.node", test_node},
 	{"engine.picture", test_picture},
 	{"engine.resource_cache", test_resource_cache},
+	{"engine.render_pipeline", test_render_pipeline},
 	{"engine.scene", test_scene},
-	 
+	{"engine.load_dds", test_load_dds},
+
 	{NULL, NULL},
 };

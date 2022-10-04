@@ -8,57 +8,77 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
+#if __linux__
+#include <linux/limits.h>
+#endif
 #endif
 
-#include "foundation/cext.h"
 #include "foundation/assert.h"
+#include "foundation/cext.h"
 #include "foundation/path_tools.h"
 #include "foundation/string.h"
 
-#include <string.h>
 #include <fmt/format.h>
+#include <string.h>
 
 namespace hg {
 
 std::string GetFilePath(const std::string &p) {
+	std::string res;
+
 	ptrdiff_t i = p.length() - 1;
-	for (; i >= 0; --i)
-		if (p[i] == '/' || p[i] == '\\') // found last separator in file name
+	for (; i >= 0; --i) {
+		if (p[i] == '/' || p[i] == '\\') { // found last separator in file name
 			break;
-
-	if (i < 0)
-		return "./"; // explicit current path
-
-	if (i == 0) {
-#if _WIN32
-		__ASSERT__(i > 0);
-		return "./"; // a path starting with a slash on windows is a non-sense...
-#else
-		return "/"; // root file
-#endif
+		}
 	}
 
-	if (p[i] == '/')
-		return slice(p, 0, i) + "/";
+	if (i < 0) {
+		res = "./"; // explicit current path
+	} else {
+		if (i == 0) {
+#if _WIN32
+			HG_ASSERT(i > 0);
+			res = "./"; // a path starting with a slash on windows is a non-sense...
+#else
+			res = "/"; // root file
+#endif
+		} else {
+			if (p[i] == '/') {
+				res = slice(p, 0, i) + "/";
+			} else {
+				res = slice(p, 0, i) + "\\";
+			}
+		}
+	}
 
-	return slice(p, 0, i) + "\\";
+	return res;
 }
 
-std::string GetFileName(const std::string &path) { return CutFilePath(CutFileExtension(path)); }
+std::string GetFileName(const std::string &path) {
+	return CutFilePath(CutFileExtension(path));
+}
 
 //
 bool IsPathAbsolute(const std::string &path) {
-#if WIN32
+#if _WIN32
 	return path.length() > 2 && path[1] == ':';
 #else
 	return path.length() > 1 && path[0] == '/';
 #endif
 }
 
-bool PathStartsWith(const std::string &path, const std::string &with) { return starts_with(CleanPath(path), CleanPath(with)); }
+bool PathStartsWith(const std::string &path, const std::string &with) {
+	return starts_with(CleanPath(path), CleanPath(with));
+}
 
-std::string PathStripPrefix(const std::string &path, const std::string &prefix) { return strip_prefix(strip_prefix(CleanPath(path), CleanPath(prefix)), "/"); }
-std::string PathStripSuffix(const std::string &path, const std::string &suffix) { return strip_suffix(strip_suffix(CleanPath(path), CleanPath(suffix)), "/"); }
+std::string PathStripPrefix(const std::string &path, const std::string &prefix) {
+	return strip_prefix(strip_prefix(CleanPath(path), CleanPath(prefix)), "/");
+}
+
+std::string PathStripSuffix(const std::string &path, const std::string &suffix) {
+	return strip_suffix(strip_suffix(CleanPath(path), CleanPath(suffix)), "/");
+}
 
 //
 std::string PathToDisplay(const std::string &path) {
@@ -84,9 +104,10 @@ std::string PathJoin(const std::vector<std::string> &elements) {
 		}
 	}
 #endif
-	for (std::vector<std::string>::const_iterator element = elements.begin(); element != elements.end(); ++element ) {
-		if (!element->empty())
+	for (std::vector<std::string>::const_iterator element = elements.begin(); element != elements.end(); ++element) {
+		if (!element->empty()) {
 			stripped_elements.push_back(rstrip(lstrip(*element, "/"), "/"));
+		}
 	}
 	return CleanPath(join(stripped_elements.begin(), stripped_elements.end(), "/"));
 }
@@ -108,165 +129,255 @@ std::string PathJoin(const std::string &a, const std::string &b, const std::stri
 
 //
 std::string CutFilePath(const std::string &path) {
-	if (path.empty())
-		return std::string();
-	for (size_t n = path.length() - 1; n > 0; --n)
-		if (path[n] == '\\' || path[n] == '/')
-			return slice(path, n + 1);
-	return path;
+	std::string res = path;
+
+	if (!path.empty()) {
+		for (size_t n = path.length() - 1; n > 0; --n) {
+			if (path[n] == '\\' || path[n] == '/') {
+				res = slice(path, n + 1);
+				break;
+			}
+		}
+	}
+
+	return res;
 }
 
 std::string CutFileExtension(const std::string &path) {
-	if (path.empty())
-		return std::string();
-	for (size_t n = path.length() - 1; n > 0; --n) {
-		if (path[n] == '.')
-			return slice(path, 0, n);
-		if (path[n] == '\\' || path[n] == '/' || path[n] == ':')
-			break;
+	std::string res = path;
+
+	if (!path.empty()) {
+		for (size_t n = path.length() - 1; n > 0; --n) {
+			bool done;
+
+			if (path[n] == '.') {
+				res = slice(path, 0, n);
+				done = true;
+			} else if (path[n] == '\\' || path[n] == '/' || path[n] == ':') {
+				done = true;
+			} else {
+				done = false;
+			}
+
+			if (done) {
+				break; // disclaimer: these inefficient and redundant code structures are mandated by MISRA compliance (2-liners become garbled mess of 10+
+					   // lines of convoluted logic)
+			}
+		}
 	}
-	return path;
+
+	return res;
 }
 
 std::string CutFileName(const std::string &path) {
+	std::string res;
+
 	if (!path.empty()) {
-		for (size_t n = path.length() - 1; n > 0; --n)
-			if (path[n] == '\\' || path[n] == '/' || path[n] == ':')
-				return slice(path, 0, n + 1);
+		for (size_t n = path.length() - 1; n > 0; --n) {
+			if (path[n] == '\\' || path[n] == '/' || path[n] == ':') {
+				res = slice(path, 0, n + 1);
+				break;
+			}
+		}
 	}
-	return std::string();
+
+	return res;
 }
 
 //
 std::string GetFileExtension(const std::string &path) {
-	if (path.empty())
-		return std::string();
-	for (size_t n = path.length() - 1; n > 0; --n)
-		if (path[n] == '.')
-			return slice(path, n + 1);
-	return std::string();
+	std::string res;
+
+	if (!path.empty()) {
+		for (size_t n = path.length() - 1; n > 0; --n) {
+			if (path[n] == '.') {
+				res = slice(path, n + 1);
+				break;
+			}
+		}
+	}
+
+	return res;
 }
 
-bool HasFileExtension(const std::string &path) { return !GetFileExtension(path).empty(); }
+bool HasFileExtension(const std::string &path) {
+	return !GetFileExtension(path).empty();
+}
 
 //
-std::string SwapFileExtension(const std::string &path, const std::string &ext) { 
+std::string SwapFileExtension(const std::string &path, const std::string &ext) {
+	std::string res;
+
 	if (ext.empty()) {
-		return path;
+		res = path;
+	} else {
+		res = CutFileExtension(path) + "." + ext;
 	}
-	return CutFileExtension(path) + "." + ext;
+
+	return res;
 }
 
 //
 std::string FactorizePath(const std::string &path) {
+	std::string res;
+
 	std::vector<std::string> dirs = split(path, "/");
+
 	if (dirs.size() < 2) {
-		return dirs.empty() ? path : dirs[0];
-	}
+		res = dirs.empty() ? path : dirs[0];
+	} else {
+		bool factorized = false;
 
-	bool factorized = false;
+		while (dirs.size() > 1 && !factorized) {
+			factorized = true;
 
-	while (dirs.size() > 1 && !factorized) {
-		factorized = true;
-
-		std::vector<std::string>::iterator i = dirs.begin();
-		for (; i != dirs.end() - 1; ++i)
-			if (*i != ".." && *(i + 1) == "..") {
-				factorized = false;
-				break;
+			std::vector<std::string>::iterator i = dirs.begin();
+			for (; i != dirs.end() - 1; ++i) {
+				if ((*i != "..") && (*(i + 1) == "..")) {
+					factorized = false;
+					break;
+				}
 			}
 
-		if (!factorized) {
-			dirs.erase(i + 1);
-			dirs.erase(i);
+			if (!factorized) {
+				dirs.erase(i + 1);
+				dirs.erase(i);
+			}
 		}
+
+		res = join(dirs.begin(), dirs.end(), "/");
 	}
 
-	return join(dirs.begin(), dirs.end(), "/");
+	return res;
 }
 
 //
 std::string CleanPath(const std::string &path) {
-	std::string out(path);
+	std::string res = path;
 
 	// drive letter to lower case on Windows platform
 #if _WIN32
-	if (path.length() > 2 && path[1] == ':')
-		out = tolower(path, 0, 1);
-	bool is_network_path = starts_with(out, "\\\\");
+	if (path.length() > 2 && path[1] == ':') {
+		res = tolower(path, 0, 1);
+	}
+
+	const bool is_network_path = starts_with(res, "\\\\");
 #endif
 
 	// convert directory separator from backslash to forward slash
-	replace_all(out, "\\", "/");
+	replace_all(res, "\\", "/");
 
 	// remove redundant forward slashes
-	while (replace_all(out, "//", "/"))
-		;
-
-	while (replace_all(out, "/./", "/"))
-		;
+	while (replace_all(res, "//", "/")) {}
+	while (replace_all(res, "/./", "/")) {}
 
 #if _WIN32
-	if (is_network_path)
-		out = std::string("\\\\") + slice(out, 1);
+	if (is_network_path) {
+		const std::string tmp = slice(res, 1);
+		res = "\\\\";
+		res += tmp;
+	}
 #endif
 
 	// remove pointless ./ when it is starting the file path
-	while (starts_with(out, "./"))
-		out = slice(out, 2);
+	while (starts_with(res, "./")) {
+		res = slice(res, 2);
+	}
 
 	// remove pointless /. when it is ending the file path
-	while (ends_with(out, "/."))
-		out = slice(out, 0, -2);
+	while (ends_with(res, "/.")) {
+		res = slice(res, 0, -2);
+	}
 
-	return FactorizePath(out);
+	res = FactorizePath(res);
+
+	return res;
 }
 
 std::string CleanFileName(const std::string &filename) {
-	std::string out(filename);
+	std::string res = filename;
 
 	const char filename_invalid_chars[] = "<>:\"/\\|?*";
 
 	for (size_t i = 0; i < sizeof(filename_invalid_chars); i++) {
-		std::string str_to_replace(1, filename_invalid_chars[i]);
-		replace_all(out, str_to_replace, "_");
+		const std::string str_to_replace(1, filename_invalid_chars[i]);
+		replace_all(res, str_to_replace, "_");
 	}
 
+	return res;
+}
+
+//
+std::string GetAbsolutePath(const std::string path) {
+#if _WIN32
+	const std::wstring wpath = utf8_to_wchar(path);
+	DWORD len = GetFullPathNameW(wpath.c_str(), 0, NULL, NULL);
+	if (len == 0) {
+		return std::string();
+	}
+	std::wstring out(len-1, 0);
+	len = GetFullPathNameW(wpath.c_str(), len, &out[0], NULL);
+
+	return wchar_to_utf8(out);
+#else
+	std::string out(PATH_MAX, 0);
+	if (realpath(path.c_str(), &out[0]) == NULL) {
+		return std::string();
+	}
+
+	size_t len = strlen(out.c_str());
+	out.resize(len);
 	return out;
+#endif
 }
 
 //
 #if _WIN32
 
 std::string GetCurrentWorkingDirectory() {
-	WCHAR path[1024];
-	GetCurrentDirectoryW(1024 - 1, path); // poorly worded documentation makes it unclear if nBufferLength should account for the terminator or not...
-	return wchar_to_utf8(path);
+	std::array<WCHAR, 1024> cwd;
+	GetCurrentDirectoryW(1024 - 1, cwd.data()); // poorly worded documentation makes it unclear if nBufferLength should account for the terminator or not...
+	return wchar_to_utf8(cwd.data());
 }
 
-bool SetCurrentWorkingDirectory(const std::string &path) { return SetCurrentDirectoryW(utf8_to_wchar(path).c_str()) == TRUE; }
+bool SetCurrentWorkingDirectory(const std::string &path) {
+	return SetCurrentDirectoryW(utf8_to_wchar(path).c_str()) == TRUE;
+}
 
 std::string GetUserFolder() {
-	PWSTR path;
-	HRESULT res = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &path);
-	if (FAILED(res))
-		return "";
+	std::string res;
 
-	std::string ret = wchar_to_utf8(path);
-	CoTaskMemFree(path);
-	return ret;
+	PWSTR path;
+	HRESULT hres = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &path);
+
+	if (SUCCEEDED(hres)) {
+		res = wchar_to_utf8(path);
+		CoTaskMemFree(path);
+	}
+
+	return res;
 }
 
 #else // POSIX
 
 std::string GetCurrentWorkingDirectory() {
+	std::string res;
+
 	std::array<char, 1024> cwd;
-	return getcwd(cwd.data(), 1024) ? std::string(cwd.data()) : "";
+	if (getcwd(cwd.data(), 1024)) {
+		res = cwd.data();
+	}
+
+	return res;
 }
 
-bool SetCurrentWorkingDirectory(const std::string &path) { return chdir(path.c_str()) == 0; }
+bool SetCurrentWorkingDirectory(const std::string &path) {
+	return chdir(path.c_str()) == 0;
+}
 
-std::string GetUserFolder() { return getpwuid(getuid())->pw_dir; }
+std::string GetUserFolder() {
+	return getpwuid(getuid())->pw_dir;
+}
 
 #endif // POSIX
 

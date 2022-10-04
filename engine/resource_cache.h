@@ -12,8 +12,14 @@ namespace hg {
 
 template <typename T> struct ResourceRef {
 	gen_ref ref;
-	bool operator==(const ResourceRef &o) const { return ref == o.ref; }
-	bool operator!=(const ResourceRef &o) const { return ref != o.ref; }
+
+	bool operator==(const ResourceRef &o) const {
+		return ref == o.ref;
+	}
+
+	bool operator!=(const ResourceRef &o) const {
+		return ref != o.ref;
+	}
 };
 
 template <typename T> class ResourceCache {
@@ -43,17 +49,19 @@ public:
 	ResourceCache(void (*destroy)(T &)) : _destroy(destroy) {}
 
 	RefType Add(const std::string &name, const T &res) {
-		dict_iterator i = name_to_ref.find(name);
-		if (i != name_to_ref.end())
-			return i->second;
-
-		name_T nt;
-		nt.name = name;
-		nt.T_ = res;
-
 		RefType ref;
-		ref.ref = resources.add_ref(nt);
-		name_to_ref[name] = ref;
+		const dict_iterator i = name_to_ref.find(name);
+
+		if (i == name_to_ref.end()) {
+			name_T nt;
+			nt.name = name;
+			nt.T_ = res;
+
+			ref.ref = resources.add_ref(nt);
+			name_to_ref[name] = ref;
+		} else {
+			ref = i->second;
+		}
 		return ref;
 	}
 
@@ -76,6 +84,7 @@ public:
 		for (res_iterator i = resources.begin(); i != resources.end(); ++i) {
 			_destroy(i->T_);
 		}
+
 		resources.clear();
 		name_to_ref.clear();
 	}
@@ -90,39 +99,50 @@ public:
 		return i != name_to_ref.end() ? i->second : RefType();
 	}
 
-	size_t GetCount() const { return resources.size(); }
+	size_t GetCount() const {
+		return resources.size();
+	}
 
 	void SetName(RefType ref, const std::string &name) {
-		if (resources.is_valid(ref.ref))
+		if (resources.is_valid(ref.ref)) {
 			resources[ref.ref.idx].name = name;
+		}
 	}
 
 	void SetName_unsafe_(uint16_t idx, const std::string &name) {
 		if (idx != 0xffff) {
-			__ASSERT__(resources.is_used(idx));
+			HG_ASSERT(resources.is_used(idx));
 			resources[idx].name = name;
 		}
 	}
 
-	std::string GetName(RefType ref) const { return resources.is_valid(ref.ref) ? resources[ref.ref.idx].name : std::string(); }
+	std::string GetName(RefType ref) const { 
+		return resources.is_valid(ref.ref) ? resources[ref.ref.idx].name : std::string(); 
+	}
 
 	std::string GetName_unsafe_(uint16_t idx) const {
+		std::string res;
 		if (idx != 0xffff) {
-			__ASSERT__(resources.is_used(idx));
-			return resources[idx].name;
+			HG_ASSERT(resources.is_used(idx));
+			res = resources[idx].name;
 		}
-		return std::string();
+		return res;
 	}
 
 	const T &Get(RefType ref) const { return IsValidRef(ref) ? resources[ref.ref.idx].T_ : dflt; }
 	T &Get(RefType ref) { return IsValidRef(ref) ? resources[ref.ref.idx].T_ : dflt; }
 
 	const T &Get_unsafe_(uint16_t idx) const {
-		if (idx != 0xffff) {
-			__ASSERT__(resources.is_used(idx));
-			return resources[idx].T_;
+		const T *res;
+
+		if (idx != 0xffffU) {
+			HG_ASSERT(resources.is_used(idx));
+			res = &resources[idx].T_;
+		} else {
+			res = &dflt;
 		}
-		return dflt;
+
+		return *res;
 	}
 
 	const T &Get(const std::string &name) const {
@@ -130,19 +150,28 @@ public:
 		return i != name_to_ref.end() ? resources[i->second.ref.idx].T_ : dflt;
 	}
 
-	gen_ref first_ref() const { return resources.first_ref(); }
-	gen_ref next_ref(gen_ref ref) const { return resources.next_ref(ref); }
+	gen_ref first_ref() const {
+		return resources.first_ref();
+	}
+
+	gen_ref next_ref(gen_ref ref) const {
+		return resources.next_ref(ref);
+	}
 
 #if 0
 
 #if __cplusplus >= 201103L
 	R Add(const std::string &name, T &&res) {
-		auto i = name_to_ref.find(name);
-		if (i != name_to_ref.end())
-			return i->second;
+		R ref;
+		const dict_iterator i = name_to_ref.find(name);
 
-		R ref = {resources.add_ref({name, std::move(res)})};
-		name_to_ref[name] = ref;
+		if (i != name_to_ref.end()) {
+			ref = {resources.add_ref({name, std::move(res)})};
+			name_to_ref[name] = ref;
+		} else {
+			ref = i->second;
+		}
+
 		return ref;
 	}
 

@@ -14,33 +14,67 @@ public:
 	explicit Data(size_t size);
 	Data(const Data &data);
 #if __cplusplus >= 201103L
-	Data(Data &&data) : Data() { *this = data; }
+	Data(Data &&data) : Data() {
+		*this = data;
+	}
 #endif
-	Data(const void *data, size_t size);
-	Data(void *data, size_t size);
+	Data(const uint8_t *data, size_t size);
+	Data(uint8_t *data, size_t size);
 
 	Data &operator=(const Data &data);
 #if __cplusplus >= 201103L
 	Data &operator=(Data &&data);
 #endif
 
-	uint8_t *GetData() { return data_; }
-	const uint8_t *GetData() const { return data_; }
+	uint8_t *GetData() {
+		return data_;
+	}
 
-	size_t GetSize() const { return size_; }
-	size_t GetCapacity() const { return capacity_; }
+	const uint8_t *GetData() const {
+		return data_;
+	}
 
-	size_t GetCursor() const { return cursor; }
-	void SetCursor(size_t pos) { Reserve(cursor = pos); }
-	void Rewind() { SetCursor(0); }
+	size_t GetSize() const {
+		return size_;
+	}
 
-	void TakeOwnership() { Reserve(size_); }
+	size_t GetCapacity() const {
+		return capacity_;
+	}
 
-	uint8_t *GetCursorPtr() { return data_ + cursor; }
-	const uint8_t *GetCursorPtr() const { return data_ + cursor; }
+	size_t GetCursor() const {
+		return cursor;
+	}
 
-	void Reset() { size_ = cursor = 0; }
-	bool Empty() const { return size_ == 0; }
+	void SetCursor(size_t pos) {
+		cursor = pos;
+		Reserve(cursor);
+	}
+
+	void Rewind() {
+		SetCursor(0);
+	}
+
+	void TakeOwnership() {
+		Reserve(size_);
+	}
+
+	uint8_t *GetCursorPtr() {
+		return &data_[cursor];
+	}
+
+	const uint8_t *GetCursorPtr() const {
+		return &data_[cursor];
+	}
+
+	void Reset() {
+		size_ = 0;
+		cursor = 0;
+	}
+
+	bool Empty() const {
+		return size_ == 0;
+	}
 
 	bool Reserve(size_t size);
 	bool Resize(size_t size);
@@ -65,7 +99,9 @@ bool Read(Data &data, std::string &str);
 bool Write(Data &data, const std::string &str);
 
 //
-template <typename T> bool Read(Data &data, T &v) { return data.Read(&v, sizeof(T)); }
+template <typename T> bool Read(Data &data, T &v) {
+	return data.Read(&v, sizeof(T));
+}
 
 template <typename T> T Read(Data &data) {
 	T v;
@@ -73,7 +109,9 @@ template <typename T> T Read(Data &data) {
 	return v;
 }
 
-template <typename T> bool Write(Data &data, const T &v) { return data.Write(&v, sizeof(T)) == sizeof(T); }
+template <typename T> bool Write(Data &data, const T &v) {
+	return data.Write(&v, sizeof(T)) == sizeof(T);
+}
 
 //
 template <typename T> struct DeferredDataWrite {

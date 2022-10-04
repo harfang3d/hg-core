@@ -2,50 +2,64 @@
 
 #include "foundation/math.h"
 #include "foundation/rotation_order.h"
+
 #include <cfloat>
 #include <cmath>
 
 namespace hg {
 
-RotationOrder ReverseRotationOrder(RotationOrder r) {
-	switch (r) {
-		case RO_ZYX:
-			return RO_XYZ;
-		case RO_YZX:
-			return RO_XZY;
-		case RO_ZXY:
-			return RO_YXZ;
-		case RO_XZY:
-			return RO_YZX;
-		case RO_YXZ:
-			return RO_ZXY;
-		case RO_XYZ:
-			return RO_ZYX;
-		default:
-			return RO_Default;
+RotationOrder ReverseRotationOrder(RotationOrder in) {
+	RotationOrder out;
+
+	if (in == RO_ZYX) {
+		out = RO_XYZ;
+	} else if (in == RO_YZX) {
+		out = RO_XZY;
+	} else if (in == RO_ZXY) {
+		out = RO_YXZ;
+	} else if (in == RO_XZY) {
+		out = RO_YZX;
+	} else if (in == RO_YXZ) {
+		out = RO_ZXY;
+	} else if (in == RO_XYZ) {
+		out = RO_ZYX;
+	} else {
+		out = RO_Default;
 	}
+
+	return out;
 }
 
 //
-float Sqrt(float v) { return sqrtf(v); }
+float Sqrt(float v) {
+	return sqrtf(v);
+}
 
-bool TestEqual(float a, float b, float e) { return Abs(b - a) < e; }
-bool EqualZero(float v, float e) { return !((v < -e) || (v > e)); }
+float Pow(float v, float e) {
+	return pow(v, e);
+}
 
-float Pow(float v, float e) { return pow(v, e); }
-
-float Ceil(float v) { 
+float Ceil(float v) {
 #if __STDC_VERSION__ >= 199901L
 	return ceilf(v);
 #else
-	return float(ceil(double(v)));
+	return static_cast<float>(ceil(static_cast<double>(v)));
 #endif
 }
+
 float Floor(float v) {
 #if __STDC_VERSION__ >= 199901L
 	return floorf(v);
 #else
-	return float(floor(double(v)));
+	return static_cast<float>(floor(static_cast<double>(v)));
+#endif
+}
+
+float Round(float v) {
+#if __STDC_VERSION__ >= 199901L
+	return roundf(v);
+#else
+	return static_cast<float>(round(static_cast<double>(v)));
 #endif
 }
 
@@ -58,19 +72,42 @@ float RangeAdjust(float v, float old_min, float old_max, float new_min, float ne
 	return Clamp((v - old_min) / (old_max - old_min) * (new_max - new_min) + new_min, new_min, new_max);
 }
 
-float Quantize(float v, float q) { return Floor(v / q) * q; }
+float Quantize(float v, float q) {
+	return Floor(v / q) * q;
+}
 
-float Frac(float v) { return v - int(v); }
+float Frac(float v) {
+	return v - static_cast<float>(static_cast<int>(v));
+}
 
 //
-bool IsFinite(float v) { return (v <= FLT_MAX && v >= -FLT_MAX); }
+bool IsFinite(float v) {
+	return (v <= FLT_MAX) && (v >= -FLT_MAX);
+}
 
 //
-float Sin(float v) { return sin(v); }
-float ASin(float v) { return asin(Clamp(v, -1.f, 1.f)); }
-float Cos(float v) { return cos(v); }
-float ACos(float v) { return acos(Clamp(v, -1.f, 1.f)); }
-float Tan(float v) { return tan(v); }
-float ATan(float v) { return atan(v); }
+float Sin(float v) {
+	return sin(v);
+}
+
+float ASin(float v) {
+	return asin(Clamp(v, -1.F, 1.F));
+}
+
+float Cos(float v) {
+	return cos(v);
+}
+
+float ACos(float v) {
+	return acos(Clamp(v, -1.F, 1.F));
+}
+
+float Tan(float v) {
+	return tan(v);
+}
+
+float ATan(float v) {
+	return atan(v);
+}
 
 } // namespace hg

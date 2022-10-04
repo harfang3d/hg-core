@@ -71,9 +71,9 @@ void test_picture() {
 
 		SetPixelRGBA(pic0, 7, 9, Color::Orange);
 		Color c = GetPixelRGBA(pic0, 7, 9);
-		TEST_CHECK(TestEqual(c.r, Color::Orange.r, 1.f / 255.f) == true);
-		TEST_CHECK(TestEqual(c.g, Color::Orange.g, 1.f / 255.f) == true);
-		TEST_CHECK(TestEqual(c.b, Color::Orange.b, 1.f / 255.f) == true);
+		TEST_CHECK(AlmostEqual(c.r, Color::Orange.r, 1.f / 255.f) == true);
+		TEST_CHECK(AlmostEqual(c.g, Color::Orange.g, 1.f / 255.f) == true);
+		TEST_CHECK(AlmostEqual(c.b, Color::Orange.b, 1.f / 255.f) == true);
 		TEST_CHECK(c.a == 0.f);
 		TEST_CHECK(GetPixelRGBA(pic0, 20, 8) == Color::Zero);
 

@@ -6,61 +6,68 @@
 
 #include "foundation/math.h"
 #include "foundation/unit.h"
+#include "foundation/vector3.h"
 
 using namespace hg;
 
 void test_units() {
-	TEST_CHECK(TestEqual(Deg(60.f), Pi/3.f));
-	TEST_CHECK(TestEqual(Deg(90.f), HalfPi));
-	TEST_CHECK(TestEqual(Deg(120.f), TwoPi / 3.f));
-	TEST_CHECK(TestEqual(Deg(180.f), Pi));
-	TEST_CHECK(TestEqual(Deg(315.f), 7.f*Pi/4.f));
-	TEST_CHECK(TestEqual(Deg(360.f), TwoPi));
+	TEST_CHECK(Equal(Deg(60.f), Pi/3.f));
+	TEST_CHECK(Equal(Deg(90.f), HalfPi));
+	TEST_CHECK(Equal(Deg(120.f), TwoPi / 3.f));
+	TEST_CHECK(Equal(Deg(180.f), Pi));
+	TEST_CHECK(Equal(Deg(315.f), 7.f*Pi/4.f));
+	TEST_CHECK(Equal(Deg(360.f), TwoPi));
 
-	TEST_CHECK(TestEqual(DegreeToRadian(60.f), Pi / 3.f));
-	TEST_CHECK(TestEqual(DegreeToRadian(90.f), HalfPi));
-	TEST_CHECK(TestEqual(DegreeToRadian(120.f), TwoPi / 3.f));
-	TEST_CHECK(TestEqual(DegreeToRadian(180.f), Pi));
-	TEST_CHECK(TestEqual(DegreeToRadian(315.f), 7.f * Pi / 4.f));
-	TEST_CHECK(TestEqual(DegreeToRadian(360.f), TwoPi));
+	TEST_CHECK(Equal(DegreeToRadian(60.f), Pi / 3.f));
+	TEST_CHECK(Equal(DegreeToRadian(90.f), HalfPi));
+	TEST_CHECK(Equal(DegreeToRadian(120.f), TwoPi / 3.f));
+	TEST_CHECK(Equal(DegreeToRadian(180.f), Pi));
+	TEST_CHECK(AlmostEqual(DegreeToRadian(315.f), 7.f * Pi / 4.f));
+	TEST_CHECK(Equal(DegreeToRadian(360.f), TwoPi));
 
-	TEST_CHECK(TestEqual(RadianToDegree(Pi / 3.f), 60.f));
-	TEST_CHECK(TestEqual(RadianToDegree(HalfPi), 90.f));
-	TEST_CHECK(TestEqual(RadianToDegree(TwoPi / 3.f), 120.f));
-	TEST_CHECK(TestEqual(RadianToDegree(Pi), 180.f));
-	TEST_CHECK(TestEqual(RadianToDegree(7.f * Pi / 4.f), 315.f));
-	TEST_CHECK(TestEqual(RadianToDegree(TwoPi), 360.f));
+	TEST_CHECK(DegreeToRadian(Vec3(60.f, 90.f, 120.f)) == Vec3(Pi / 3.f, HalfPi, TwoPi/3.f));
+
+	TEST_CHECK(Equal(RadianToDegree(Pi / 3.f), 60.f));
+	TEST_CHECK(Equal(RadianToDegree(HalfPi), 90.f));
+	TEST_CHECK(Equal(RadianToDegree(TwoPi / 3.f), 120.f));
+	TEST_CHECK(Equal(RadianToDegree(Pi), 180.f));
+	TEST_CHECK(Equal(RadianToDegree(7.f * Pi / 4.f), 315.f));
+	TEST_CHECK(Equal(RadianToDegree(TwoPi), 360.f));
+
+	TEST_CHECK(Equal(Csec(1.0f), 0.01f));
+	TEST_CHECK(Equal(Csec(100.f), 1.f));
+
+	TEST_CHECK(Equal(Sec(1.f), 1.f));
+	TEST_CHECK(Equal(Sec(60.f), 60.f));
+	TEST_CHECK(Equal(Sec(0.5f), 0.5f));
+
+	TEST_CHECK(Equal(Ms(1.0f), 0.001f));
+	TEST_CHECK(Equal(Ms(1000.f), 1.f));
+
+	TEST_CHECK(Equal(Ton(2.f), 2000.f));
+	TEST_CHECK(Equal(Ton(0.001f), 1.f));
+
+	TEST_CHECK(Equal(Kg(2.f), 2.f));
+
+	TEST_CHECK(Equal(G(2.f), 0.002f));
+	TEST_CHECK(Equal(G(1000.f), 1.f));
+
+	TEST_CHECK(Equal(Km(1.f), 1000.f));
+	TEST_CHECK(Equal(Km(0.001f), 1.f));
+
+	TEST_CHECK(Equal(Mtr(1.f), 1.f));
+
+	TEST_CHECK(Equal(Cm(1.f), 0.01f));
+	TEST_CHECK(Equal(Cm(100.f), 1.f));
+
+	TEST_CHECK(Equal(Mm(1.f), 0.001f));
+	TEST_CHECK(Equal(Mm(1000.f), 1.f));
 	
-	TEST_CHECK(TestEqual(Csec(1.0f), 0.01f));
-	TEST_CHECK(TestEqual(Csec(100.f), 1.f));
-
-	TEST_CHECK(TestEqual(Ms(1.0f), 0.001f));
-	TEST_CHECK(TestEqual(Ms(1000.f), 1.f));
-
-	TEST_CHECK(TestEqual(Ton(2.f), 2000.f));
-	TEST_CHECK(TestEqual(Ton(0.001f), 1.f));
-
-	TEST_CHECK(TestEqual(Kg(2.f), 2.f));
-
-	TEST_CHECK(TestEqual(G(2.f), 0.002f));
-	TEST_CHECK(TestEqual(G(1000.f), 1.f));
-
-	TEST_CHECK(TestEqual(Km(1.f), 1000.f));
-	TEST_CHECK(TestEqual(Km(0.001f), 1.f));
-
-	TEST_CHECK(TestEqual(Mtr(1.f), 1.f));
-
-	TEST_CHECK(TestEqual(Cm(1.f), 0.01f));
-	TEST_CHECK(TestEqual(Cm(100.f), 1.f));
-
-	TEST_CHECK(TestEqual(Mm(1.f), 0.001f));
-	TEST_CHECK(TestEqual(Mm(1000.f), 1.f));
+	TEST_CHECK(Equal(Inch(1.f), 0.0254f));
+	TEST_CHECK(AlmostEqual(Inch(39.3701f), 1.f));
 	
-	TEST_CHECK(TestEqual(Inch(1.f), 0.0254f));
-	TEST_CHECK(TestEqual(Inch(39.3701f), 1.f));
-	
-	TEST_CHECK(TestEqual(KB(1), 1024));
-	TEST_CHECK(TestEqual(KB(1024), MB(1)));
+	TEST_CHECK(Equal(KB(1), 1024));
+	TEST_CHECK(Equal(KB(1024), MB(1)));
 
 	TEST_CHECK(FormatMemorySize(512) == "512B");
 	TEST_CHECK(FormatMemorySize(KB(1)) == "1.0KB");

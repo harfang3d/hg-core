@@ -245,7 +245,11 @@ std::vector<PipelineProgramFeature> LoadPipelineProgramFeaturesFromAssets(const 
 enum VertexAttribute { VA_Position, VA_Normal, VA_Tangent, VA_Bitangent, VA_Color, VA_BoneIndices, VA_BoneWeights, VA_UV0, VA_UV1, VA_Count };
 
 struct ShaderLayout {
-	ShaderLayout() { std::fill(attrib, attrib + SG_MAX_VERTEX_ATTRIBUTES, VA_Count); }
+	ShaderLayout() {
+		for (size_t i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+			attrib[i] = VA_Count;
+		}
+	}
 
 	uint8_t attrib[SG_MAX_VERTEX_ATTRIBUTES]; // VertexAttribute
 };
@@ -253,20 +257,39 @@ struct ShaderLayout {
 struct VertexLayout {
 	VertexLayout();
 
-	void Set(VertexAttribute semantic, sg_vertex_format format);
+	void Set(VertexAttribute semantic, sg_vertex_format format, size_t offset);
 
-	/// Return offsets for each vertex attribute as output parameter and layout stride as return value.
-	size_t GetOffsets(int offset[VA_Count]) const;
-	size_t GetStride() const;
+	bool Has(VertexAttribute attr) const {
+		return attrib[attr].format != SG_VERTEXFORMAT_INVALID;
+	}
 
-	bool Has(VertexAttribute attr) const { return attrib[attr] != SG_VERTEXFORMAT_INVALID; }
-	sg_vertex_format GetFormat(VertexAttribute attr) const { return sg_vertex_format(attrib[attr]); }
+	sg_vertex_format GetFormat(VertexAttribute attr) const {
+		return static_cast<sg_vertex_format>(attrib[attr].format);
+	}
 
-	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const;
-	void PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const;
+	size_t GetOffset(VertexAttribute attr) const {
+		return static_cast<size_t>(attrib[attr].offset);
+	}
+
+	size_t GetStride() const {
+		return stride;
+	}
+
+	void SetStride(uint8_t stride_) {
+		stride = stride_;
+	}
+
+	void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
+	void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
+
+	struct Attrib {
+		uint8_t format; // sg_vertex_format
+		uint8_t offset; // offset
+	};
 
 private:
-	uint8_t attrib[VA_Count]; // sg_vertex_format
+	Attrib attrib[VA_Count];
+	uint8_t stride;
 };
 
 //
@@ -301,17 +324,17 @@ static const TextureRef InvalidTextureRef;
 static const ModelRef InvalidModelRef;
 
 //
-static const float default_shadow_bias = 0.0001f;
-static const Vec4 default_pssm_split = Vec4(10.f, 50.f, 100.f, 500.f);
+static const float default_shadow_bias = 0.0001F;
+static const Vec4 default_pssm_split = Vec4(10.F, 50.F, 100.F, 500.F);
 
 #if 1
 
 //
 struct ShaderUniform {
-	ShaderUniform() : type(SG_UNIFORMTYPE_INVALID) {}
-
+	ShaderUniform() : type(SG_UNIFORMTYPE_INVALID), count(0) {}
 	std::string name;
 	sg_uniform_type type;
+	int count;
 };
 
 struct ShaderUniforms {
@@ -321,18 +344,35 @@ struct ShaderUniforms {
 	sg_uniform_layout layout;
 };
 
+struct ShaderImage {
+	ShaderImage() : image(SG_IMAGETYPE_2D), sampler(SG_SAMPLERTYPE_FLOAT) {}
+	std::string name;
+	sg_image_type image;
+	sg_sampler_type sampler;
+};
+
 struct Shader { // 20B
-	Shader() { shader.id = SG_INVALID_ID; }
+	Shader() {
+		shader.id = SG_INVALID_ID;
+	}
 
 	sg_shader shader;
 
 	ShaderLayout layout; // attributes
-	ShaderUniforms uniforms; // uniforms
+
+	ShaderUniforms uniforms[SG_NUM_SHADER_STAGES][SG_MAX_SHADERSTAGE_UBS]; // uniforms
+	ShaderImage images[SG_NUM_SHADER_STAGES][SG_MAX_SHADERSTAGE_IMAGES]; // images
 };
+
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &vs_name, const std::string &fs_name, bool silent);
 
 Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent = false);
 Shader LoadShaderFromFile(const std::string &path, bool silent = false);
 Shader LoadShaderFromAssets(const std::string &name, bool silent = false);
+
+struct PipelineProgram {
+	Shader shader;
+};
 
 /*
 struct TextureUniform {
@@ -349,6 +389,11 @@ struct Vec4Uniform {
 	bool is_color;
 };
 */
+
+bool LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_image_desc &desc, bool silent);
+
+bool LoadTextureMetaFromFile(const std::string &path, sg_image_desc &desc, bool silent);
+bool LoadTextureMetaFromAssets(const std::string &name, sg_image_desc &desc, bool silent);
 
 #if 0
 struct PipelineProgram {
@@ -382,6 +427,7 @@ bool LoadPipelineProgramUniformsFromAssets(
 //
 struct DisplayList { // 4B
 	size_t element_count;
+	uint8_t index_type_size;
 	sg_buffer index_buffer;
 	sg_buffer vertex_buffer;
 	std::vector<uint16_t> bones_table;
@@ -448,6 +494,34 @@ struct UniformSetTexture { // burn it with fire, complete insanity
 UniformSetTexture MakeUniformSetTexture(const std::string &name, const Texture &texture, uint8_t stage);
 
 //
+struct UniformData { // stored in material, links to Shader.uniforms
+	UniformData() {
+		for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+			offset[i] = 0;
+		}
+	}
+
+	uint16_t offset[SG_MAX_UB_MEMBERS];
+	std::vector<int8_t> data;
+};
+
+int GetUniformDataIndex(const std::string &name, const Shader &shader);
+
+template <typename T> T GetUniformDataValue(const UniformData &data, const int index) {
+	return *reinterpret_cast<T *>(&data.data[data.offset[index]]);
+}
+
+template <typename T> void SetUniformDataValue(UniformData &data, const int index, const T &value) {
+	if (index != -1)
+		*reinterpret_cast<T *>(&data.data[data.offset[index]]) = value;
+}
+
+const void *GetUniformDataPtr(const UniformData &data);
+size_t GetUniformDataSize(const UniformData &data);
+
+void SetupShaderUniformData(const Shader &shader, UniformData &data);
+
+//
 static const int MF_EnableSkinning = 0x01;
 static const int MF_DiffuseUV1 = 0x02;
 static const int MF_SpecularUV1 = 0x04;
@@ -483,8 +557,9 @@ struct Material { // 56B
 	std::map<std::string, Texture> textures;
 
 	RenderState state;
-
 	uint8_t flags;
+
+	UniformData uniform_data;
 };
 
 Material CreateMaterial(PipelineProgramRef prg);
@@ -555,11 +630,13 @@ RenderState ComputeRenderState(BlendMode blend, DepthTest test = DT_Less, FaceCu
 
 //
 struct Model { // 96B (+heap)
+	Model() : tri_count(0) {}
+
 	uint32_t tri_count;
 	VertexLayout vtx_layout;
 
-	std::vector<MinMax> bounds; // minmax/list
 	std::vector<DisplayList> lists;
+	std::vector<MinMax> bounds; // minmax/list
 	std::vector<uint16_t> mats; // material/list
 	std::vector<Mat4> bind_pose; // bind pose matrices
 };
@@ -573,6 +650,7 @@ size_t GetModelMaterialCount(const Model &model);
 //
 void Destroy(Model &model);
 void Destroy(Material &material);
+void Destroy(PipelineProgram &pipeline_shader);
 
 //
 struct TextureLoad {
@@ -588,10 +666,12 @@ struct ModelLoad {
 };
 
 struct PipelineResources {
-	PipelineResources() : /*programs(Destroy),*/ textures(Destroy), materials(Destroy), models(Destroy) {}
-	~PipelineResources() { DestroyAll(); }
+	PipelineResources() : programs(Destroy), textures(Destroy), materials(Destroy), models(Destroy) {}
+	~PipelineResources() {
+		DestroyAll();
+	}
 
-	//	ResourceCache<PipelineProgram> programs;
+	ResourceCache<PipelineProgram> programs;
 	ResourceCache<Texture> textures;
 	ResourceCache<Material> materials;
 	ResourceCache<Model> models;
@@ -758,7 +838,9 @@ typedef std::vector<uint16_t> Indices;
 struct Vertices {
 	Vertices(const VertexLayout &layout, size_t count);
 
-	const VertexLayout &GetDecl() const { return layout; }
+	const VertexLayout &GetDecl() const {
+		return layout;
+	}
 
 	Vertices &Begin(size_t i);
 	Vertices &SetPos(const Vec3 &pos);
@@ -784,11 +866,21 @@ struct Vertices {
 	void Reserve(size_t count);
 	void Resize(size_t count);
 
-	const void *GetData() const { return data.data(); }
+	const void *GetData() const {
+		return data.data();
+	}
 
-	size_t GetSize() const { return data.size(); }
-	size_t GetCount() const { return data.size() / layout.GetStride(); }
-	size_t GetCapacity() const { return data.capacity() / layout.GetStride(); }
+	size_t GetSize() const {
+		return data.size();
+	}
+
+	size_t GetCount() const {
+		return data.size() / layout.GetStride();
+	}
+
+	size_t GetCapacity() const {
+		return data.capacity() / layout.GetStride();
+	}
 
 private:
 	VertexLayout layout;

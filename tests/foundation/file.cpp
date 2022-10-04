@@ -57,8 +57,12 @@ void test_file() {
 		TEST_CHECK(info.is_file == true);
 		TEST_CHECK(info.size == size);
 
+		std::string filepath = GetFilePath(filename);
 		TEST_CHECK(IsFile(filename) == true);
-		TEST_CHECK(IsFile(GetFilePath(filename)) == false);
+		TEST_CHECK(IsFile(filepath) == false);
+
+		TEST_CHECK(IsDirectory(filepath) == true);
+		TEST_CHECK(IsDirectory(filename) == false);
 
 		File f = Open(filename, true);
 		uint8_t dummy = 'A';

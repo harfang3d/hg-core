@@ -918,15 +918,15 @@ static void test_anim_conform() {
 	ConformAnimTrackKeys(track);
 
 	if (TEST_CHECK(track.keys.size() == 3)) {
-		TEST_CHECK(TestEqual(track.keys[1].v.x, q3.x));
-		TEST_CHECK(TestEqual(track.keys[1].v.y, q3.y));
-		TEST_CHECK(TestEqual(track.keys[1].v.z, q3.z));
-		TEST_CHECK(TestEqual(track.keys[1].v.w, q3.w));
+		TEST_CHECK(AlmostEqual(track.keys[1].v.x, q3.x, 1e-6f));
+		TEST_CHECK(AlmostEqual(track.keys[1].v.y, q3.y, 1e-6f));
+		TEST_CHECK(AlmostEqual(track.keys[1].v.z, q3.z, 1e-6f));
+		TEST_CHECK(AlmostEqual(track.keys[1].v.w, q3.w, 1e-6f));
 
-		TEST_CHECK(TestEqual(track.keys[2].v.x, q4.x));
-		TEST_CHECK(TestEqual(track.keys[2].v.y, q4.y));
-		TEST_CHECK(TestEqual(track.keys[2].v.z, q4.z));
-		TEST_CHECK(TestEqual(track.keys[2].v.w, q4.w));
+		TEST_CHECK(AlmostEqual(track.keys[2].v.x, q4.x, 1e-6f));
+		TEST_CHECK(AlmostEqual(track.keys[2].v.y, q4.y, 1e-6f));
+		TEST_CHECK(AlmostEqual(track.keys[2].v.z, q4.z, 1e-6f));
+		TEST_CHECK(AlmostEqual(track.keys[2].v.w, q4.w, 1e-6f));
 	}
 }
 

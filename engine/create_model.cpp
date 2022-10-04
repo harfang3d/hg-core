@@ -11,7 +11,7 @@ static inline VtxIdxType AddVertex(ModelBuilder &builder, const Vec3 &p, const V
 	Vertex v;
 	v.pos = p;
 	v.normal = n;
-	v.uv0 = uv;
+	v.uv[0] = uv;
 	return builder.AddVertex(v);
 }
 

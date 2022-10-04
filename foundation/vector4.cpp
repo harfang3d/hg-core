@@ -10,8 +10,8 @@
 
 namespace hg {
 
-const Vec4 Vec4::Zero(0, 0, 0, 0);
-const Vec4 Vec4::One(1, 1, 1, 1);
+const Vec4 Vec4::Zero(0.F, 0.F, 0.F, 0.F);
+const Vec4 Vec4::One(1.F, 1.F, 1.F, 1.F);
 
 void Vec4::operator*=(const Mat4 &m) {
 	const float _x = x, _y = y, _z = z, _w = w;
@@ -21,28 +21,32 @@ void Vec4::operator*=(const Mat4 &m) {
 	w = _w;
 }
 
-Vec4 Abs(const Vec4 &v) { return Vec4(Abs(v.x), Abs(v.y), Abs(v.z), Abs(v.w)); }
+Vec4 Abs(const Vec4 &v) {
+	return Vec4(Abs(v.x), Abs(v.y), Abs(v.z), Abs(v.w));
+}
 
 Vec4 Normalize(const Vec4 &v) {
 	const float l = Sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
-	return l > 0.f ? v / l : v;
+	return l > 0.F ? v / l : v;
 }
 
-Vec4 RandomVec4(float min, float max) { return Vec4(FRRand(min, max), FRRand(min, max), FRRand(min, max), FRRand(min, max)); }
-Vec4 RandomVec4(const Vec4 &min, const Vec4 &max) { return Vec4(FRRand(min.x, max.x), FRRand(min.y, max.y), FRRand(min.z, max.z), FRRand(min.w, max.w)); }
-
-bool AlmostEqual(const Vec4 &a, const Vec4 &b, float epsilon) {
-	return Abs(a.x - b.x) < epsilon && Abs(a.y - b.y) < epsilon && Abs(a.z - b.z) < epsilon && Abs(a.w - b.w) < epsilon;
+Vec4 RandomVec4(float min, float max) {
+	return Vec4(FRRand(min, max), FRRand(min, max), FRRand(min, max), FRRand(min, max));
 }
 
-Vec4::Vec4() : x(0.f), y(0.f), z(0.f), w(0.f) {}
+Vec4 RandomVec4(const Vec4 &min, const Vec4 &max) {
+	return Vec4(FRRand(min.x, max.x), FRRand(min.y, max.y), FRRand(min.z, max.z), FRRand(min.w, max.w));
+}
 
+bool AlmostEqual(const Vec4 &a, const Vec4 &b, float e) {
+	return AlmostEqual(a.x, b.x, e) && AlmostEqual(a.y, b.y, e) && AlmostEqual(a.z, b.z, e) && AlmostEqual(a.w, b.w, e);
+}
+
+Vec4::Vec4() : x(0.F), y(0.F), z(0.F), w(0.F) {}
 Vec4::Vec4(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
-
-Vec4::Vec4(const tVec2<int> &v) : x(float(v.x)), y(float(v.y)), z(0), w(1) {}
-Vec4::Vec4(const tVec2<float> &v) : x(float(v.x)), y(float(v.y)), z(0), w(1) {}
+Vec4::Vec4(const tVec2<int> &v) : x(static_cast<float>(v.x)), y(static_cast<float>(v.y)), z(0.F), w(1.F) {}
+Vec4::Vec4(const tVec2<float> &v) : x(v.x), y(v.y), z(0.F), w(1.F) {}
 Vec4::Vec4(const Vec3 &v, float w_) : x(v.x), y(v.y), z(v.z), w(w_) {}
-
 Vec4::Vec4(const Color &c) : x(c.r), y(c.g), z(c.b), w(c.a) {}
 Vec4::Vec4(float v) : x(v), y(v), z(v), w(v) {}
 

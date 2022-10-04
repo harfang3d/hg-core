@@ -32,8 +32,8 @@ Mat44 operator*(const Mat4 &a, const Mat44 &b);
 Vec3 operator*(const Mat44 &m, const Vec3 &v);
 Vec4 operator*(const Mat44 &m, const Vec4 &v);
 
-void TransformVec3(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
-void TransformVec4(const Mat44 &__restrict m, Vec4 *__restrict out, const Vec4 *__restrict in, unsigned int count = 1);
+void TransformVec3(const Mat44 &m, Vec4 out[], const Vec3 in[], unsigned int count = 1);
+void TransformVec4(const Mat44 &m, Vec4 out[], const Vec4 in[], unsigned int count = 1);
 
 Mat44 Transpose(const Mat44 &m);
 

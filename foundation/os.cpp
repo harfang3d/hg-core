@@ -14,11 +14,12 @@
 namespace hg {
 
 #if _WIN32
+
 std::string OSGetLastError() {
 	LPWSTR err_win32 = NULL;
 
 	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&err_win32, 0, NULL);
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPWSTR>(&err_win32), 0, NULL);
 
 	std::string err;
 
@@ -29,8 +30,13 @@ std::string OSGetLastError() {
 
 	return err;
 }
+
 #else
-std::string OSGetLastError() { return std::string(strerror(errno)); }
+
+std::string OSGetLastError() {
+	return std::string(strerror(errno));
+}
+
 #endif
 
 } // namespace hg

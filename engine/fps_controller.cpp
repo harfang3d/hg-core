@@ -13,21 +13,29 @@ void FpsController(bool key_up, bool key_down, bool key_left, bool key_right, bo
 
 	Vec3 dt;
 
-	if (key_up)
+	if (key_up) {
 		dt += front;
-	else if (key_down)
+	} else if (key_down) {
 		dt -= front;
+	} else {
+		//
+	}
 
-	if (key_left)
+	if (key_left) {
 		dt -= right;
-	else if (key_right)
+	} else if (key_right) {
 		dt += right;
+	} else {
+		//
+	}
 
 	pos += dt * speed * time_to_sec_f(dt_t);
 
 	if (btn) {
-		rot += Vec3(-dy * 0.005f, dx * 0.005f, 0.f);
+		rot += Vec3(-dy * 0.005F, dx * 0.005F, 0.F);
 		rot.x = Wrap(rot.x, -Pi, Pi);
+	} else {
+		//
 	}
 }
 

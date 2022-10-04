@@ -2,9 +2,6 @@
 add_library(mikktspace STATIC extern/mikktspace/mikktspace.c extern/mikktspace/mikktspace.h)
 target_include_directories(mikktspace PUBLIC extern/mikktspace)
 
-# meshoptimizer
-add_subdirectory(extern/meshoptimizer)
-
 # miniz
 add_library(miniz STATIC extern/miniz/miniz.c extern/miniz/miniz.h)
 target_include_directories(miniz PUBLIC extern/miniz)
@@ -53,6 +50,11 @@ set(ENGINE_SRCS
 )
 
 add_library(engine STATIC ${ENGINE_SRCS} ${ENGINE_HDRS})
-target_link_libraries(engine PUBLIC foundation mikktspace meshoptimizer miniz hg::gfx_backend)
+target_link_libraries(engine PUBLIC foundation mikktspace miniz hg::gfx_backend)
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} extern/sokol extern/stb)
 target_compile_definitions(engine PUBLIC ${HG_ENGINE_BACKEND})
+set_target_properties(engine 
+	PROPERTIES 
+		CXX_STANDARD 98
+		CXX_EXTENSIONS OFF
+)

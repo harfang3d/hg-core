@@ -3,7 +3,9 @@
 #include "engine/render_pipeline.h"
 #include "engine/assets_rw_interface.h"
 #include "engine/file_format.h"
+#include "engine/json.h"
 #include "engine/load_dds.h"
+#include "engine/shader.h"
 
 #include "foundation/file.h"
 #include "foundation/file_rw_interface.h"
@@ -69,7 +71,7 @@ ViewState ComputePerspectiveViewState(const Mat4 &world, float fov, float znear,
 	return out;
 }
 
-// l
+//
 Mat4 ComputeBillboardMat4(const Vec3 &pos, const ViewState &view_state, const Vec3 &scale) {
 	return ComputeBillboardMat4(pos, Transpose(GetRotationMatrix(view_state.view)), scale);
 }
@@ -90,89 +92,20 @@ uint32_t ComputeSortKeyFromWorld(const Vec3 &T, const Mat4 &view, const Mat4 &mo
 //
 static size_t vertex_format_size[_SG_VERTEXFORMAT_NUM] = {0, 4, 8, 12, 16, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 4};
 
-VertexLayout::VertexLayout() { std::fill_n(attrib, VA_Count, SG_VERTEXFORMAT_INVALID); }
-
-void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format) { attrib[semantic] = format; }
-
-size_t VertexLayout::GetOffsets(int offset[VA_Count]) const {
-	size_t stride = 0;
-
-	for (int i = 0; i < VA_Count; ++i) {
-		const sg_vertex_format format = sg_vertex_format(attrib[i]);
-
-		if (format == SG_VERTEXFORMAT_INVALID) {
-			offset[i] = -1;
-		} else {
-			offset[i] = stride;
-			stride += vertex_format_size[format];
-		}
-	}
-
-	return stride;
+VertexLayout::VertexLayout() {
+	Attrib attr;
+	attr.format = SG_VERTEXFORMAT_INVALID;
+	attr.offset = 0;
+	std::fill(attrib, attrib + VA_Count, attr);
 }
 
-size_t VertexLayout::GetStride() const {
-	size_t stride = 0;
-
-	for (int i = 0; i < VA_Count; ++i) {
-		const sg_vertex_format format = sg_vertex_format(attrib[i]);
-
-		if (format != SG_VERTEXFORMAT_INVALID)
-			stride += vertex_format_size[format];
-	}
-
-	return stride;
+void VertexLayout::Set(VertexAttribute semantic, sg_vertex_format format, size_t offset) {
+	attrib[semantic].format = uint8_t(format);
+	attrib[semantic].offset = numeric_cast<uint8_t>(offset);
 }
 
-void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const float *in, size_t in_count, int8_t *out) const {
-	const sg_vertex_format format = sg_vertex_format(attrib[semantic]);
-
-	if (format == SG_VERTEXFORMAT_FLOAT || format == SG_VERTEXFORMAT_FLOAT2 || format == SG_VERTEXFORMAT_FLOAT3 || format == SG_VERTEXFORMAT_FLOAT4) {
-		size_t out_count;
-
-		if (format == SG_VERTEXFORMAT_FLOAT)
-			out_count = 1;
-		else if (format == SG_VERTEXFORMAT_FLOAT2)
-			out_count = 2;
-		else if (format == SG_VERTEXFORMAT_FLOAT3)
-			out_count = 3;
-		else if (format == SG_VERTEXFORMAT_FLOAT4)
-			out_count = 4;
-
-		if (in_count > out_count)
-			in_count = out_count;
-
-		float *f_out = reinterpret_cast<float *>(out + offset[semantic]);
-
-		size_t i = 0;
-		for (; i < in_count; ++i)
-			f_out[i] = in[i];
-		for (; i < out_count; ++i) // zero pad missing input
-			f_out[i] = 0.f;
-	} else if (format == SG_VERTEXFORMAT_BYTE4 || format == SG_VERTEXFORMAT_BYTE4N) {
-		int8_t *i_out = reinterpret_cast<int8_t *>(out + offset[semantic]);
-
-		const size_t out_count = 4;
-
-		size_t i = 0;
-		for (; i < in_count; ++i)
-			i_out[i] = format == SG_VERTEXFORMAT_BYTE4N ? pack_float<int8_t>(in[i]) : int8_t(in[i]);
-		for (; i < out_count; ++i) // zero pad missing input
-			i_out[i] = 0;
-	} else if (format == SG_VERTEXFORMAT_UBYTE4 || format == SG_VERTEXFORMAT_UBYTE4N) {
-		uint8_t *u_out = reinterpret_cast<uint8_t *>(out + offset[semantic]);
-
-		const size_t out_count = 4;
-
-		size_t i = 0;
-		for (; i < in_count; ++i)
-			u_out[i] = format == SG_VERTEXFORMAT_UBYTE4N ? pack_float<uint8_t>(in[i]) : uint8_t(in[i]);
-		for (; i < out_count; ++i) // zero pad missing input
-			u_out[i] = 0;
-	}
-}
-
-void VertexLayout::PackVertex(VertexAttribute semantic, const int offset[VA_Count], const uint8_t *in, size_t in_count, int8_t *out) const {}
+// void PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const;
+// void PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const;
 
 // sg_vertex_format attrib[VA_Count];
 
@@ -192,9 +125,6 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 			va_location[va] = i;
 	}
 
-	int offset[VA_Count];
-	vertex_layout.GetOffsets(offset);
-
 	for (size_t i = 0; i < VA_Count; ++i) {
 		const int location = va_location[i];
 		if (location == -1)
@@ -204,56 +134,570 @@ void FillPipelineLayout(const VertexLayout &vertex_layout, const ShaderLayout &s
 
 		layout_attr.buffer_index = buffer_index;
 		layout_attr.format = vertex_layout.GetFormat(VertexAttribute(i));
-		layout_attr.offset = offset[i];
+		layout_attr.offset = vertex_layout.GetOffset(VertexAttribute(i));
 	}
 }
 
-//
-Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
-	struct shader_vs_params {
-		Mat44 mvp;
+void VertexLayout::PackVertex(VertexAttribute semantic, const float *in, size_t in_count, int8_t *out) const {
+	const sg_vertex_format format = sg_vertex_format(attrib[semantic].format);
+
+	if (format == SG_VERTEXFORMAT_FLOAT || format == SG_VERTEXFORMAT_FLOAT2 || format == SG_VERTEXFORMAT_FLOAT3 || format == SG_VERTEXFORMAT_FLOAT4) {
+		size_t out_count;
+
+		if (format == SG_VERTEXFORMAT_FLOAT)
+			out_count = 1;
+		else if (format == SG_VERTEXFORMAT_FLOAT2)
+			out_count = 2;
+		else if (format == SG_VERTEXFORMAT_FLOAT3)
+			out_count = 3;
+		else if (format == SG_VERTEXFORMAT_FLOAT4)
+			out_count = 4;
+
+		if (in_count > out_count)
+			in_count = out_count;
+
+		float *f_out = reinterpret_cast<float *>(out + attrib[semantic].offset);
+
+		size_t i = 0;
+		for (; i < in_count; ++i)
+			f_out[i] = in[i];
+		for (; i < out_count; ++i) // zero pad missing input
+			f_out[i] = 0.f;
+	} else if (format == SG_VERTEXFORMAT_BYTE4 || format == SG_VERTEXFORMAT_BYTE4N) {
+		int8_t *i_out = reinterpret_cast<int8_t *>(out + attrib[semantic].offset);
+
+		const size_t out_count = 4;
+
+		size_t i = 0;
+		for (; i < in_count; ++i)
+			i_out[i] = format == SG_VERTEXFORMAT_BYTE4N ? pack_float<int8_t>(in[i]) : int8_t(in[i]);
+		for (; i < out_count; ++i) // zero pad missing input
+			i_out[i] = 0;
+	} else if (format == SG_VERTEXFORMAT_UBYTE4 || format == SG_VERTEXFORMAT_UBYTE4N) {
+		uint8_t *u_out = reinterpret_cast<uint8_t *>(out + attrib[semantic].offset);
+
+		const size_t out_count = 4;
+
+		size_t i = 0;
+		for (; i < in_count; ++i)
+			u_out[i] = format == SG_VERTEXFORMAT_UBYTE4N ? pack_float<uint8_t>(in[i]) : uint8_t(in[i]);
+		for (; i < out_count; ++i) // zero pad missing input
+			u_out[i] = 0;
+	}
+}
+
+void VertexLayout::PackVertex(VertexAttribute semantic, const uint8_t *in, size_t in_count, int8_t *out) const {}
+
+// [todo] use some kind of string buffer?
+struct ShaderInfos {
+	ShaderLang lang;
+	uint32_t profile;
+};
+
+static sg_uniform_type ToSGUniformType(uint16_t type) {
+	sg_uniform_type ret = SG_UNIFORMTYPE_INVALID;
+
+	switch (type) {
+		case UniformFloat:
+			ret = SG_UNIFORMTYPE_FLOAT;
+			break;
+		case UniformFloat2:
+			ret = SG_UNIFORMTYPE_FLOAT2;
+			break;
+		case UniformFloat3:
+			ret = SG_UNIFORMTYPE_FLOAT3;
+			break;
+		case UniformFloat4:
+			ret = SG_UNIFORMTYPE_FLOAT4;
+			break;
+		case UniformInt:
+			ret = SG_UNIFORMTYPE_INT;
+			break;
+		case UniformInt2:
+			ret = SG_UNIFORMTYPE_INT2;
+			break;
+		case UniformInt3:
+			ret = SG_UNIFORMTYPE_INT3;
+			break;
+		case UniformInt4:
+			ret = SG_UNIFORMTYPE_INT3;
+			break;
+		case UniformMat4:
+			ret = SG_UNIFORMTYPE_MAT4;
+			break;
+		default:
+			ret = SG_UNIFORMTYPE_INVALID;
+			break;
+	}
+
+	return ret;
+}
+
+static sg_image_type ToImageType(uint8_t type) {
+	sg_image_type out;
+
+	switch (type) {
+		case Image2D:
+			out = SG_IMAGETYPE_2D;
+			break;
+		case ImageCube:
+			out = SG_IMAGETYPE_CUBE;
+			break;
+		case Image3D:
+			out = SG_IMAGETYPE_3D;
+			break;
+		case ImageArray:
+			out = SG_IMAGETYPE_ARRAY;
+			break;
+		default:
+			out = SG_IMAGETYPE_2D;
+			break;
 	};
 
-	sg_shader_desc shader_desc;
+	return out;
+}
+
+static sg_sampler_type ToSamplerType(uint8_t type) {
+	sg_sampler_type out;
+
+	switch (type) {
+		case ImageFloat:
+			out = SG_SAMPLERTYPE_FLOAT;
+			break;
+		case ImageByte:
+		case ImageShort:
+		case ImageInt:
+			out = SG_SAMPLERTYPE_SINT;
+			break;
+		case ImageUByte:
+		case ImageUShort:
+		case ImageUInt:
+			out = SG_SAMPLERTYPE_UINT;
+			break;
+		default:
+			out = SG_SAMPLERTYPE_FLOAT;
+			break;
+	};
+
+	return out;
+}
+
+static char *Duplicate(const std::string &in) {
+	const size_t size = in.size();
+	char *out = new char[size + 1];
+
+	if (!in.empty()) {
+		memcpy(out, in.data(), size);
+	}
+
+	out[size] = '\0';
+	return out;
+}
+
+static inline uint32_t FourCC(char a, char b, char c, char d) {
+	return static_cast<unsigned char>(a) | (static_cast<unsigned char>(b) << 8) | (static_cast<unsigned char>(c) << 16) | (static_cast<unsigned char>(d) << 24);
+}
+
+static bool LoadShaderHeader(const Reader &ir, const Handle &handle, ShaderInfos &out) {
+	static const uint32_t g_fourcc = FourCC('H', 'G', 'S', 'L');
+	static const uint8_t g_major_version = 0;
+	static const uint8_t g_minor_version = 0;
+
+	bool ret = true;
+
+	if (!ir.is_valid(handle)) {
+		ret = false;
+	} else {
+		uint32_t fourcc;
+
+		if (!Read<uint32_t>(ir, handle, fourcc)) {
+			ret = false;
+		} else if (fourcc != g_fourcc) {
+			ret = false;
+		} else {
+			uint8_t major, minor, lang, type;
+			if (!Read<uint8_t>(ir, handle, major)) {
+				ret = false;
+			} else if (!Read<uint8_t>(ir, handle, minor)) {
+				ret = false;
+			} else if ((major != g_major_version) || (minor != g_minor_version)) {
+				ret = false;
+			} else if (!Read<uint8_t>(ir, handle, lang)) {
+				ret = false;
+			} else if (!Read<uint32_t>(ir, handle, out.profile)) {
+				ret = false;
+			} else {
+				ret = true;
+			}
+		}
+	}
+
+	return ret;
+}
+
+static bool LoadShaderUniforms(const Reader &ir, const Handle &handle, sg_shader_stage_desc &out) {
+	bool ret = true;
+
+	uint16_t count;
+	ret = Read<uint16_t>(ir, handle, count);
+
+	for (uint16_t i = 0; ret && (i < count); ++i) {
+		uint32_t binding;
+		std::string name;
+		uint32_t size;
+
+		if (!Read<uint32_t>(ir, handle, binding)) {
+			ret = false;
+		} else if (binding >= SG_MAX_SHADERSTAGE_UBS) {
+			ret = false;
+		} else if (!Read(ir, handle, name)) {
+			ret = false;
+		} else if (!Read<uint32_t>(ir, handle, size)) {
+			ret = false;
+		} else {
+			out.uniform_blocks[binding].layout = SG_UNIFORMLAYOUT_STD140;
+			out.uniform_blocks[binding].size = size;
+
+			uint32_t uniform_count;
+			if (!Read<uint32_t>(ir, handle, uniform_count)) {
+				ret = false;
+			} else if (uniform_count >= SG_MAX_UB_MEMBERS) {
+				ret = false;
+			} else {
+				for (uint32_t j = 0; ret && (j < uniform_count); ++j) {
+					uint32_t offset, array_count;
+					uint16_t type;
+					std::string member;
+					if (!Read<uint32_t>(ir, handle, offset)) {
+						ret = false;
+					} else if (!Read(ir, handle, member)) {
+						ret = false;
+					} else if (!Read<uint16_t>(ir, handle, type)) {
+						ret = false;
+					} else if (!Read<uint32_t>(ir, handle, array_count)) {
+						ret = false;
+					} else {
+						out.uniform_blocks[binding].uniforms[j].type = ToSGUniformType(type);
+						out.uniform_blocks[binding].uniforms[j].array_count = array_count;
+						char *str = nullptr;
+						if (!name.empty()) {
+							str = Duplicate(fmt::format("{}.{}", name, member));
+						} else if (!member.empty()) {
+							str = Duplicate(member);
+						} else {
+							str = nullptr;
+						}
+						out.uniform_blocks[binding].uniforms[j].name = str;
+					}
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
+static bool LoadShaderImages(const Reader &ir, const Handle &handle, sg_shader_stage_desc &out) {
+	bool ret = true;
+
+	uint16_t count;
+	ret = Read<uint16_t>(ir, handle, count);
+
+	for (uint16_t i = 0; ret && (i < count); ++i) {
+		uint32_t binding;
+		uint8_t type, sampler_type;
+		std::string name;
+
+		if (!Read<uint32_t>(ir, handle, binding)) {
+			ret = false;
+		} else if (binding >= SG_MAX_SHADERSTAGE_IMAGES) {
+			ret = false;
+		} else if (!Read(ir, handle, name)) {
+			ret = false;
+		} else if (!Read<uint8_t>(ir, handle, type)) {
+			ret = false;
+		} else if (!Read<uint8_t>(ir, handle, sampler_type)) {
+			ret = false;
+		} else {
+			out.images[binding].image_type = ToImageType(type);
+			out.images[binding].sampler_type = ToSamplerType(sampler_type);
+			out.images[binding].name = Duplicate(name);
+		}
+	}
+
+	return ret;
+}
+
+bool LoadShaderAttributes(const Reader &ir, const Handle &handle, sg_shader_attr_desc out[SG_MAX_VERTEX_ATTRIBUTES]) {
+	bool ret = true;
+
+	uint16_t count = 0;
+	if (!Read<uint16_t>(ir, handle, count)) {
+		ret = false;
+	} else {
+		for (uint16_t j = 0; ret && (j < count); ++j) {
+			uint32_t location;
+			std::string name;
+
+			if (!Read<uint32_t>(ir, handle, location)) {
+				ret = false;
+			} else if (location >= SG_MAX_VERTEX_ATTRIBUTES) {
+				ret = false;
+			} else if (!Read(ir, handle, name)) {
+				ret = false;
+			} else {
+				out[location].name = Duplicate(name);
+			}
+		}
+	}
+
+	return ret;
+}
+
+static bool SkipShaderAttributes(const Reader &ir, const Handle &handle) {
+	bool ret = true;
+
+	uint16_t count = 0;
+	if (!Read<uint16_t>(ir, handle, count)) {
+		ret = false;
+	} else {
+		for (uint16_t j = 0; ret && (j < count); ++j) {
+			if (!Skip<uint32_t>(ir, handle)) {
+				ret = false;
+			} else if (!SkipString(ir, handle)) {
+				ret = false;
+			} else {
+				ret = true;
+			}
+		}
+	}
+
+	return ret;
+}
+
+static bool LoadShaderSource(const Reader &ir, const Handle &handle, sg_shader_stage_desc &out) {
+	bool ret = true;
+
+	uint8_t binary;
+	uint32_t size;
+
+	if (!Read<uint8_t>(ir, handle, binary)) {
+		ret = false;
+	} else if (!Read<uint32_t>(ir, handle, size)) {
+		ret = false;
+	} else {
+		char *data = new char[size + (binary ? 0 : 1)];
+
+		if (data == nullptr) {
+			ret = false;
+		} else if (ir.read(handle, data, size) != size) {
+			ret = false;
+		} else if (binary) {
+			out.bytecode.size = size;
+			out.bytecode.ptr = data;
+		} else {
+			data[size] = '\0';
+			out.source = data;
+		}
+	}
+
+	return ret;
+}
+
+static bool LoadShaderStages(const Reader &ir, const Handle &handle, const ShaderInfos &infos, sg_shader_desc &out) {
+	bool ret = true;
+
+	uint16_t count;
+	if (!Read<uint16_t>(ir, handle, count)) {
+		ret = false;
+	} else {
+		for (uint16_t i = 0; ret && (i < count); ++i) {
+			uint8_t byte;
+			if (!Read<uint8_t>(ir, handle, byte)) {
+				ret = false;
+			} else if ((byte != VertexShader) && (byte != FragmentShader)) {
+				ret = false;
+			} else {
+				sg_shader_stage_desc &out_desc = (byte == VertexShader) ? out.vs : out.fs;
+				std::string entry;
+				if (!Read(ir, handle, entry)) {
+					ret = false;
+				} else {
+					out_desc.entry = Duplicate(entry);
+
+					if (byte == VertexShader) {
+						ret = LoadShaderAttributes(ir, handle, out.attrs);
+					} else {
+						ret = SkipShaderAttributes(ir, handle);
+					}
+					if (ret) {
+						if (!SkipShaderAttributes(ir, handle)) { // skip output
+							ret = false;
+						} else if (!LoadShaderUniforms(ir, handle, out_desc)) {
+							ret = false;
+						} else if (!LoadShaderImages(ir, handle, out_desc)) {
+							ret = false;
+						} else if (!LoadShaderSource(ir, handle, out_desc)) {
+							ret = false;
+						} else {
+							if (infos.lang == HLSLTarget) {
+								for (int i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+									out.attrs[i].sem_name = "TEXCOORD";
+									out.attrs[i].sem_index = i;
+								}
+
+								const int major = infos.profile / 10;
+								const int minor = infos.profile % 10;
+								std::string target = fmt::format("{}_{}_{}", (byte == VertexShader) ? "ps" : "vs", major, minor);
+
+								out_desc.d3d11_target = Duplicate(target);
+							}
+							ret = true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
+static bool LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_shader_desc &shader_desc) {
+	bool ret = false;
 	memset(&shader_desc, 0, sizeof(sg_shader_desc));
 
-	shader_desc.vs.source = "#version 330\n"
-							"uniform mat4 mvp;\n"
-							"layout (location=0) in vec4 a_position;\n"
-							"layout (location=1) in vec3 a_normal;\n"
-							"out vec3 i_normal;\n"
-							"void main() {\n"
-							"	gl_Position = mvp * a_position;\n"
-							"	i_normal = a_normal;\n"
-							"}\n";
+	sg_shader_stage_desc stage_desc;
+	memset(&stage_desc, 0, sizeof(sg_shader_stage_desc));
 
-	shader_desc.vs.uniform_blocks[0].size = sizeof(shader_vs_params);
-	shader_desc.vs.uniform_blocks[0].uniforms[0].name = "mvp";
-	shader_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
+	ScopedReadHandle handle(ip, name);
+	if (ir.is_valid(handle)) {
+		ShaderInfos infos;
+		if (!LoadShaderHeader(ir, handle, infos)) {
+			ret = false;
+		} else if (!LoadShaderStages(ir, handle, infos, shader_desc)) {
+			ret = false;
+		} else {
+			ret = true;
+		}
+	}
 
-	shader_desc.fs.source = "#version 330\n"
-							"in vec3 i_normal;\n"
-							"out vec4 o_color;\n"
-							"void main() {\n"
-							"	float k = normalize(i_normal).z;\n"
-							"	o_color = vec4(k, k, k, 1);\n"
-							"}\n";
+	return ret;
+}
 
+static void Release(sg_shader_stage_desc &in) {
+	if (in.source) {
+		delete[] in.source;
+	}
+
+	if (in.bytecode.ptr) {
+		const char *ptr = reinterpret_cast<const char *>(in.bytecode.ptr);
+		delete[] ptr;
+	}
+
+	if (in.entry) {
+		delete[] in.entry;
+	}
+
+	if (in.d3d11_target) {
+		delete[] in.d3d11_target;
+	}
+
+	for (int i = 0; i < SG_MAX_SHADERSTAGE_UBS; ++i) {
+		for (int j = 0; j < SG_MAX_UB_MEMBERS; ++j) {
+			if (in.uniform_blocks[i].uniforms[j].name) {
+				delete[] in.uniform_blocks[i].uniforms[j].name;
+			}
+		}
+	}
+
+	for (int i = 0; i < SG_MAX_SHADERSTAGE_IMAGES; ++i) {
+		if (in.images[i].name) {
+			delete[] in.images[i].name;
+		}
+	}
+}
+
+static void Release(sg_shader_attr_desc &in) {
+	if (in.name) {
+		delete[] in.name;
+	}
+	// sem_name is a const string
+}
+
+static void Release(sg_shader_desc &in) {
+	for (int i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+		Release(in.attrs[i]);
+	}
+
+	Release(in.vs);
+	Release(in.fs);
+
+	if (in.label) {
+		delete[] in.label;
+	}
+
+	memset(&in, 0, sizeof(sg_shader_desc));
+}
+
+static const char *g_vertex_attribute_names[VA_Count] = {
+	"a_position", "a_normal", "a_tangent", "a_bitangent", "a_color", "a_bone_indices", "a_bone_weight", "a_uv0", "a_uv1"};
+
+Shader LoadShader(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
 	Shader shader;
+	sg_shader_desc desc;
 
-	shader.shader = sg_make_shader(&shader_desc);
-	shader.layout.attrib[0] = VA_Position;
-	shader.layout.attrib[1] = VA_Normal;
+	memset(&desc, 0, sizeof(sg_shader_desc));
 
-	shader.uniforms.layout = _SG_UNIFORMLAYOUT_DEFAULT;
-	shader.uniforms.uniform[0].name = "mvp";
-	shader.uniforms.uniform[0].type = SG_UNIFORMTYPE_MAT4;
+	if (LoadShader(ir, ip, name, desc)) {
+		shader.shader = sg_make_shader(&desc);
+
+		for (int i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; ++i) {
+			uint8_t attr = VA_Count;
+			if (desc.attrs[i].name) {
+				for (attr = 0; (attr < VA_Count) && (strcmp(desc.attrs[i].name, g_vertex_attribute_names[attr]) != 0); ++attr) {}
+			}
+			shader.layout.attrib[i] = attr;
+		}
+
+		for (int k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
+			const sg_shader_stage_desc &stage = (k == 0) ? desc.vs : desc.fs;
+
+			for (int i = 0; i < SG_MAX_SHADERSTAGE_UBS; ++i) {
+				if (stage.uniform_blocks[i].size) {
+					shader.uniforms[k][i].layout = stage.uniform_blocks[i].layout;
+					for (int j = 0; j < SG_MAX_UB_MEMBERS; ++j) {
+						if (stage.uniform_blocks[i].uniforms[j].name) {
+							shader.uniforms[k][i].uniform[j].name = stage.uniform_blocks[i].uniforms[j].name;
+							shader.uniforms[k][i].uniform[j].type = stage.uniform_blocks[i].uniforms[j].type;
+							shader.uniforms[k][i].uniform[j].count = stage.uniform_blocks[i].uniforms[j].array_count;
+						}
+					}
+				}
+			}
+
+			for (int i = 0; i < SG_MAX_SHADERSTAGE_IMAGES; ++i) {
+				if (stage.images[i].image_type) {
+					shader.images[k][i].name = stage.images[i].name;
+					shader.images[k][i].image = stage.images[i].image_type;
+					shader.images[k][i].sampler = stage.images[i].sampler_type;
+				}
+			}
+		}
+	}
+
+	Release(desc);
 
 	return shader;
 }
 
-Shader LoadShaderFromFile(const std::string &path, bool silent) { return LoadShader(g_file_reader, g_file_read_provider, path, silent); }
-Shader LoadShaderFromAssets(const std::string &name, bool silent) { return LoadShader(g_assets_reader, g_assets_read_provider, name, silent); }
+Shader LoadShaderFromFile(const std::string &path, bool silent) {
+	return LoadShader(g_file_reader, g_file_read_provider, path, silent);
+}
+
+Shader LoadShaderFromAssets(const std::string &name, bool silent) {
+	return LoadShader(g_assets_reader, g_assets_read_provider, name, silent);
+}
 
 //
 sg_buffer MakeIndexBuffer(const void *data, size_t size) {
@@ -291,12 +735,15 @@ Material LoadMaterial(const Reader &ir, const Handle &h, const Reader &deps_ir, 
 
 	std::string name;
 	Read(ir, h, name); // shader name
-	/*
-		if (do_not_load_resources)
-			mat.program = resources.programs.Add(name, PipelineProgram());
-		else
-			mat.program = LoadPipelineProgramRef(deps_ir, deps_ip, name, resources, pipeline, silent);
-	*/
+
+	if (do_not_load_resources) {
+		mat.program = resources.programs.Add(name, PipelineProgram());
+	} else {
+		PipelineProgram pp;
+		pp.shader = LoadShader(deps_ir, deps_ip, name, silent);
+		mat.program = resources.programs.Add(name, pp);
+	}
+
 	const uint16_t value_count = Read<uint16_t>(ir, h);
 
 	for (size_t i = 0; i < value_count; ++i) {
@@ -351,21 +798,31 @@ Material LoadMaterialFromAssets(
 	return Material();
 }
 
-bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) { return false; }
+bool SaveMaterial(rapidjson::Document &jd, rapidjson::Value &js, const Material &mat, const PipelineResources &resources) {
+	return false;
+}
 
-bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) { return false; }
+bool SaveMaterial(const Material &mat, const Writer &iw, const Handle &h, const PipelineResources &resources) {
+	return false;
+}
 
-bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) { return false; }
+bool SaveMaterialToFile(const std::string &path, const Material &m, const PipelineResources &resources) {
+	return false;
+}
 
 //
 Texture LoadTexture(const Reader &ir, const ReadProvider &ip, const std::string &name, bool silent) {
 	ScopedReadHandle h(ip, name, silent);
-	return LoadDDS(ir, h, name);
+	return ir.is_valid(h) ? LoadDDS(ir, ip, h, name, silent) : Texture();
 }
 
-Texture LoadTextureFromFile(const std::string &path, bool silent) { return Texture(); }
+Texture LoadTextureFromFile(const std::string &path, bool silent) {
+	return Texture();
+}
 
-Texture LoadTextureFromAssets(const std::string &name, bool silent) { return Texture(); }
+Texture LoadTextureFromAssets(const std::string &name, bool silent) {
+	return Texture();
+}
 
 void Destroy(Texture &tex) {}
 
@@ -432,6 +889,65 @@ TextureRef SkipLoadOrQueueTextureLoad(
 }
 
 //
+int GetUniformDataIndex(const std::string &name, const Shader &shader) {
+	for (int k = 0; k < SG_NUM_SHADER_STAGES; k++) {
+		for (int j = 0; j < SG_MAX_SHADERSTAGE_UBS; j++) {
+			for (int i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+				if (shader.uniforms[k][j].uniform[i].name == name) {
+					return i;
+				}
+			}
+		}
+	}
+	return -1;
+}
+
+const void *GetUniformDataPtr(const UniformData &data) {
+	return data.data.data();
+}
+
+size_t GetUniformDataSize(const UniformData &data) {
+	return data.data.size();
+}
+
+void SetupShaderUniformData(const Shader &shader, UniformData &data) {
+	size_t offset = 0;
+	// for (size_t k = 0; k < SG_NUM_SHADER_STAGES; ++k) {
+	size_t k = 0;
+	{ // [todo]
+		//	for (size_t j = 0; j < SG_MAX_SHADERSTAGE_UBS; ++j) {
+		size_t j = 0;
+		{ // [todo]
+			for (size_t i = 0; i < SG_MAX_UB_MEMBERS; ++i) {
+				const sg_uniform_type type = shader.uniforms[k][j].uniform[i].type;
+
+				data.offset[i] = numeric_cast<uint16_t>(offset);
+
+				if (type == SG_UNIFORMTYPE_FLOAT)
+					offset += 4;
+				else if (type == SG_UNIFORMTYPE_FLOAT2)
+					offset += 4 * 2;
+				else if (type == SG_UNIFORMTYPE_FLOAT3)
+					offset += 4 * 3;
+				else if (type == SG_UNIFORMTYPE_FLOAT4)
+					offset += 4 * 4;
+				else if (type == SG_UNIFORMTYPE_INT)
+					offset += 4;
+				else if (type == SG_UNIFORMTYPE_INT2)
+					offset += 4 * 2;
+				else if (type == SG_UNIFORMTYPE_INT3)
+					offset += 4 * 3;
+				else if (type == SG_UNIFORMTYPE_INT4)
+					offset += 4 * 4;
+				else if (type == SG_UNIFORMTYPE_MAT4)
+					offset += 4 * 4 * 4; // float 4x4
+			}
+		}
+	}
+	data.data.resize(offset);
+}
+
+//
 enum legacy_Attrib {
 	lA_Position,
 	lA_Normal,
@@ -454,6 +970,8 @@ enum legacy_Attrib {
 	lA_Count
 };
 
+enum legacy_AttribType { lAT_Uint8, lAT_Uint10, lAT_Int16, lAT_Half, lAT_Float, lAT_Count };
+
 struct legacy_VertexLayout {
 	uint32_t m_hash; // hash
 	uint16_t m_stride; // stride
@@ -461,28 +979,106 @@ struct legacy_VertexLayout {
 	uint16_t m_attributes[lA_Count]; // used attributes
 };
 
+static VertexAttribute legacy_Attrib_to_VertexAttribute(legacy_Attrib legacy_attr) {
+	if (legacy_attr == lA_Position)
+		return VA_Position;
+	if (legacy_attr == lA_Normal)
+		return VA_Normal;
+	if (legacy_attr == lA_Tangent)
+		return VA_Tangent;
+	if (legacy_attr == lA_Bitangent)
+		return VA_Bitangent;
+	if (legacy_attr == lA_Color0)
+		return VA_Color;
+	if (legacy_attr == lA_Indices)
+		return VA_BoneIndices;
+	if (legacy_attr == lA_Weight)
+		return VA_BoneWeights;
+	if (legacy_attr == lA_TexCoord0)
+		return VA_UV0;
+	if (legacy_attr == lA_TexCoord1)
+		return VA_UV1;
+	return VA_Count;
+}
+
+static void legacy_VertexLayoutToVertexLayout(const legacy_VertexLayout &legacy_layout, VertexLayout &layout) {
+	for (int i = 0; i < lA_Count; ++i) {
+		const VertexAttribute va = legacy_Attrib_to_VertexAttribute(legacy_Attrib(i));
+
+		if (va != VA_Count) {
+			const uint16_t attr = legacy_layout.m_attributes[i];
+
+			if (legacy_layout.m_attributes[i] == 0xffff)
+				continue;
+
+			const int num = (attr & 3) + 1;
+			const int type = (attr >> 3) & 7;
+			const bool is_signed = ((attr >> 8) & 1) ? true : false;
+			const bool is_normalized = ((attr >> 7) & 1) ? true : false;
+
+			//
+			sg_vertex_format sg_type = SG_VERTEXFORMAT_INVALID;
+
+			if (type == lAT_Float) {
+				if (num == 1)
+					sg_type = SG_VERTEXFORMAT_FLOAT;
+				else if (num == 2)
+					sg_type = SG_VERTEXFORMAT_FLOAT2;
+				else if (num == 3)
+					sg_type = SG_VERTEXFORMAT_FLOAT3;
+				else if (num == 4)
+					sg_type = SG_VERTEXFORMAT_FLOAT4;
+			} else if (type == lAT_Uint8) {
+				if (is_normalized) {
+					if (!is_signed) {
+						if ((num == 3) || (num == 4))
+							sg_type = SG_VERTEXFORMAT_BYTE4N;
+					} else {
+						if ((num == 3) || (num == 4))
+							sg_type = SG_VERTEXFORMAT_UBYTE4N;
+					}
+				} else {
+					if (!is_signed) {
+						if (num == 4)
+							sg_type = SG_VERTEXFORMAT_BYTE4;
+					} else {
+						if (num == 4)
+							sg_type = SG_VERTEXFORMAT_UBYTE4;
+					}
+				}
+			}
+
+			if (sg_type != SG_VERTEXFORMAT_INVALID)
+				layout.Set(va, sg_type, legacy_layout.m_offset[i]);
+		}
+	}
+
+	layout.SetStride(legacy_layout.m_stride);
+}
+
 //
 Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool silent) {
 	ProfilerPerfSection section("LoadModel", name);
 
 	const time_ns t = time_now();
+	Model model;
 
 	if (!ir.is_valid(h)) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', invalid file handle", name));
-		return Model();
+		return model;
 	}
 
 	if (Read<uint32_t>(ir, h) != HarfangMagic) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', invalid magic marker", name));
-		return Model();
+		return model;
 	}
 
 	if (Read<uint8_t>(ir, h) != ModelMarker) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', invalid file marker", name));
-		return Model();
+		return model;
 	}
 
 	const uint8_t version = Read<uint8_t>(ir, h);
@@ -490,16 +1086,15 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 	if (version > 2) {
 		if (!silent)
 			warn(fmt::format("Cannot load model '{}', unsupported version {}", name, version));
-		return Model();
+		return model;
 	}
-
-	Model model;
 
 	legacy_VertexLayout vs_decl;
 	ir.read(h, &vs_decl, sizeof(legacy_VertexLayout)); // read vertex declaration
 
-	uint32_t tri_count = 0;
+	legacy_VertexLayoutToVertexLayout(vs_decl, model.vtx_layout);
 
+	uint32_t tri_count = 0;
 	std::vector<uint8_t> data;
 
 	while (true) {
@@ -509,8 +1104,6 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 
 			if (idx_type_size == 0)
 				break; // EOLists
-
-			//__ASSERT_MSG__(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
 		}
 
 		// index buffer
@@ -521,6 +1114,7 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 				break; // EOLists
 
 		DisplayList list;
+		list.index_type_size = idx_type_size;
 
 		data.resize(size);
 		ir.read(h, data.data(), size); // load indices
@@ -548,7 +1142,6 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, bool
 		model.mats.push_back(Read<uint16_t>(ir, h));
 	}
 
-	// model.vtx_layout = ; FIXME implement lightweight vtx layout
 	model.tri_count = tri_count;
 
 	if (version > 0) { // version 1: add bind poses
@@ -667,6 +1260,110 @@ ModelRef SkipLoadOrQueueModelLoad(
 #else
 	return InvalidModelRef;
 #endif
+}
+
+//
+bool LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_image_desc &desc, bool silent) {
+	ProfilerPerfSection section("LoadTextureMeta", name);
+
+	rapidjson::Document meta;
+	if (!LoadJson(ir, ScopedReadHandle(ip, name + ".meta", silent), meta)) {
+		return false;
+	}
+
+	desc.max_anisotropy = 8;
+
+	desc.min_filter = SG_FILTER_LINEAR_MIPMAP_LINEAR;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("min-filter");
+
+		if (i != meta.MemberEnd()) {
+			const std::string min_filter = i->value.GetString();
+
+			if (min_filter == "Nearest") {
+				desc.min_filter = SG_FILTER_NEAREST_MIPMAP_NEAREST;
+			} else {
+				desc.min_filter = SG_FILTER_LINEAR_MIPMAP_LINEAR;
+			}
+		}
+	}
+
+	desc.mag_filter = SG_FILTER_LINEAR; //_MIPMAP_LINEAR;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("mag-filter");
+
+		if (i != meta.MemberEnd()) {
+			const std::string mag_filter = i->value.GetString();
+
+			if (mag_filter == "Nearest") {
+				desc.mag_filter = SG_FILTER_NEAREST; //_MIPMAP_NEAREST;
+			} else {
+				desc.mag_filter = SG_FILTER_LINEAR; //_MIPMAP_LINEAR;
+			}
+		}
+	}
+
+	desc.wrap_u = SG_WRAP_REPEAT;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("wrap-U");
+
+		if (i != meta.MemberEnd()) {
+			const std::string wrap_u = i->value.GetString();
+
+			if (wrap_u == "Clamp") {
+				desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
+			} else if (wrap_u == "Border") {
+				desc.wrap_u = SG_WRAP_CLAMP_TO_BORDER;
+			} else if (wrap_u == "Mirror") {
+				desc.wrap_u = SG_WRAP_MIRRORED_REPEAT;
+			} else {
+				desc.wrap_u = SG_WRAP_REPEAT;
+			}
+		}
+	}
+
+	desc.wrap_v = SG_WRAP_REPEAT;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("wrap-V");
+
+		if (i != meta.MemberEnd()) {
+			const std::string wrap_v = i->value.GetString();
+
+			if (wrap_v == "Clamp") {
+				desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+			} else if (wrap_v == "Border") {
+				desc.wrap_v = SG_WRAP_CLAMP_TO_BORDER;
+			} else if (wrap_v == "Mirror") {
+				desc.wrap_v = SG_WRAP_MIRRORED_REPEAT;
+			} else {
+				desc.wrap_v = SG_WRAP_REPEAT;
+			}
+		}
+	}
+
+	return true;
+
+#if 0
+	{
+		bool sRGB = false;
+
+		GetMetaValue(js, "sRGB", sRGB);
+		if (sRGB)
+			meta.flags |= BGFX_TEXTURE_SRGB;
+		else
+			meta.flags &= ~BGFX_TEXTURE_SRGB;
+	}
+
+	return meta;
+#endif
+}
+
+bool LoadTextureMetaFromFile(const std::string &path, sg_image_desc &desc, bool silent) {
+	return LoadTextureMeta(g_file_reader, g_file_read_provider, path, desc, silent);
+}
+
+bool LoadTextureMetaFromAssets(const std::string &name, sg_image_desc &desc, bool silent) {
+	return LoadTextureMeta(g_assets_reader, g_assets_read_provider, name, desc, silent);
 }
 
 #if 0
@@ -1434,7 +2131,7 @@ int GetPipelineProgramVariantCount(const std::vector<PipelineProgramFeature> &fe
 }
 
 int GetPipelineProgramVariantIndex(const std::vector<PipelineProgramFeature> &feats, const std::vector<int> &states) {
-	__ASSERT__(feats.size() == states.size());
+	HG_ASSERT(feats.size() == states.size());
 
 	int k = 1, idx = 0;
 	for (size_t i = 0; i < feats.size(); ++i) {
@@ -1446,7 +2143,7 @@ int GetPipelineProgramVariantIndex(const std::vector<PipelineProgramFeature> &fe
 }
 
 std::string GetPipelineProgramVariantName(const std::string &name, const std::vector<PipelineProgramFeature> &feats, const std::vector<int> &states) {
-	__ASSERT__(feats.size() == states.size());
+	HG_ASSERT(feats.size() == states.size());
 
 	std::vector<std::string> variant_tags;
 	variant_tags.reserve(feats.size() + 2);
@@ -2301,7 +2998,7 @@ Model LoadModel(const Reader &ir, const Handle &h, const std::string &name, Mode
 			if (idx_type_size == 0)
 				break; // EOLists
 
-			__ASSERT_MSG__(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
+			HG_ASSERT_MSG(idx_type_size == 2 || idx_type_size == 4, "BGFX only supports 16 or 32 bit index buffer");
 		}
 
 		// index buffer
@@ -2649,7 +3346,7 @@ static void _RenderDisplayLists(bgfx::ViewId view_id, const std::vector<DisplayL
 	const auto i_mtx = bgfx::setTransform(mtxs, uint16_t(mtx_count));
 
 	const auto lists_size = lists.size();
-	__ASSERT__(lists_size == depths.size());
+	HG_ASSERT(lists_size == depths.size());
 
 	for (size_t i = 0; i < lists_size; ++i) {
 		bgfx::setTransform(i_mtx);
@@ -2681,7 +3378,7 @@ static void _DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<Model
 	uint32_t mtx_idx = 0xffffffff, i_mtx = 0xffffffff; // last set_matrix
 
 	const auto dl_size = display_lists.size();
-	__ASSERT__(depths == nullptr || dl_size == depths->size());
+	HG_ASSERT(depths == nullptr || dl_size == depths->size());
 
 	for (size_t i = 0; i < dl_size; ++i) {
 		const auto &dl = display_lists[i];
@@ -2700,7 +3397,7 @@ static void _DrawModelDisplayLists(bgfx::ViewId view_id, const std::vector<Model
 		}
 
 		const auto &mdl = res.models.Get_unsafe_(dl.mdl_idx);
-		__ASSERT__(dl.mat != nullptr);
+		HG_ASSERT(dl.mat != nullptr);
 
 		_RenderPipelineStageDisplayList(view_id, mdl.lists[dl.lst_idx], *dl.mat, pipeline_config_idx, res, values, textures, depths ? (*depths)[i] : 0);
 	}
@@ -2730,12 +3427,12 @@ static void _DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vecto
 	bgfxMatrix4 _mtx[max_skinned_model_matrix_count] = {0};
 
 	const auto dl_size = display_lists.size();
-	__ASSERT__(depths == nullptr || dl_size == depths->size());
+	HG_ASSERT(depths == nullptr || dl_size == depths->size());
 
 	for (size_t i = 0; i < dl_size; ++i) {
 		const auto &dl = display_lists[i];
 
-		__ASSERT__(dl.bone_count <= max_skinned_model_matrix_count);
+		HG_ASSERT(dl.bone_count <= max_skinned_model_matrix_count);
 
 		const auto &mdl = res.models.Get_unsafe_(dl.mdl_idx);
 
@@ -2751,7 +3448,7 @@ static void _DrawSkinnedModelDisplayLists(bgfx::ViewId view_id, const std::vecto
 			bgfx::setUniform(u_previous_model, _mtx, dl.bone_count);
 		}
 
-		__ASSERT__(dl.mat != nullptr);
+		HG_ASSERT(dl.mat != nullptr);
 
 		_RenderPipelineStageDisplayList(view_id, mdl.lists[dl.lst_idx], *dl.mat, pipeline_config_idx, res, values, textures, depths ? (*depths)[i] : 0);
 	}
@@ -2927,125 +3624,125 @@ Vertices &Vertices::Begin(size_t i) {
 
 	vtx_attr_flag = 0;
 
-	__ASSERT__(idx == -1);
+	HG_ASSERT(idx == -1);
 	idx = numeric_cast<int>(i);
 	return *this;
 }
 
 Vertices &Vertices::SetPos(const Vec3 &pos) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&pos.x, false, bgfx::Attrib::Position, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Position;
 	return *this;
 }
 
 Vertices &Vertices::SetNormal(const Vec3 &normal) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&normal.x, true, bgfx::Attrib::Normal, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Normal;
 	return *this;
 }
 
 Vertices &Vertices::SetTangent(const Vec3 &tangent) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&tangent.x, true, bgfx::Attrib::Tangent, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Tangent;
 	return *this;
 }
 
 Vertices &Vertices::SetBinormal(const Vec3 &binormal) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&binormal.x, true, bgfx::Attrib::Bitangent, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Bitangent;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord0(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord0, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord0;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord1(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord1, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord1;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord2(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord2, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord2;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord3(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord3, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord3;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord4(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord4, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord4;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord5(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord5, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord5;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord6(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord6, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord6;
 	return *this;
 }
 
 Vertices &Vertices::SetTexCoord7(const Vec2 &uv) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&uv.x, true, bgfx::Attrib::TexCoord7, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::TexCoord7;
 	return *this;
 }
 
 Vertices &Vertices::SetColor0(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color0, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color0;
 	return *this;
 }
 
 Vertices &Vertices::SetColor1(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color1, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color1;
 	return *this;
 }
 
 Vertices &Vertices::SetColor2(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color2, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color2;
 	return *this;
 }
 
 Vertices &Vertices::SetColor3(const Color &color) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 	bgfx::vertexPack(&color.r, true, bgfx::Attrib::Color3, decl, data.data(), idx);
 	vtx_attr_flag |= 1 << bgfx::Attrib::Color3;
 	return *this;
 }
 
 void Vertices::End(bool validate) {
-	__ASSERT__(idx != -1);
+	HG_ASSERT(idx != -1);
 
 	if (validate) {
 		static const std::string &attr_name[bgfx::Attrib::Count] = {"Position", "Normal", "Tangent", "Bitangent", "Color0", "Color1", "Color2", "Color3", "Indices",

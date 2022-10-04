@@ -21,19 +21,24 @@ static uint32_t xorshf96() { // XORSHIFT period 2^96-1
 	return z;
 }
 
-void Seed(uint32_t) { /* TODO */
-}
+void Seed(uint32_t seed) { seed = 0; }
 
 uint32_t Rand(uint32_t r) {
-	if (!r)
-		return 0;
-	return xorshf96() % r;
+	uint32_t v = 0;
+
+	if (r != 0) {
+		v = xorshf96() % r;
+	}
+
+	return v;
 }
 
-float FRand(float r) { return float(Rand(65536)) * r / 65536.f; }
+float FRand(float r) {
+	return static_cast<float>(Rand(65536)) * r / 65536.F;
+}
 
 float FRRand(float lo, float hi) {
-	const float v = float(Rand(65536)) / 65536.f;
+	const float v = static_cast<float>(Rand(65536)) / 65536.F;
 	return v * (hi - lo) + lo;
 }
 

@@ -55,14 +55,16 @@ template <typename T> void SaveAnimKey(const Writer &iw, const Handle &h, const 
 template <typename Track> void SaveAnimTrack(const Writer &iw, const Handle &h, const Track &track) {
 	Write(iw, h, track.target);
 	Write(iw, h, numeric_cast<uint32_t>(track.keys.size()));
-	for (typename std::deque<typename Track::Key>::const_iterator i = track.keys.begin(); i != track.keys.end(); ++i)
+	for (typename std::deque<typename Track::Key>::const_iterator i = track.keys.begin(); i != track.keys.end(); ++i) {
 		SaveAnimKey(iw, h, *i);
+	}
 }
 
 template <typename Track> void SaveAnimTracks(const Writer &iw, const Handle &h, const std::vector<Track> &tracks) {
 	Write(iw, h, numeric_cast<uint32_t>(tracks.size()));
-	for (typename std::vector<Track>::const_iterator i = tracks.begin(); i != tracks.end(); ++i)
+	for (typename std::vector<Track>::const_iterator i = tracks.begin(); i != tracks.end(); ++i) {
 		SaveAnimTrack(iw, h, *i);
+	}
 }
 
 void SaveInstanceAnimTrack(const Writer &iw, const Handle &h, const AnimTrackT<InstanceAnimKey> &track) {
@@ -151,8 +153,9 @@ template <typename Track> void LoadAnimTrack(const Reader &ir, const Handle &h, 
 	uint32_t count;
 	Read(ir, h, count);
 	track.keys.resize(count);
-	for (uint32_t i = 0; i < count; ++i)
+	for (uint32_t i = 0; i < count; ++i) {
 		LoadAnimKey(ir, h, track.keys[i]);
+	}
 
 	SortAnimTrackKeys(track);
 }
@@ -161,8 +164,9 @@ template <typename Track> void LoadAnimTracks(const Reader &ir, const Handle &h,
 	uint32_t count;
 	Read(ir, h, count);
 	tracks.resize(count);
-	for (uint32_t i = 0; i < count; ++i)
+	for (uint32_t i = 0; i < count; ++i) {
 		LoadAnimTrack(ir, h, tracks[i]);
+	}
 }
 
 void LoadInstanceAnimTrack(const Reader &ir, const Handle &h, AnimTrackT<InstanceAnimKey> &track) {
@@ -174,7 +178,7 @@ void LoadInstanceAnimTrack(const Reader &ir, const Handle &h, AnimTrackT<Instanc
 		AnimKeyT<InstanceAnimKey> &key = track.keys[i];
 		Read(ir, h, key.t);
 		Read(ir, h, key.v.anim_name);
-		Read(ir, h, key.v.loop_mode);
+		key.v.loop_mode = AnimLoopMode(Read<uint8_t>(ir, h));
 		Read(ir, h, key.v.t_scale);
 	}
 }
@@ -185,27 +189,27 @@ void LoadAnimFromBinary(const Reader &ir, const Handle &h, Anim &anim) {
 
 	if (version > 2) {
 		warn(fmt::format("Unsupported animation format version {}", version));
-		return;
+	} else {
+		Read(ir, h, anim.t_start);
+		Read(ir, h, anim.t_end);
+		Read(ir, h, anim.flags);
+
+		LoadAnimTracks(ir, h, anim.bool_tracks);
+		LoadAnimTracks(ir, h, anim.int_tracks);
+		LoadAnimTracks(ir, h, anim.float_tracks);
+		LoadAnimTracks(ir, h, anim.vec2_tracks);
+		LoadAnimTracks(ir, h, anim.vec3_tracks);
+		LoadAnimTracks(ir, h, anim.vec4_tracks);
+		LoadAnimTracks(ir, h, anim.quat_tracks);
+		LoadAnimTracks(ir, h, anim.color_tracks);
+		LoadAnimTracks(ir, h, anim.string_tracks);
+
+		if (version >= 2) {
+			LoadInstanceAnimTrack(ir, h, anim.instance_anim_track);
+		}
+
+		// MigrateLegacyAnimTracks(anim);
 	}
-
-	Read(ir, h, anim.t_start);
-	Read(ir, h, anim.t_end);
-	Read(ir, h, anim.flags);
-
-	LoadAnimTracks(ir, h, anim.bool_tracks);
-	LoadAnimTracks(ir, h, anim.int_tracks);
-	LoadAnimTracks(ir, h, anim.float_tracks);
-	LoadAnimTracks(ir, h, anim.vec2_tracks);
-	LoadAnimTracks(ir, h, anim.vec3_tracks);
-	LoadAnimTracks(ir, h, anim.vec4_tracks);
-	LoadAnimTracks(ir, h, anim.quat_tracks);
-	LoadAnimTracks(ir, h, anim.color_tracks);
-	LoadAnimTracks(ir, h, anim.string_tracks);
-
-	if (version >= 2)
-		LoadInstanceAnimTrack(ir, h, anim.instance_anim_track);
-
-	// [todo] MigrateLegacyAnimTracks(anim);
 }
 
 } // namespace hg

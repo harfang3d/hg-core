@@ -54,12 +54,12 @@ void Decompose(const Mat4 &m, Vec3 *position, Mat3 *rotation = nullptr, Vec3 *sc
 void Decompose(const Mat4 &m, Vec3 *position, Vec3 *rotation, Vec3 *scale, RotationOrder order = RO_Default);
 
 /// Transform a series of vector.
-void TransformVec3(const Mat4 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
+void TransformVec3(const Mat4 &m, Vec3 out[], const Vec3 in[], unsigned int count = 1);
 /// Transform a series of vector.
-void TransformVec3(const Mat4 &__restrict m, Vec4 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
+void TransformVec3(const Mat4 &m, Vec4 out[], const Vec3 in[], unsigned int count = 1);
 
 /// Transform a vector array by the matrix upper-left 3x3 matrix.
-void RotateVec3(const Mat4 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, unsigned int count = 1);
+void RotateVec3(const Mat4 &m, Vec3 out[], const Vec3 in[], unsigned int count = 1);
 
 Vec3 GetX(const Mat4 &m);
 Vec3 GetY(const Mat4 &m);
@@ -84,7 +84,7 @@ void SetS(Mat4 &m, const Vec3 &);
 void SetScale(Mat4 &m, const Vec3 &);
 
 /// Set from float array (ordered per column).
-void Set(Mat4 &m, const float *v);
+void Set(Mat4 &m, const float v[]);
 /// Set values.
 void Set(Mat4 &m, float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22, float m03, float m13, float m23);
 

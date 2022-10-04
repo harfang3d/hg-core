@@ -27,7 +27,7 @@ void test_minmax() {
 		TEST_CHECK(box.mn == Vec3(-1.f, -1.f, -1.f));
 		TEST_CHECK(box.mx == Vec3(1.f, 1.f, 1.f));
 	}
-	TEST_CHECK(TestEqual(GetArea(MinMax(Vec3(-1.f, 1.f, 0.f), Vec3(0.f, 2.f, 1.f))), 1.f));
+	TEST_CHECK(Equal(GetArea(MinMax(Vec3(-1.f, 1.f, 0.f), Vec3(0.f, 2.f, 1.f))), 1.f));
 	TEST_CHECK(AlmostEqual(GetCenter(MinMax(Vec3(-1.f, 1.f, 0.f), Vec3(0.f, 2.f, 1.f))), Vec3(-0.5f, 1.5f, 0.5f), 0.000001f));
 	TEST_CHECK(AlmostEqual(GetSize(MinMax(Vec3(-1.f, 1.f, 0.f), Vec3(0.f, 2.f, 1.f))), Vec3::One, 0.000001f));
 	{ 
@@ -49,7 +49,7 @@ void test_minmax() {
 		float radius;
 		ComputeMinMaxBoundingSphere(box, origin, radius);
 		TEST_CHECK(AlmostEqual(origin, Vec3(-0.5f, 1.5f, 0.5f), 0.000001f));
-		TEST_CHECK(TestEqual(radius, Dist(Vec3(-1.f, 1.f, 0.f), Vec3(0.f, 2.f, 1.f)) / 2.f));
+		TEST_CHECK(Equal(radius, Dist(Vec3(-1.f, 1.f, 0.f), Vec3(0.f, 2.f, 1.f)) / 2.f));
 	}
 	{ 
 		TEST_CHECK(Overlap(MinMax(Vec3(-2.f, -1.f, -1.f), Vec3(-1.0f, 0.f, 0.f)), MinMax(Vec3(-1.5f, -0.5f, -0.5f), Vec3(-0.5f, 0.5f, 0.5f)), A_X));
@@ -138,16 +138,16 @@ void test_minmax() {
 		bool ret = false;
 		float t0 = 0.f, t1 = 0.f;
 		TEST_CHECK(IntersectRay(m0, Vec3(0.5f, -0.5f, 0.5f), Vec3(0.f, 0.f, 1.f), t0, t1));
-		TEST_CHECK(TestEqual(t0, 0.0f));
-		TEST_CHECK(TestEqual(t1, 0.5f));
+		TEST_CHECK(Equal(t0, 0.0f));
+		TEST_CHECK(Equal(t1, 0.5f));
 
 		TEST_CHECK(IntersectRay(m0, Vec3(2.0f, 1.0f, -1.0f), Vec3(0.f, 0.f, 1.f), t0, t1) == false);
-		TEST_CHECK(TestEqual(t0, 0.0f));
-		TEST_CHECK(TestEqual(t1, FLT_MAX));
+		TEST_CHECK(Equal(t0, 0.0f));
+		TEST_CHECK(Equal(t1, FLT_MAX));
 
 		TEST_CHECK(IntersectRay(m0, Vec3(2.0f, 0.1f, 0.1f), Vec3(0.f, 0.f,-1.f), t0, t1) == false);
-		TEST_CHECK(TestEqual(t0, 0.0f));
-		TEST_CHECK(TestEqual(t1, FLT_MAX));
+		TEST_CHECK(Equal(t0, 0.0f));
+		TEST_CHECK(Equal(t1, FLT_MAX));
 
 		TEST_CHECK(IntersectRay(m0, Vec3(2.0f, 2.0f, 2.0f), Vec3(0.f, 1.f, 0.f)) == false);
 

@@ -7,7 +7,6 @@
 #include "foundation/assert.h"
 #include "foundation/seek_mode.h"
 
-#include <cassert>
 #include <cstddef>
 #include <string>
 
@@ -46,38 +45,73 @@ bool Seek(const Writer &i, const Handle &h, ptrdiff_t offset, SeekMode mode);
 
 //
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
+
 template <typename T> bool Read(const Reader &i, const Handle &h, T &v) {
+	bool res = true;
+
 	if (h.debug) {
 		uint16_t _check;
-		if (i.read(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t))
-			return false;
-		assert(_check == sizeof(T));
+		if (i.read(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t)) {
+			res = false;
+		} else {
+			HG_ASSERT(_check == sizeof(T));
+		}
 	}
+
+	if (res && (i.read(h, &v, sizeof(T)) != sizeof(T))) {
+		res = false;
+	}
+	return res;
+}
+
+template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) {
+	bool res = true;
+
+	if (h.debug) {
+		const uint16_t _check = sizeof(T);
+		if (i.write(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t)) {
+			res = false;
+		}
+	}
+
+	if (res && (i.write(h, &v, sizeof(T)) != sizeof(T))) {
+		res = false;
+	}
+	return res;
+}
+
+template <typename T> bool Skip(const Reader &i, const Handle &h) {
+	bool res = true;
+
+	if (h.debug) {
+		uint16_t _check;
+		if (i.read(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t)) {
+			res = false;
+		} else {
+			HG_ASSERT(_check == sizeof(T));
+		}
+	}
+
+	if (res && (i.seek(h, sizeof(T), SM_Current) == false)) {
+		res = false;
+	}
+	return res;
+}
+
+#else
+
+template <typename T> bool Read(const Reader &i, const Handle &h, T &v) {
 	return i.read(h, &v, sizeof(T)) == sizeof(T);
 }
 
 template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) {
-	if (h.debug) {
-		uint16_t _check = sizeof(T);
-		if (i.write(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t))
-			return false;
-	}
 	return i.write(h, &v, sizeof(T)) == sizeof(T);
 }
 
 template <typename T> bool Skip(const Reader &i, const Handle &h) {
-	if (h.debug) {
-		uint16_t _check;
-		if (i.read(h, &_check, sizeof(uint16_t)) != sizeof(uint16_t))
-			return false;
-		assert(_check == sizeof(T));
-	}
-	return i.seek(h, sizeof(T), SM_Current);
+	return Seek(i, h, sizeof(T), SM_Current);
 }
-#else
-template <typename T> bool Read(const Reader &i, const Handle &h, T &v) { return i.read(h, &v, sizeof(T)) == sizeof(T); }
-template <typename T> bool Write(const Writer &i, const Handle &h, const T &v) { return i.write(h, &v, sizeof(T)) == sizeof(T); }
-template <typename T> bool Skip(const Reader &i, const Handle &h) { return Seek(i, h, sizeof(T), SM_Current); }
+
 #endif
 
 //
@@ -92,7 +126,7 @@ size_t Tell(const Writer &i, const Handle &h);
 template <typename T> T Read(const Reader &i, const Handle &h) {
 	T v;
 	bool r = Read(i, h, v);
-	__ASSERT__(r == true);
+	HG_ASSERT(r == true);
 	return v;
 }
 
@@ -115,13 +149,19 @@ struct WriteProvider {
 //
 struct ScopedReadHandle {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
-	ScopedReadHandle(ReadProvider i, const std::string &path, bool silent = false, bool debug = false) : i_(i), h_(i.open(path, silent)) { h_.debug = debug; }
+	ScopedReadHandle(ReadProvider i, const std::string &path, bool silent = false, bool debug = false) : i_(i), h_(i.open(path, silent)) {
+		h_.debug = debug;
+	}
 #else
 	ScopedReadHandle(ReadProvider i, const std::string &path, bool silent = false) : i_(i), h_(i.open(path, silent)) {}
 #endif
-	~ScopedReadHandle() { i_.close(h_); }
+	~ScopedReadHandle() {
+		i_.close(h_);
+	}
 
-	operator const Handle &() const { return h_; }
+	operator const Handle &() const {
+		return h_;
+	}
 
 private:
 	Handle h_;
@@ -130,13 +170,19 @@ private:
 
 struct ScopedWriteHandle {
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
-	ScopedWriteHandle(WriteProvider i, const std::string &path, bool debug = false) : i_(i), h_(i.open(path)) { h_.debug = debug; }
+	ScopedWriteHandle(WriteProvider i, const std::string &path, bool debug = false) : i_(i), h_(i.open(path)) {
+		h_.debug = debug;
+	}
 #else
 	ScopedWriteHandle(WriteProvider i, const std::string &path) : i_(i), h_(i.open(path)) {}
 #endif
-	~ScopedWriteHandle() { i_.close(h_); }
+	~ScopedWriteHandle() {
+		i_.close(h_);
+	}
 
-	operator const Handle &() const { return h_; }
+	operator const Handle &() const {
+		return h_;
+	}
 
 private:
 	Handle h_;
@@ -154,8 +200,9 @@ template <typename T> struct DeferredWrite {
 		cursor = Tell(iw, h);
 
 #ifdef ENABLE_BINARY_DEBUG_HANDLE
-		if (h.debug)
+		if (h.debug) {
 			Seek(iw, h, sizeof(uint16_t), SM_Current); // leave space for debug size marker
+		}
 #endif
 		Seek(iw, h, sizeof(T), SM_Current); // leave space for deferred write
 	}
@@ -163,10 +210,12 @@ template <typename T> struct DeferredWrite {
 	bool Commit(const T &v) {
 		const size_t seek_ = Tell(iw, h);
 
-		if (!Seek(iw, h, cursor, SM_Start) || !Write(iw, h, v) || !Seek(iw, h, seek_, SM_Start))
-			return false;
+		bool res = true;
+		if (!Seek(iw, h, cursor, SM_Start) || !Write(iw, h, v) || !Seek(iw, h, seek_, SM_Start)) {
+			res = false;
+		}
 
-		return true;
+		return res;
 	}
 
 	size_t cursor;

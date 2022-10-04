@@ -91,6 +91,9 @@ static void test_array() {
 		for (std::array<int, 5>::const_reverse_iterator it = k5.rbegin(); it != k5.rend(); it++, j--) {
 			TEST_CHECK(*it == k5[j - 1]);
 		}
+
+		TEST_CHECK(k5.front() == i5.front());
+		TEST_CHECK(k5.back() == i5.back());
 	}
 
 	{ 
@@ -123,7 +126,77 @@ static void test_array() {
 		TEST_CHECK((c16 <= f16) == true);
 		TEST_CHECK((d16 <= c16) == true);
 		TEST_CHECK((d16 >= c16) == true);
+
+		e16 = f16;
+		TEST_CHECK(e16 == f16);
 	}
+}
+
+static void test_is_integral() {
+	TEST_CHECK(std::is_integral<bool>() == true);
+	TEST_CHECK(std::is_integral<char>() == true);
+	TEST_CHECK(std::is_integral<signed char>() == true);
+	TEST_CHECK(std::is_integral<unsigned char>() == true);
+	TEST_CHECK(std::is_integral<short>() == true);
+	TEST_CHECK(std::is_integral<unsigned short>() == true);
+	TEST_CHECK(std::is_integral<int>() == true);
+	TEST_CHECK(std::is_integral<unsigned int>() == true);
+	TEST_CHECK(std::is_integral<long>() == true);
+	TEST_CHECK(std::is_integral<unsigned long>() == true);
+	TEST_CHECK(std::is_integral<long long>() == true);
+	TEST_CHECK(std::is_integral<unsigned long long>() == true);
+	TEST_CHECK(std::is_integral<float>() == false);
+	TEST_CHECK(std::is_integral<double>() == false);
+	TEST_CHECK(std::is_integral<long double>() == false);
+
+
+	TEST_CHECK(std::is_floating_point<bool>() == false);
+	TEST_CHECK(std::is_floating_point<char>() == false);
+	TEST_CHECK(std::is_floating_point<signed char>() == false);
+	TEST_CHECK(std::is_floating_point<unsigned char>() == false);
+	TEST_CHECK(std::is_floating_point<short>() == false);
+	TEST_CHECK(std::is_floating_point<unsigned short>() == false);
+	TEST_CHECK(std::is_floating_point<int>() == false);
+	TEST_CHECK(std::is_floating_point<unsigned int>() == false);
+	TEST_CHECK(std::is_floating_point<long>() == false);
+	TEST_CHECK(std::is_floating_point<unsigned long>() == false);
+	TEST_CHECK(std::is_floating_point<long long>() == false);
+	TEST_CHECK(std::is_floating_point<unsigned long long>() == false);
+	TEST_CHECK(std::is_floating_point<float>() == true);
+	TEST_CHECK(std::is_floating_point<double>() == true);
+	TEST_CHECK(std::is_floating_point<long double>() == true);
+
+	TEST_CHECK(std::is_arithmetic<bool>() == true);
+	TEST_CHECK(std::is_arithmetic<char>() == true);
+	TEST_CHECK(std::is_arithmetic<signed char>() == true);
+	TEST_CHECK(std::is_arithmetic<unsigned char>() == true);
+	TEST_CHECK(std::is_arithmetic<short>() == true);
+	TEST_CHECK(std::is_arithmetic<unsigned short>() == true);
+	TEST_CHECK(std::is_arithmetic<int>() == true);
+	TEST_CHECK(std::is_arithmetic<unsigned int>() == true);
+	TEST_CHECK(std::is_arithmetic<long>() == true);
+	TEST_CHECK(std::is_arithmetic<unsigned long>() == true);
+	TEST_CHECK(std::is_arithmetic<long long>() == true);
+	TEST_CHECK(std::is_arithmetic<unsigned long long>() == true);
+	TEST_CHECK(std::is_arithmetic<float>() == true);
+	TEST_CHECK(std::is_arithmetic<double>() == true);
+	TEST_CHECK(std::is_arithmetic<long double>() == true);
+
+	TEST_CHECK(std::is_signed<bool>() == false);
+	TEST_CHECK(std::is_signed<char>() == true);
+	TEST_CHECK(std::is_signed<signed char>() == true);
+	TEST_CHECK(std::is_signed<unsigned char>() == false);
+	TEST_CHECK(std::is_signed<short>() == true);
+	TEST_CHECK(std::is_signed<unsigned short>() == false);
+	TEST_CHECK(std::is_signed<int>() == true);
+	TEST_CHECK(std::is_signed<unsigned int>() == false);
+	TEST_CHECK(std::is_signed<long>() == true);
+	TEST_CHECK(std::is_signed<unsigned long>() == false);
+	TEST_CHECK(std::is_signed<long long>() == true);
+	TEST_CHECK(std::is_signed<unsigned long long>() == false);
+	TEST_CHECK(std::is_signed<float>() == true);
+	TEST_CHECK(std::is_signed<double>() == true);
+	TEST_CHECK(std::is_signed<long double>() == true);
 }
 #endif
 
@@ -133,5 +206,6 @@ void test_cext() {
 	test_set_bool_gate();
 #if __cplusplus < 201103L
 	test_array();
+	test_is_integral();
 #endif
 }

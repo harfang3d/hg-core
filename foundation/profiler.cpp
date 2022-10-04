@@ -33,43 +33,63 @@ static uint32_t frame = 0;
 static ProfilerFrame last_frame_profile;
 
 //
-static size_t GetTaskBucket(const std::string &name) { return XXH32(name.data(), name.length(), 0) & 255; }
+static size_t GetTaskBucket(const std::string &name) {
+	return XXH32(name.data(), name.length(), 0) & 255;
+}
 
 static size_t GetTaskInBucket(size_t bucket_index, const std::string &name) {
+	size_t idx = std::numeric_limits<size_t>::max();
+
 	std::vector<size_t> &bucket = task_buckets[bucket_index];
 
 	// look into the bucket for the period
-	for (std::vector<size_t>::const_iterator i = bucket.begin(); i != bucket.end(); ++i)
-		if (tasks[*i].name == name)
-			return *i;
+	for (std::vector<size_t>::const_iterator i = bucket.begin(); i != bucket.end(); ++i) {
+		if (tasks[*i].name == name) {
+			idx = *i;
+			break;
+		}
+	}
 
-	// create missing event
-	const size_t idx = tasks.size();
+	if (idx == std::numeric_limits<size_t>::max()) {
+		idx = tasks.size(); // create missing event
 
-	Task task;
-	task.name = name;
-	tasks.push_back(task);
+		Task task;
+		task.name = name;
+		tasks.push_back(task);
 
-	bucket.push_back(idx);
+		bucket.push_back(idx);
+	}
+
 	return idx;
 }
 
 //
 static bool _compare_tree_entry(const ProfilerFrame::Task &a, const ProfilerFrame::Task &b) {
+	bool res;
+
 	const size_t task_a_name_length = a.name.length(), task_b_name_length = b.name.length();
 	const size_t shortest_length = Min(task_a_name_length, task_b_name_length);
 
 	for (size_t i = 0; i < shortest_length; ++i) {
 		const char dt = b.name[i] - a.name[i];
-		if (dt)
-			return dt > 0;
+
+		if (dt) {
+			res = dt > 0;
+			goto _compare_tree_entry_done;
+		} else {
+			//
+		}
 	}
 
-	return task_a_name_length < task_b_name_length;
+	res = task_a_name_length < task_b_name_length;
+
+_compare_tree_entry_done:
+	return res;
 }
 
 ProfilerFrame CaptureProfilerFrame() {
 	ProfilerFrame f;
+
 	f.frame = frame;
 
 	const time_ns t_now = time_now();
@@ -79,10 +99,12 @@ ProfilerFrame CaptureProfilerFrame() {
 
 	const size_t task_count = tasks.size();
 
-	if (!task_count) {
-		f.start = f.end = 0;
+	if (task_count == 0) {
+		f.start = 0;
+		f.end = f.start;
 	} else {
-		f.start = f.end = sections[0].start;
+		f.start = sections[0].start;
+		f.end = f.start;
 
 		f.sections.resize(sections.size());
 		for (size_t i = 0; i < sections.size(); ++i) {
@@ -90,16 +112,26 @@ ProfilerFrame CaptureProfilerFrame() {
 			ProfilerFrame::Section &frame_section = f.sections[i];
 
 			frame_section.start = section.start;
-			if (section.end == 0)
+
+			if (section.end == 0) {
 				frame_section.end = t_now; // fix-up pending section
-			else
+			} else {
 				frame_section.end = section.end;
+			}
+
 			frame_section.details = section.details;
 
-			if (frame_section.start < f.start)
+			if (frame_section.start < f.start) {
 				f.start = frame_section.start;
-			if (frame_section.end > f.end)
+			} else {
+				// happy now dumdum?
+			}
+
+			if (frame_section.end > f.end) {
 				f.end = frame_section.end;
+			} else {
+				// happy now dumdum?
+			}
 		}
 
 		f.tasks.clear();
@@ -122,6 +154,7 @@ ProfilerFrame CaptureProfilerFrame() {
 
 		std::sort(f.tasks.begin(), f.tasks.end(), &_compare_tree_entry);
 	}
+
 	return f;
 }
 
@@ -129,8 +162,9 @@ ProfilerFrame CaptureProfilerFrame() {
 ProfilerFrame EndProfilerFrame() {
 	ProfilerFrame profiler_frame = CaptureProfilerFrame();
 
-	for (size_t i = 0; i < task_bucket_count; ++i)
+	for (size_t i = 0; i < task_bucket_count; ++i) {
 		task_buckets[i].clear();
+	}
 
 	tasks.clear();
 	sections.clear();
@@ -147,15 +181,18 @@ struct TaskReport {
 	time_ns total, avg;
 };
 
-static bool _compare_task_report(const TaskReport &a, const TaskReport &b) { return a.name < b.name; }
+static bool _compare_task_report(const TaskReport &a, const TaskReport &b) {
+	return a.name < b.name;
+}
 
 void PrintProfilerFrame(const ProfilerFrame &frame) {
 	// compile task reports
 	std::vector<TaskReport> task_reports;
 
 	for (std::vector<ProfilerFrame::Task>::const_iterator i = frame.tasks.begin(); i != frame.tasks.end(); ++i) {
-		if (i->section_indexes.empty())
+		if (i->section_indexes.empty()) {
 			continue;
+		}
 
 		// compute section statistics
 		time_ns total = 0;
@@ -181,8 +218,9 @@ void PrintProfilerFrame(const ProfilerFrame &frame) {
 	std::sort(task_reports.begin(), task_reports.end(), &_compare_task_report);
 
 	log(fmt::format("Profile for Frame {} (duration: {} ms)", frame.frame, time_to_ms(frame.end - frame.start)));
-	for (std::vector<TaskReport>::const_iterator i = task_reports.begin(); i != task_reports.end(); ++i)
+	for (std::vector<TaskReport>::const_iterator i = task_reports.begin(); i != task_reports.end(); ++i) {
 		log(fmt::format("    Task {} ({} section): total {} ms, average {} ms", i->name, i->section_count, time_to_ms(i->total), time_to_ms(i->avg)));
+	}
 }
 
 //
@@ -203,13 +241,18 @@ ProfilerSectionIndex BeginProfilerSection(const std::string &name, const std::st
 }
 
 void EndProfilerSection(ProfilerSectionIndex section_index) {
-	if (section_index < sections.size() && sections[section_index].start != 0)
+	if (section_index < sections.size() && sections[section_index].start != 0) {
 		sections[section_index].end = time_now();
+	} else {
+		// now that was very hard to understand hey dumdum?
+	}
 }
 
 //
 ProfilerPerfSection::ProfilerPerfSection(const std::string &task_name, const std::string &section_details)
 	: section_index(BeginProfilerSection(task_name, section_details)) {}
-ProfilerPerfSection::~ProfilerPerfSection() { EndProfilerSection(section_index); }
+ProfilerPerfSection::~ProfilerPerfSection() {
+	EndProfilerSection(section_index);
+}
 
 } // namespace hg

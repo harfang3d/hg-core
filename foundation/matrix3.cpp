@@ -26,31 +26,43 @@ bool Inverse(const Mat3 &m, Mat3 &i) {
 	i.m[2][1] = m.m[0][1] * m.m[2][0] - m.m[0][0] * m.m[2][1];
 	i.m[2][2] = m.m[0][0] * m.m[1][1] - m.m[0][1] * m.m[1][0];
 
-	float k = m.m[0][0] * i.m[0][0] + m.m[0][1] * i.m[1][0] + m.m[0][2] * i.m[2][0];
-	if (k == 0.f)
-		return false;
+	const float k = m.m[0][0] * i.m[0][0] + m.m[0][1] * i.m[1][0] + m.m[0][2] * i.m[2][0];
 
-	k = 1.f / k;
-	i.m[0][0] *= k;
-	i.m[0][1] *= k;
-	i.m[0][2] *= k;
-	i.m[1][0] *= k;
-	i.m[1][1] *= k;
-	i.m[1][2] *= k;
-	i.m[2][0] *= k;
-	i.m[2][1] *= k;
-	i.m[2][2] *= k;
-	return true;
+	bool res = false;
+
+	if (EqualZero(k) == false) {
+		const float ik = 1.F / k;
+		i.m[0][0] *= ik;
+		i.m[0][1] *= ik;
+		i.m[0][2] *= ik;
+		i.m[1][0] *= ik;
+		i.m[1][1] *= ik;
+		i.m[1][2] *= ik;
+		i.m[2][0] *= ik;
+		i.m[2][1] *= ik;
+		i.m[2][2] *= ik;
+		res = true;
+	}
+
+	return res;
 }
 
 //
-Mat3 VectorMat3(const Vec3 &v) { return Mat3(v.x, 0, 0, v.y, 0, 0, v.z, 0, 0); }
-Mat3 CrossProductMat3(const Vec3 &v) { return Mat3(0, v.z, -v.y, -v.z, 0, v.x, v.y, -v.x, 0); }
+Mat3 VectorMat3(const Vec3 &v) {
+	return Mat3(v.x, 0.F, 0.F, v.y, 0.F, 0.F, v.z, 0.F, 0.F);
+}
+
+Mat3 CrossProductMat3(const Vec3 &v) {
+	return Mat3(0.F, v.z, -v.y, -v.z, 0.F, v.x, v.y, -v.x, 0.F);
+}
+
 //
-Mat3 Normalize(const Mat3 &m) { return Mat3(Normalize(GetColumn(m, 0)), Normalize(GetColumn(m, 1)), Normalize(GetColumn(m, 2))); }
+Mat3 Normalize(const Mat3 &m) {
+	return Mat3(Normalize(GetColumn(m, 0)), Normalize(GetColumn(m, 1)), Normalize(GetColumn(m, 2)));
+}
 
 Mat3 Orthonormalize(const Mat3 &m) {
-	const Vec3& x = GetX(m), y = GetY(m), z = Normalize(Cross(x, y));
+	const Vec3 &x = GetX(m), y = GetY(m), z = Normalize(Cross(x, y));
 	return Mat3(Normalize(x), Normalize(Cross(z, x)), z);
 }
 
@@ -76,7 +88,7 @@ inline void unpack_euler_order(euler_order order, int &i, int &j, int &k, bool &
 
 	repeat = order & REPEAT;
 	odd = ((order & ODD) == ODD);
-	int offset = odd;
+	const int offset = odd;
 	i = (order & AXIS) % 3;
 	j = (i + 1 + offset) % 3;
 	k = (i + 2 - offset) % 3;
@@ -84,7 +96,6 @@ inline void unpack_euler_order(euler_order order, int &i, int &j, int &k, bool &
 
 // internal function, taken from the cml library : http://cmldev.sourceforge.net/cml1-doc/d4/da1/helper_8h_source.html
 static void ToEuler(const Mat3 &m, euler_order order, float &angle_0, float &angle_1, float &angle_2) {
-
 	const float tolerance = std::numeric_limits<float>::epsilon();
 
 	/* Unpack the order first: */
@@ -94,29 +105,29 @@ static void ToEuler(const Mat3 &m, euler_order order, float &angle_0, float &ang
 
 	/* Detect repeated indices: */
 	if (repeat) {
-		float s1 = Len(Vec2(m.m[j][i], m.m[k][i]));
-		float c1 = m.m[i][i];
+		const float s1 = Len(Vec2(m.m[j][i], m.m[k][i]));
+		const float c1 = m.m[i][i];
 
 		angle_1 = atan2(s1, c1);
 		if (s1 > tolerance) {
 			angle_0 = atan2(m.m[j][i], m.m[k][i]);
 			angle_2 = atan2(m.m[i][j], -m.m[i][k]);
 		} else {
-			angle_0 = 0;
-			float sign_c1 = c1 < 0 ? -1.0f : (c1 > 0 ? 1.0f : 0.0f);
+			angle_0 = 0.F;
+			const float sign_c1 = c1 < 0.F ? -1.F : (c1 > 0.F ? 1.F : 0.F);
 			angle_2 = sign_c1 * atan2(-m.m[k][j], m.m[j][j]);
 		}
 	} else {
-		float s1 = -m.m[i][k];
-		float c1 = Len(Vec2(m.m[i][i], m.m[i][j]));
+		const float s1 = -m.m[i][k];
+		const float c1 = Len(Vec2(m.m[i][i], m.m[i][j]));
 
 		angle_1 = atan2(s1, c1);
 		if (c1 > tolerance) {
 			angle_0 = atan2(m.m[j][k], m.m[k][k]);
 			angle_2 = atan2(m.m[i][j], m.m[i][i]);
 		} else {
-			angle_0 = 0;
-			float sign_s1 = s1 < 0 ? -1.0f : (s1 > 0 ? 1.0f : 0.0f);
+			angle_0 = 0.F;
+			const float sign_s1 = s1 < 0.F ? -1.F : (s1 > 0.F ? 1.F : 0.F);
 			angle_2 = -sign_s1 * atan2(-m.m[k][j], m.m[j][j]);
 		}
 	}
@@ -135,6 +146,7 @@ static void ToEuler(const Mat3 &m, euler_order order, float &angle_0, float &ang
 
 Vec3 ToEuler(const Mat3 &m, RotationOrder rorder) {
 	Vec3 euler(0, 0, 0);
+
 	if (rorder == RO_ZYX) {
 		ToEuler(m, euler_order_zyx, euler.z, euler.y, euler.x);
 	} else if (rorder == RO_YZX) {
@@ -156,19 +168,33 @@ Vec3 ToEuler(const Mat3 &m, RotationOrder rorder) {
 	return euler;
 }
 
-Mat3 RotationMatXZY(float x, float y, float z) { return RotationMat3(Vec3(x, y, z), RO_XZY); }
+Mat3 RotationMatXZY(float x, float y, float z) {
+	return RotationMat3(Vec3(x, y, z), RO_XZY);
+}
 
-Mat3 RotationMatZYX(float x, float y, float z) { return RotationMat3(Vec3(x, y, z), RO_ZYX); }
+Mat3 RotationMatZYX(float x, float y, float z) {
+	return RotationMat3(Vec3(x, y, z), RO_ZYX);
+}
 
-Mat3 RotationMatXYZ(float x, float y, float z) { return RotationMat3(Vec3(x, y, z), RO_XYZ); }
+Mat3 RotationMatXYZ(float x, float y, float z) {
+	return RotationMat3(Vec3(x, y, z), RO_XYZ);
+}
 
-Mat3 RotationMatZXY(float x, float y, float z) { return RotationMat3(Vec3(x, y, z), RO_ZXY); }
+Mat3 RotationMatZXY(float x, float y, float z) {
+	return RotationMat3(Vec3(x, y, z), RO_ZXY);
+}
 
-Mat3 RotationMatYZX(float x, float y, float z) { return RotationMat3(Vec3(x, y, z), RO_YZX); }
+Mat3 RotationMatYZX(float x, float y, float z) {
+	return RotationMat3(Vec3(x, y, z), RO_YZX);
+}
 
-Mat3 RotationMatYXZ(float x, float y, float z) { return RotationMat3(Vec3(x, y, z), RO_YXZ); }
+Mat3 RotationMatYXZ(float x, float y, float z) {
+	return RotationMat3(Vec3(x, y, z), RO_YXZ);
+}
 
-Mat3 RotationMatXY(float x, float y) { return RotationMat3(Vec3(x, y, 0.0f), RO_XYZ); }
+Mat3 RotationMatXY(float x, float y) {
+	return RotationMat3(Vec3(x, y, 0.F), RO_XYZ);
+}
 
 // internal function, taken from the cml library : http://cmldev.sourceforge.net/cml1-doc/d4/da1/helper_8h_source.html
 static Mat3 RotationMat3(float angle_0, float angle_1, float angle_2, euler_order order) {
@@ -178,7 +204,7 @@ static Mat3 RotationMat3(float angle_0, float angle_1, float angle_2, euler_orde
 	angle_1 = -angle_1;
 	angle_2 = -angle_2;
 
-	Mat3 m = Mat3::Identity;
+	Mat3 out = Mat3::Identity;
 
 	int i, j, k;
 	bool odd, repeat;
@@ -190,81 +216,113 @@ static Mat3 RotationMat3(float angle_0, float angle_1, float angle_2, euler_orde
 		angle_2 = -angle_2;
 	}
 
-	float s0 = sinf(angle_0);
-	float c0 = cosf(angle_0);
-	float s1 = sinf(angle_1);
-	float c1 = cosf(angle_1);
-	float s2 = sinf(angle_2);
-	float c2 = cosf(angle_2);
+	const float s0 = sinf(angle_0);
+	const float c0 = cosf(angle_0);
+	const float s1 = sinf(angle_1);
+	const float c1 = cosf(angle_1);
+	const float s2 = sinf(angle_2);
+	const float c2 = cosf(angle_2);
 
-	float s0s2 = s0 * s2;
-	float s0c2 = s0 * c2;
-	float c0s2 = c0 * s2;
-	float c0c2 = c0 * c2;
+	const float s0s2 = s0 * s2;
+	const float s0c2 = s0 * c2;
+	const float c0s2 = c0 * s2;
+	const float c0c2 = c0 * c2;
 
 	if (repeat) {
-		m.m[i][i] = c1;
-		m.m[i][j] = s1 * s2;
-		m.m[i][k] = -s1 * c2;
-		m.m[j][i] = s0 * s1;
-		m.m[j][j] = -c1 * s0s2 + c0c2;
-		m.m[j][k] = c1 * s0c2 + c0s2;
-		m.m[k][i] = c0 * s1;
-		m.m[k][j] = -c1 * c0s2 - s0c2;
-		m.m[k][k] = c1 * c0c2 - s0s2;
+		out.m[i][i] = c1;
+		out.m[i][j] = s1 * s2;
+		out.m[i][k] = -s1 * c2;
+		out.m[j][i] = s0 * s1;
+		out.m[j][j] = -c1 * s0s2 + c0c2;
+		out.m[j][k] = c1 * s0c2 + c0s2;
+		out.m[k][i] = c0 * s1;
+		out.m[k][j] = -c1 * c0s2 - s0c2;
+		out.m[k][k] = c1 * c0c2 - s0s2;
 	} else {
-		m.m[i][i] = c1 * c2;
-		m.m[i][j] = c1 * s2;
-		m.m[i][k] = -s1;
-		m.m[j][i] = s1 * s0c2 - c0s2;
-		m.m[j][j] = s1 * s0s2 + c0c2;
-		m.m[j][k] = s0 * c1;
-		m.m[k][i] = s1 * c0c2 + s0s2;
-		m.m[k][j] = s1 * c0s2 - s0c2;
-		m.m[k][k] = c0 * c1;
+		out.m[i][i] = c1 * c2;
+		out.m[i][j] = c1 * s2;
+		out.m[i][k] = -s1;
+		out.m[j][i] = s1 * s0c2 - c0s2;
+		out.m[j][j] = s1 * s0s2 + c0c2;
+		out.m[j][k] = s0 * c1;
+		out.m[k][i] = s1 * c0c2 + s0s2;
+		out.m[k][j] = s1 * c0s2 - s0c2;
+		out.m[k][k] = c0 * c1;
 	}
 
-	return m;
+	return out;
 }
 
 Mat3 RotationMat3(float x, float y, float z, RotationOrder rorder) {
+	Mat3 out;
+
 	if (rorder == RO_ZYX) {
-		return RotationMat3(z, y, x, euler_order_zyx);
+		out = RotationMat3(z, y, x, euler_order_zyx);
 	} else if (rorder == RO_YZX) {
-		return RotationMat3(y, z, x, euler_order_yzx);
+		out = RotationMat3(y, z, x, euler_order_yzx);
 	} else if (rorder == RO_ZXY) {
-		return RotationMat3(z, x, y, euler_order_zxy);
+		out = RotationMat3(z, x, y, euler_order_zxy);
 	} else if (rorder == RO_XZY) {
-		return RotationMat3(x, z, y, euler_order_xzy);
+		out = RotationMat3(x, z, y, euler_order_xzy);
 	} else if (rorder == RO_YXZ) {
-		return RotationMat3(y, x, z, euler_order_yxz);
+		out = RotationMat3(y, x, z, euler_order_yxz);
 	} else if (rorder == RO_XYZ) {
-		return RotationMat3(x, y, z, euler_order_xyz);
+		out = RotationMat3(x, y, z, euler_order_xyz);
 	} else if (rorder == RO_XY) {
-		return RotationMat3(x, y, z, euler_order_xyz);
+		out = RotationMat3(x, y, z, euler_order_xyz);
 	} else {
-		return RotationMat3(x, y, z, euler_order_xyz);
+		out = RotationMat3(x, y, z, euler_order_xyz);
 	}
+
+	return out;
 }
 
-Mat3 RotationMat3(const Vec3 &euler, RotationOrder rorder) { return RotationMat3(euler.x, euler.y, euler.z, rorder); }
+Mat3 RotationMat3(const Vec3 &euler, RotationOrder rorder) {
+	return RotationMat3(euler.x, euler.y, euler.z, rorder);
+}
 
 //
-Mat3 TranslationMat3(const Vec3 &t) { return Mat3(1, 0, 0, 0, 1, 0, t.x, t.y, 1); }
-Mat3 TranslationMat3(const tVec2<float> &t) { return Mat3(1, 0, 0, 0, 1, 0, t.x, t.y, 1); }
-Mat3 ScaleMat3(const Vec3 &s) { return Mat3(s.x, 0, 0, 0, s.y, 0, 0, 0, s.z); }
-Mat3 ScaleMat3(const tVec2<float> &s) { return Mat3(s.x, 0, 0, 0, s.y, 0, 0, 0, 1); }
+Mat3 TranslationMat3(const Vec3 &t) {
+	return Mat3(1.F, 0.F, 0.F, 0.F, 1.F, 0.F, t.x, t.y, 1.F);
+}
+
+Mat3 TranslationMat3(const tVec2<float> &t) {
+	return Mat3(1.F, 0.F, 0.F, 0.F, 1.F, 0.F, t.x, t.y, 1.F);
+}
+
+Mat3 ScaleMat3(const Vec3 &s) {
+	return Mat3(s.x, 0.F, 0.F, 0.F, s.y, 0.F, 0.F, 0.F, s.z);
+}
+
+Mat3 ScaleMat3(const tVec2<float> &s) {
+	return Mat3(s.x, 0.F, 0.F, 0.F, s.y, 0.F, 0.F, 0.F, 1.F);
+}
 
 //
-Mat3 RotationMatX(float a) { return Mat3(1, 0, 0, 0, Cos(a), Sin(a), 0, -Sin(a), Cos(a)); }
-Mat3 RotationMatY(float a) { return Mat3(Cos(a), 0, -Sin(a), 0, 1, 0, Sin(a), 0, Cos(a)); }
-Mat3 RotationMatZ(float a) { return Mat3(Cos(a), Sin(a), 0, -Sin(a), Cos(a), 0, 0, 0, 1); }
+Mat3 RotationMatX(float a) {
+	return Mat3(1.F, 0.F, 0.F, 0.F, Cos(a), Sin(a), 0.F, -Sin(a), Cos(a));
+}
 
-Mat3 RotationMat2D(float a, const tVec2<float> &pivot) { return TranslationMat3(pivot) * RotationMatZ(a) * TranslationMat3(tVec2<float>(-pivot.x, -pivot.y)); }
+Mat3 RotationMatY(float a) {
+	return Mat3(Cos(a), 0.F, -Sin(a), 0.F, 1.F, 0.F, Sin(a), 0.F, Cos(a));
+}
+
+Mat3 RotationMatZ(float a) {
+	return Mat3(Cos(a), Sin(a), 0.F, -Sin(a), Cos(a), 0.F, 0.F, 0.F, 1.F);
+}
+
+Mat3 RotationMat2D(float a, const tVec2<float> &pivot) {
+	return TranslationMat3(pivot) * RotationMatZ(a) * TranslationMat3(tVec2<float>(-pivot.x, -pivot.y));
+}
 
 //
-Vec3 GetRow(const Mat3 &m, int n) { return Vec3(m.m[n][0], m.m[n][1], m.m[n][2]); }
-Vec3 GetColumn(const Mat3 &m, int n) { return Vec3(m.m[0][n], m.m[1][n], m.m[2][n]); }
+Vec3 GetRow(const Mat3 &m, int n) {
+	return Vec3(m.m[n][0], m.m[n][1], m.m[n][2]);
+}
+
+Vec3 GetColumn(const Mat3 &m, int n) {
+	return Vec3(m.m[0][n], m.m[1][n], m.m[2][n]);
+}
 
 void SetRow(Mat3 &m, int n, const Vec3 &v) {
 	m.m[n][0] = v.x;
@@ -278,15 +336,37 @@ void SetColumn(Mat3 &m, int n, const Vec3 &v) {
 	m.m[2][n] = v.z;
 }
 
-Vec3 GetX(const Mat3 &m) { return GetColumn(m, 0); }
-Vec3 GetY(const Mat3 &m) { return GetColumn(m, 1); }
-Vec3 GetZ(const Mat3 &m) { return GetColumn(m, 2); }
-Vec3 GetTranslation(const Mat3 &m) { return Vec3(m.m[0][2], m.m[1][2], 0.f); }
-Vec3 GetScale(const Mat3 &m) { return Vec3(Len(GetX(m)), Len(GetY(m)), Len(GetZ(m))); }
+Vec3 GetX(const Mat3 &m) {
+	return GetColumn(m, 0);
+}
 
-void SetX(Mat3 &m, const Vec3 &v) { SetColumn(m, 0, v); }
-void SetY(Mat3 &m, const Vec3 &v) { SetColumn(m, 1, v); }
-void SetZ(Mat3 &m, const Vec3 &v) { SetColumn(m, 2, v); }
+Vec3 GetY(const Mat3 &m) {
+	return GetColumn(m, 1);
+}
+
+Vec3 GetZ(const Mat3 &m) {
+	return GetColumn(m, 2);
+}
+
+Vec3 GetTranslation(const Mat3 &m) {
+	return Vec3(m.m[0][2], m.m[1][2], 0.F);
+}
+
+Vec3 GetScale(const Mat3 &m) {
+	return Vec3(Len(GetX(m)), Len(GetY(m)), Len(GetZ(m)));
+}
+
+void SetX(Mat3 &m, const Vec3 &v) {
+	SetColumn(m, 0, v);
+}
+
+void SetY(Mat3 &m, const Vec3 &v) {
+	SetColumn(m, 1, v);
+}
+
+void SetZ(Mat3 &m, const Vec3 &v) {
+	SetColumn(m, 2, v);
+}
 
 void SetTranslation(Mat3 &m, const tVec2<float> &v) {
 	m.m[0][2] = v.x;
@@ -312,34 +392,45 @@ void SetAxises(Mat3 &m, const Vec3 &x, const Vec3 &y, const Vec3 &z) {
 
 //
 Mat3 Mat3LookAt(const Vec3 &w) {
-	float l = Len(w);
-	if (l == 0.f)
-		return Mat3::Identity;
+	Mat3 out = Mat3::Identity;
 
-	Vec3 wn = w / l, u;
+	const float l = Len(w);
 
-	if (!EqualZero(wn.x) || !EqualZero(wn.z))
-		u = Normalize(Vec3(wn.z, 0, -wn.x)); // cross with up = {0,1,0}
-	else
-		u = Vec3(-1, 0, 0);
+	if (NotEqualZero(l)) {
+		const Vec3 wn = w / l;
 
-	return Mat3(u, Cross(wn, u), wn);
+		Vec3 u;
+
+		if (!EqualZero(wn.x) || !EqualZero(wn.z)) {
+			u = Normalize(Vec3(wn.z, 0.F, -wn.x)); // cross with up = {0,1,0}
+		} else {
+			u = Vec3(-1.F, 0.F, 0.F);
+		}
+
+		out = Mat3(u, Cross(wn, u), wn);
+	}
+
+	return out;
 }
 
 Mat3 Mat3LookAt(const Vec3 &w, const Vec3 &v) {
-	float l = Len(w);
-	if (l == 0.f)
-		return Mat3::Identity;
+	Mat3 out = Mat3::Identity;
 
-    Vec3 wn = w / l;
-	Vec3 vn = Normalize(v);
-    Vec3 u  = Normalize(Cross(vn, wn));
-    vn = Normalize(Cross(wn, u));
-	return Mat3(u, vn, wn);
+	const float l = Len(w);
+
+	if (NotEqualZero(l)) {
+		const Vec3 wn = w / l;
+		Vec3 vn = Normalize(v);
+		const Vec3 u = Normalize(Cross(vn, wn));
+		vn = Normalize(Cross(wn, u));
+		out = Mat3(u, vn, wn);
+	}
+
+	return out;
 }
 
 //
-void TransformVec2(const Mat3 &__restrict m, tVec2<float> *__restrict out, const tVec2<float> *__restrict in, int count) {
+void TransformVec2(const Mat3 &m, tVec2<float> out[], const tVec2<float> in[], int count) {
 	for (int i = 0; i < count; ++i) {
 		const float x = in[i].x, y = in[i].y;
 		out[i].x = x * m.m[0][0] + y * m.m[0][1] + m.m[0][2];
@@ -347,7 +438,7 @@ void TransformVec2(const Mat3 &__restrict m, tVec2<float> *__restrict out, const
 	}
 }
 
-void TransformVec3(const Mat3 &__restrict m, Vec3 *__restrict out, const Vec3 *__restrict in, int count) {
+void TransformVec3(const Mat3 &m, Vec3 out[], const Vec3 in[], int count) {
 	for (int i = 0; i < count; ++i) {
 		const float x = in[i].x, y = in[i].y, z = in[i].z;
 		out[i].x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2];
@@ -356,7 +447,7 @@ void TransformVec3(const Mat3 &__restrict m, Vec3 *__restrict out, const Vec3 *_
 	}
 }
 
-void TransformVec4(const Mat3 &__restrict m, Vec4 *__restrict out, const Vec4 *__restrict in, int count) {
+void TransformVec4(const Mat3 &m, Vec4 out[], const Vec4 in[], int count) {
 	for (int i = 0; i < count; ++i) {
 		const float x = in[i].x, y = in[i].y, z = in[i].z, w = in[i].w;
 		out[i].x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2];
@@ -372,61 +463,87 @@ float Det(const Mat3 &m) {
 		   ((m.m[1][0] * m.m[2][1]) - (m.m[1][1] * m.m[2][0])) * m.m[0][2];
 }
 
-Mat3 Transpose(const Mat3 &m) { return Mat3(m.m[0][0], m.m[0][1], m.m[0][2], m.m[1][0], m.m[1][1], m.m[1][2], m.m[2][0], m.m[2][1], m.m[2][2]); }
+Mat3 Transpose(const Mat3 &m) {
+	return Mat3(m.m[0][0], m.m[0][1], m.m[0][2], m.m[1][0], m.m[1][1], m.m[1][2], m.m[2][0], m.m[2][1], m.m[2][2]);
+}
 
 //
 bool operator==(const Mat3 &a, const Mat3 &b) {
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
-			if (a.m[i][j] != b.m[i][j])
-				return false;
-	return true;
+	bool res = true;
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			if (NotEqual(a.m[i][j], b.m[i][j])) {
+				res = false;
+				goto eq_done;
+			}
+		}
+	}
+
+eq_done:
+	return res;
 }
 
 bool operator!=(const Mat3 &a, const Mat3 &b) {
-	for (int i = 0; i < 3; ++i)
-		for (int j = 0; j < 3; ++j)
-			if (a.m[i][j] != b.m[i][j])
-				return true;
-	return false;
+	bool res = false;
+
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			if (NotEqual(a.m[i][j], b.m[i][j])) {
+				res = true;
+				goto ne_done;
+			}
+		}
+	}
+
+ne_done:
+	return res;
 }
 
 //
 Mat3 operator+(const Mat3 &a, const Mat3 &b) {
 	Mat3 r;
-	for (int j = 0; j < 3; ++j)
-		for (int i = 0; i < 3; ++i)
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
 			r.m[i][j] = a.m[i][j] + b.m[i][j];
+		}
+	}
 	return r;
 }
 
 Mat3 operator-(const Mat3 &a, const Mat3 &b) {
 	Mat3 r;
-	for (int j = 0; j < 3; ++j)
-		for (int i = 0; i < 3; ++i)
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
 			r.m[i][j] = a.m[i][j] - b.m[i][j];
+		}
+	}
 	return r;
 }
 
 Mat3 operator*(const Mat3 &m, const float v) {
 	Mat3 r;
-	for (int j = 0; j < 3; ++j)
-		for (int i = 0; i < 3; ++i)
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
 			r.m[i][j] = m.m[i][j] * v;
+		}
+	}
 	return r;
 }
 
 Mat3 operator/(const Mat3 &m, const float v) {
 	Mat3 r;
-	for (int j = 0; j < 3; ++j)
-		for (int i = 0; i < 3; ++i)
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
 			r.m[i][j] = m.m[i][j] / v;
+		}
+	}
 	return r;
 }
 
 //
 tVec2<float> operator*(const Mat3 &m, const tVec2<float> &v) {
-	return tVec2<float>(v.x * m.m[0][0] + v.y * m.m[0][1] + m.m[0][2], v.x *m.m[1][0] + v.y *m.m[1][1] + m.m[1][2]);
+	return tVec2<float>(v.x * m.m[0][0] + v.y * m.m[0][1] + m.m[0][2], v.x * m.m[1][0] + v.y * m.m[1][1] + m.m[1][2]);
 }
 
 Vec3 operator*(const Mat3 &m, const Vec3 &v) {
@@ -440,8 +557,8 @@ Vec4 operator*(const Mat3 &m, const Vec4 &v) {
 }
 
 Mat3 operator*(const Mat3 &a, const Mat3 &b) {
-#define __M33M33(__I, __J) a.m[__I][0] * b.m[0][__J] + a.m[__I][1] * b.m[1][__J] + a.m[__I][2] * b.m[2][__J]
-	return Mat3(__M33M33(0, 0), __M33M33(1, 0), __M33M33(2, 0), __M33M33(0, 1), __M33M33(1, 1), __M33M33(2, 1), __M33M33(0, 2), __M33M33(1, 2), __M33M33(2, 2));
+#define M33M33(I, J) a.m[I][0] * b.m[0][J] + a.m[I][1] * b.m[1][J] + a.m[I][2] * b.m[2][J]
+	return Mat3(M33M33(0, 0), M33M33(1, 0), M33M33(2, 0), M33M33(0, 1), M33M33(1, 1), M33M33(2, 1), M33M33(0, 2), M33M33(1, 2), M33M33(2, 2));
 }
 
 Mat3 &Mat3::operator*=(const Mat3 &a) {
@@ -456,31 +573,33 @@ Mat3 &Mat3::operator*=(const Mat3 &a) {
 		m[i][1] = v;
 		m[i][2] = w;
 	}
+
 	return *this;
 }
 
 //
 Mat3::Mat3() {
-	m[0][0] = 1.f;
-	m[1][0] = 0.f;
-	m[2][0] = 0.f;
-	m[0][1] = 0.f;
-	m[1][1] = 1.f;
-	m[2][1] = 0.f;
-	m[0][2] = 0.f;
-	m[1][2] = 0.f;
-	m[2][2] = 1.f;
+	m[0][0] = 1.F;
+	m[1][0] = 0.F;
+	m[2][0] = 0.F;
+	m[0][1] = 0.F;
+	m[1][1] = 1.F;
+	m[2][1] = 0.F;
+	m[0][2] = 0.F;
+	m[1][2] = 0.F;
+	m[2][2] = 1.F;
 }
-Mat3::Mat3(const float *_m) {
-	m[0][0] = _m[0];
-	m[1][0] = _m[1];
-	m[2][0] = _m[2];
-	m[0][1] = _m[3];
-	m[1][1] = _m[4];
-	m[2][1] = _m[5];
-	m[0][2] = _m[6];
-	m[1][2] = _m[7];
-	m[2][2] = _m[8];
+
+Mat3::Mat3(const float m_[]) {
+	m[0][0] = m_[0];
+	m[1][0] = m_[1];
+	m[2][0] = m_[2];
+	m[0][1] = m_[3];
+	m[1][1] = m_[4];
+	m[2][1] = m_[5];
+	m[0][2] = m_[6];
+	m[1][2] = m_[7];
+	m[2][2] = m_[8];
 }
 
 Mat3::Mat3(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22) {

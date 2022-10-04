@@ -164,16 +164,16 @@ void test_mat4() {
 	}
 	{
 		Vec3 v = Mat4(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f) * Vec3(0.1f, 0.2f, 0.3f);
-		TEST_CHECK(TestEqual(v.x, 13.f));
-		TEST_CHECK(TestEqual(v.y, 14.6f));
-		TEST_CHECK(TestEqual(v.z, 16.2f));
+		TEST_CHECK(Equal(v.x, 13.f));
+		TEST_CHECK(Equal(v.y, 14.6f));
+		TEST_CHECK(Equal(v.z, 16.2f));
 	}
 	{
 		Vec4 v = Mat4(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f) * Vec4(0.1f,-0.2f, 0.3f,-0.4f);
-		TEST_CHECK(TestEqual(v.x, -2.6f));
-		TEST_CHECK(TestEqual(v.y, -2.8f));
-		TEST_CHECK(TestEqual(v.z, -3.f));
-		TEST_CHECK(TestEqual(v.w, -0.4f));
+		TEST_CHECK(Equal(v.x, -2.6f));
+		TEST_CHECK(Equal(v.y, -2.8f));
+		TEST_CHECK(AlmostEqual(v.z, -3.f));
+		TEST_CHECK(Equal(v.w, -0.4f));
 	}
 	{
 		const Mat4 m(-1.f, 2.f, -3.f, 4.f, -5.f, 6.f, -7.f, 8.f, 9.f, 10.f, -11.f, -12.f);
@@ -209,20 +209,20 @@ void test_mat4() {
 	{ 
 		Mat4 m = Orthonormalize(Mat4(-1.f, 2.f, -3.f, 4.f, -5.f, 6.f, -7.f, 8.f, 9.f, 10.f, -11.f, -12.f));
 		Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-		TEST_CHECK(TestEqual(Dot(i, j), 0.f));
-		TEST_CHECK(TestEqual(Dot(j, k), 0.f));
-		TEST_CHECK(TestEqual(Dot(k, i), 0.f));
-		TEST_CHECK(TestEqual(Len2(i), 1.f));
-		TEST_CHECK(TestEqual(Len2(j), 1.f));
-		TEST_CHECK(TestEqual(Len2(k), 1.f));
+		TEST_CHECK(Equal(Dot(i, j), 0.f));
+		TEST_CHECK(Equal(Dot(j, k), 0.f));
+		TEST_CHECK(Equal(Dot(k, i), 0.f));
+		TEST_CHECK(Equal(Len2(i), 1.f));
+		TEST_CHECK(Equal(Len2(j), 1.f));
+		TEST_CHECK(Equal(Len2(k), 1.f));
 		TEST_CHECK(AlmostEqual(t, Vec3(10.f, -11.f, -12.f), 0.000001f));
 	}
 	{ 
 		Mat4 m = Normalize(Mat4(-1.f, 2.f, -3.f, 4.f, -5.f, 6.f, -7.f, 8.f, 9.f, 10.f, -11.f, -12.f));
 		Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-		TEST_CHECK(TestEqual(Len2(i), 1.f));
-		TEST_CHECK(TestEqual(Len2(j), 1.f));
-		TEST_CHECK(TestEqual(Len2(k), 1.f));
+		TEST_CHECK(Equal(Len2(i), 1.f));
+		TEST_CHECK(Equal(Len2(j), 1.f));
+		TEST_CHECK(Equal(Len2(k), 1.f));
 		TEST_CHECK(AlmostEqual(t, Vec3(10.f, -11.f, -12.f), 0.000001f));
 	}
     {
@@ -388,17 +388,17 @@ void test_mat4() {
 	{
 		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
 		SetS(m, Vec3(0.1f, 10.0f, 2.0f));
-		TEST_CHECK(TestEqual(Len(GetX(m)), 0.1f));
-		TEST_CHECK(TestEqual(Len(GetY(m)), 10.0f));
-		TEST_CHECK(TestEqual(Len(GetZ(m)), 2.0f));
+		TEST_CHECK(Equal(Len(GetX(m)), 0.1f));
+		TEST_CHECK(Equal(Len(GetY(m)), 10.0f));
+		TEST_CHECK(Equal(Len(GetZ(m)), 2.0f));
 		TEST_CHECK(AlmostEqual(GetT(m), Vec3(10.f, 11.f, 12.f), 0.00001f));
 	}
 	{
 		Mat4 m(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
 		SetScale(m, Vec3(3.0f, 0.5f, 11.0f));
-		TEST_CHECK(TestEqual(Len(GetX(m)), 3.0f));
-		TEST_CHECK(TestEqual(Len(GetY(m)), 0.5f));
-		TEST_CHECK(TestEqual(Len(GetZ(m)), 11.0f));
+		TEST_CHECK(Equal(Len(GetX(m)), 3.0f));
+		TEST_CHECK(Equal(Len(GetY(m)), 0.5f));
+		TEST_CHECK(Equal(Len(GetZ(m)), 11.0f));
 		TEST_CHECK(AlmostEqual(GetT(m), Vec3(10.f, 11.f, 12.f), 0.00001f));
 	}
 	{
@@ -518,20 +518,20 @@ void test_mat4() {
         {
             Mat4 m = Mat4LookAt(eye, target);
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(k, Normalize(target - eye)), 1.f, 0.000001f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(AlmostEqual(Dot(k, Normalize(target - eye)), 1.f, 0.000001f));
             TEST_CHECK(AlmostEqual(eye, t, 0.000001f));
         }
 
         {
             Mat4 m = Mat4LookAt(eye, target, scale);
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(Normalize(k), Normalize(target - eye)), 1.f, 0.000001f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(AlmostEqual(Dot(Normalize(k), Normalize(target - eye)), 1.f, 0.000001f));
             TEST_CHECK(AlmostEqual(GetScale(m), scale, 0.000001f));
         }
     }
@@ -542,20 +542,20 @@ void test_mat4() {
         {
             Mat4 m = Mat4LookAtUp(eye, target, Vec3(0.f, 1.f, 0.f));
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(k, Normalize(target - eye)), 1.f, 0.000001f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(AlmostEqual(Dot(k, Normalize(target - eye)), 1.f, 0.000001f));
             TEST_CHECK(AlmostEqual(eye, t, 0.000001f));
         }
         {
             Vec3 up(0.f, -1.f, 0.f);
             Mat4 m = Mat4LookAtUp(eye, target, up);
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(k, Normalize(target - eye)), 1.f, 0.000001f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(AlmostEqual(Dot(k, Normalize(target - eye)), 1.f, 0.000001f));
             TEST_CHECK(AlmostEqual(eye, t, 0.000001f));
             TEST_CHECK(Dot(j, up) > 0.f);
             TEST_CHECK(Dot(i, Vec3(-1.f, 0.f, 0.f)) > 0.f);
@@ -564,10 +564,10 @@ void test_mat4() {
             Vec3 up(1.f, 0.f, 0.f);
             Mat4 m = Mat4LookAtUp(eye, target, up);
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(Normalize(k), Normalize(target - eye)), 1.f, 0.000001f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(AlmostEqual(Dot(Normalize(k), Normalize(target - eye)), 1.f, 0.000001f));
             TEST_CHECK(Dot(j, up) > 0.f);
             TEST_CHECK(Dot(i, Vec3(0.f, -1.f, 0.f)) > 0.f);
         }
@@ -578,20 +578,20 @@ void test_mat4() {
         {
             Mat4 m = Mat4LookToward(eye, direction);
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,direction), 1.f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(Equal(Dot(k,direction), 1.f));
             TEST_CHECK(AlmostEqual(eye, t, 0.000001f));
         }
         {
             Vec3 up(0.f, -1.f, 0.f);
             Mat4 m = Mat4LookTowardUp(eye, direction, up);
             Vec3 i = GetX(m), j = GetY(m), k = GetZ(m), t = GetT(m);
-            TEST_CHECK(TestEqual(Dot(i,j), 0.f));
-            TEST_CHECK(TestEqual(Dot(j,k), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,i), 0.f));
-            TEST_CHECK(TestEqual(Dot(k,direction), 1.f));
+            TEST_CHECK(Equal(Dot(i,j), 0.f));
+            TEST_CHECK(Equal(Dot(j,k), 0.f));
+            TEST_CHECK(Equal(Dot(k,i), 0.f));
+            TEST_CHECK(Equal(Dot(k,direction), 1.f));
             TEST_CHECK(AlmostEqual(eye, t, 0.000001f));
             TEST_CHECK(Dot(j, up) > 0.f);
         }
@@ -740,22 +740,22 @@ void test_mat4() {
 		const Mat4 m = Mat4(1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f);
 		float u[16];
 		Mat4ToFloat16Transposed(m, u);
-		TEST_CHECK(TestEqual(u[0], 1.f));
-		TEST_CHECK(TestEqual(u[1], 2.f));
-		TEST_CHECK(TestEqual(u[2], 3.f));
-		TEST_CHECK(TestEqual(u[3], 0.f));
-		TEST_CHECK(TestEqual(u[4], 4.f));
-		TEST_CHECK(TestEqual(u[5], 5.f));
-		TEST_CHECK(TestEqual(u[6], 6.f));
-		TEST_CHECK(TestEqual(u[7], 0.f));
-		TEST_CHECK(TestEqual(u[8], 7.f));
-		TEST_CHECK(TestEqual(u[9], 8.f));
-		TEST_CHECK(TestEqual(u[10], 9.f));
-		TEST_CHECK(TestEqual(u[11], 0.f));
-		TEST_CHECK(TestEqual(u[12], 10.f));
-		TEST_CHECK(TestEqual(u[13], 11.f));
-		TEST_CHECK(TestEqual(u[14], 12.f));
-		TEST_CHECK(TestEqual(u[15], 1.f));
+		TEST_CHECK(Equal(u[0], 1.f));
+		TEST_CHECK(Equal(u[1], 2.f));
+		TEST_CHECK(Equal(u[2], 3.f));
+		TEST_CHECK(Equal(u[3], 0.f));
+		TEST_CHECK(Equal(u[4], 4.f));
+		TEST_CHECK(Equal(u[5], 5.f));
+		TEST_CHECK(Equal(u[6], 6.f));
+		TEST_CHECK(Equal(u[7], 0.f));
+		TEST_CHECK(Equal(u[8], 7.f));
+		TEST_CHECK(Equal(u[9], 8.f));
+		TEST_CHECK(Equal(u[10], 9.f));
+		TEST_CHECK(Equal(u[11], 0.f));
+		TEST_CHECK(Equal(u[12], 10.f));
+		TEST_CHECK(Equal(u[13], 11.f));
+		TEST_CHECK(Equal(u[14], 12.f));
+		TEST_CHECK(Equal(u[15], 1.f));
 	}
 // Mat4 LerpAsOrthonormalBase(const Mat4 &a, const Mat4 &b, float k, bool fast = false);
 // Mat4 ComputeBillboardMat4(const Vec3 &pos, const Mat3 &camera, const Vec3 &scale = Vec3::One);
