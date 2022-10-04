@@ -1263,60 +1263,87 @@ ModelRef SkipLoadOrQueueModelLoad(
 }
 
 //
-void LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_image_desc &desc, bool silent) {
+bool LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string &name, sg_image_desc &desc, bool silent) {
 	ProfilerPerfSection section("LoadTextureMeta", name);
 
 	rapidjson::Document meta;
-	if (!LoadJson(ir, ScopedReadHandle(ip, name + ".meta", silent), meta))
-		return;
+	if (!LoadJson(ir, ScopedReadHandle(ip, name + ".meta", silent), meta)) {
+		return false;
+	}
 
-	meta.FindMember("min-filter");
+	desc.max_anisotropy = 8;
+
+	desc.min_filter = SG_FILTER_LINEAR_MIPMAP_LINEAR;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("min-filter");
+
+		if (i != meta.MemberEnd()) {
+			const std::string min_filter = i->value.GetString();
+
+			if (min_filter == "Nearest") {
+				desc.min_filter = SG_FILTER_NEAREST_MIPMAP_NEAREST;
+			} else {
+				desc.min_filter = SG_FILTER_LINEAR_MIPMAP_LINEAR;
+			}
+		}
+	}
+
+	desc.mag_filter = SG_FILTER_LINEAR; //_MIPMAP_LINEAR;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("mag-filter");
+
+		if (i != meta.MemberEnd()) {
+			const std::string mag_filter = i->value.GetString();
+
+			if (mag_filter == "Nearest") {
+				desc.mag_filter = SG_FILTER_NEAREST; //_MIPMAP_NEAREST;
+			} else {
+				desc.mag_filter = SG_FILTER_LINEAR; //_MIPMAP_LINEAR;
+			}
+		}
+	}
+
+	desc.wrap_u = SG_WRAP_REPEAT;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("wrap-U");
+
+		if (i != meta.MemberEnd()) {
+			const std::string wrap_u = i->value.GetString();
+
+			if (wrap_u == "Clamp") {
+				desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
+			} else if (wrap_u == "Border") {
+				desc.wrap_u = SG_WRAP_CLAMP_TO_BORDER;
+			} else if (wrap_u == "Mirror") {
+				desc.wrap_u = SG_WRAP_MIRRORED_REPEAT;
+			} else {
+				desc.wrap_u = SG_WRAP_REPEAT;
+			}
+		}
+	}
+
+	desc.wrap_v = SG_WRAP_REPEAT;
+	{
+		rapidjson::Value::ConstMemberIterator i = meta.FindMember("wrap-V");
+
+		if (i != meta.MemberEnd()) {
+			const std::string wrap_v = i->value.GetString();
+
+			if (wrap_v == "Clamp") {
+				desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+			} else if (wrap_v == "Border") {
+				desc.wrap_v = SG_WRAP_CLAMP_TO_BORDER;
+			} else if (wrap_v == "Mirror") {
+				desc.wrap_v = SG_WRAP_MIRRORED_REPEAT;
+			} else {
+				desc.wrap_v = SG_WRAP_REPEAT;
+			}
+		}
+	}
+
+	return true;
 
 #if 0
-	{
-
-
-
-
-		std::string filter;
-
-		GetMetaValue(js, "min-filter", filter);
-		if (filter == "Nearest")
-			meta.flags |= BGFX_SAMPLER_MIN_POINT;
-		else if (filter == "Linear")
-			;
-		else // if (filter == "Anisotropic")
-			meta.flags |= BGFX_SAMPLER_MIN_ANISOTROPIC;
-
-		GetMetaValue(js, "mag-filter", filter);
-		if (filter == "Nearest")
-			meta.flags |= BGFX_SAMPLER_MAG_POINT;
-		else if (filter == "Linear")
-			;
-		else // if (filter == "Anisotropic")
-			meta.flags |= BGFX_SAMPLER_MAG_ANISOTROPIC;
-	}
-
-	{
-		std::string wrap;
-
-		GetMetaValue(js, "wrap-U", wrap);
-		if (wrap == "Clamp")
-			meta.flags |= BGFX_SAMPLER_U_CLAMP;
-		else if (wrap == "Border")
-			meta.flags |= BGFX_SAMPLER_U_BORDER;
-		else if (wrap == "Mirror")
-			meta.flags |= BGFX_SAMPLER_U_MIRROR;
-
-		GetMetaValue(js, "wrap-V", wrap);
-		if (wrap == "Clamp")
-			meta.flags |= BGFX_SAMPLER_V_CLAMP;
-		else if (wrap == "Border")
-			meta.flags |= BGFX_SAMPLER_V_BORDER;
-		else if (wrap == "Mirror")
-			meta.flags |= BGFX_SAMPLER_V_MIRROR;
-	}
-
 	{
 		bool sRGB = false;
 
@@ -1331,10 +1358,11 @@ void LoadTextureMeta(const Reader &ir, const ReadProvider &ip, const std::string
 #endif
 }
 
-void LoadTextureMetaFromFile(const std::string &path, sg_image_desc &desc, bool silent) {
+bool LoadTextureMetaFromFile(const std::string &path, sg_image_desc &desc, bool silent) {
 	return LoadTextureMeta(g_file_reader, g_file_read_provider, path, desc, silent);
 }
-void LoadTextureMetaFromAssets(const std::string &name, sg_image_desc &desc, bool silent) {
+
+bool LoadTextureMetaFromAssets(const std::string &name, sg_image_desc &desc, bool silent) {
 	return LoadTextureMeta(g_assets_reader, g_assets_read_provider, name, desc, silent);
 }
 

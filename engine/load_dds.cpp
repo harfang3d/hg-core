@@ -706,14 +706,13 @@ Texture LoadDDS(const Reader &ir, const ReadProvider &ip, const Handle &h, const
 		warn("    Invalid DDS file");
 	} else {
 		DDSURFACEDESC2 header;
+
 		if (ir.read(h, &header, sizeof(DDSURFACEDESC2)) != sizeof(DDSURFACEDESC2)) {
 			warn("    Failed to read DDS header");
 		} else if (header.dwSize != 124) {
 			warn("    Invalid DDS header (size != 124)");
 		} else {
 			desc.pixel_format = SG_PIXELFORMAT_NONE;
-			desc.min_filter = SG_FILTER_LINEAR;
-			desc.mag_filter = SG_FILTER_LINEAR;
 			desc.width = header.dwWidth;
 			desc.height = header.dwHeight;
 			desc.num_mipmaps = header.dwMipMapCount;
@@ -807,6 +806,7 @@ Texture LoadDDS(const Reader &ir, const ReadProvider &ip, const Handle &h, const
 							}
 						}
 					}
+
 					if (desc.pixel_format == SG_PIXELFORMAT_BGRA8) {
 						// BGRA8 may not be supported by some backends (namely OpenGL).
 						desc.pixel_format = SG_PIXELFORMAT_RGBA8;
@@ -821,6 +821,7 @@ Texture LoadDDS(const Reader &ir, const ReadProvider &ip, const Handle &h, const
 							}
 						}
 					}
+
 					tex.image = sg_make_image(&desc);
 				}
 			}
